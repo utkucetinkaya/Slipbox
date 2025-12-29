@@ -1,4 +1,6 @@
 import SwiftUI
+import FirebaseFirestore
+import FirebaseAuth
 
 struct ReceiptDetailView: View {
     let receipt: Receipt
@@ -14,7 +16,7 @@ struct ReceiptDetailView: View {
     
     var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: AppSpacing.lg) {
+            VStack(alignment: .leading, spacing: 24) { // AppSpacing.lg
                 // Receipt Image
                 receiptImage
                 
@@ -33,7 +35,7 @@ struct ReceiptDetailView: View {
                 // Actions
                 actionsSection
             }
-            .padding(AppSpacing.md)
+            .padding(16) // AppSpacing.md
         }
         .navigationTitle("Fiş Detayı")
         .navigationBarTitleDisplayMode(.inline)
@@ -46,7 +48,7 @@ struct ReceiptDetailView: View {
             }
         }
         .sheet(isPresented: $showingCategoryPicker) {
-            NavigationView {
+            NavigationStack {
                 CategoryPickerView(selectedCategoryId: $editedReceipt.categoryId)
                     .navigationTitle("Kategori Seç")
                     .navigationBarTitleDisplayMode(.inline)
@@ -72,7 +74,7 @@ struct ReceiptDetailView: View {
     // MARK: - Receipt Image
     private var receiptImage: some View {
         ZStack {
-            RoundedRectangle(cornerRadius: AppCornerRadius.md)
+            RoundedRectangle(cornerRadius: 12) // AppCornerRadius.md
                 .fill(Color.gray.opacity(0.2))
                 .frame(height: 300)
             
@@ -81,14 +83,14 @@ struct ReceiptDetailView: View {
                     .resizable()
                     .aspectRatio(contentMode: .fit)
                     .frame(maxHeight: 300)
-                    .cornerRadius(AppCornerRadius.md)
+                    .cornerRadius(12) // AppCornerRadius.md
             } else {
                 VStack {
                     Image(systemName: "doc.text.fill")
                         .font(.system(size: 80))
                         .foregroundColor(.gray)
                     Text("Görüntü bulunamadı")
-                        .font(AppFonts.caption())
+                        .font(.caption) // AppFonts.caption
                         .foregroundColor(.gray)
                 }
             }
@@ -104,12 +106,12 @@ struct ReceiptDetailView: View {
             
             VStack(alignment: .leading, spacing: 4) {
                 Text(statusTitle)
-                    .font(AppFonts.headline())
-                    .foregroundColor(AppColors.textPrimary)
+                    .font(.headline) // AppFonts.headline
+                    .foregroundColor(DesignSystem.Colors.textPrimary)
                 
                 Text(statusMessage)
-                    .font(AppFonts.caption())
-                    .foregroundColor(AppColors.textSecondary)
+                    .font(.caption) // AppFonts.caption
+                    .foregroundColor(DesignSystem.Colors.textSecondary)
             }
             
             Spacer()
@@ -117,19 +119,23 @@ struct ReceiptDetailView: View {
             if receipt.status == .needsReview {
                 Button(action: approveReceipt) {
                     Text("Onayla")
-                        .font(AppFonts.callout())
+                        .font(.callout) // AppFonts.callout
                         .fontWeight(.semibold)
                         .foregroundColor(.white)
-                        .padding(.horizontal, AppSpacing.md)
-                        .padding(.vertical, AppSpacing.xs)
-                        .background(AppColors.success)
-                        .cornerRadius(AppCornerRadius.sm)
+                        .padding(.horizontal, 16) // AppSpacing.md
+                        .padding(.vertical, 4) // AppSpacing.xs
+                        .background(DesignSystem.Colors.success)
+                        .cornerRadius(8) // AppCornerRadius.sm
                 }
             }
         }
-        .padding(AppSpacing.md)
+        .padding(16) // AppSpacing.md
         .background(statusBackgroundColor)
-        .cornerRadius(AppCornerRadius.md)
+        .cornerRadius(12) // AppCornerRadius.md
+        .overlay(
+            RoundedRectangle(cornerRadius: 12)
+                .stroke(DesignSystem.Colors.border, lineWidth: 1)
+        )
     }
     
     private var statusIcon: some View {
@@ -139,13 +145,13 @@ struct ReceiptDetailView: View {
                 ProgressView()
             case .needsReview:
                 Image(systemName: "exclamationmark.circle.fill")
-                    .foregroundColor(AppColors.warning)
+                    .foregroundColor(DesignSystem.Colors.warning)
             case .approved:
                 Image(systemName: "checkmark.circle.fill")
-                    .foregroundColor(AppColors.success)
+                    .foregroundColor(DesignSystem.Colors.success)
             case .error:
                 Image(systemName: "xmark.circle.fill")
-                    .foregroundColor(AppColors.error)
+                    .foregroundColor(DesignSystem.Colors.error)
             }
         }
         .font(.title2)
@@ -175,37 +181,37 @@ struct ReceiptDetailView: View {
     
     private var statusBackgroundColor: Color {
         switch receipt.status {
-        case .processing: return AppColors.statusProcessing.opacity(0.1)
-        case .needsReview: return AppColors.warning.opacity(0.1)
-        case .approved: return AppColors.success.opacity(0.1)
-        case .error: return AppColors.error.opacity(0.1)
+        case .processing: return Color.blue.opacity(0.1) // AppColors.statusProcessing fallback
+        case .needsReview: return DesignSystem.Colors.warning.opacity(0.1)
+        case .approved: return DesignSystem.Colors.success.opacity(0.1)
+        case .error: return DesignSystem.Colors.error.opacity(0.1)
         }
     }
     
     // MARK: - Editable Fields
     private var editableFields: some View {
-        VStack(alignment: .leading, spacing: AppSpacing.md) {
+        VStack(alignment: .leading, spacing: 16) { // AppSpacing.md
             // Merchant
             VStack(alignment: .leading, spacing: 4) {
                 Text("İşletme")
-                    .font(AppFonts.caption())
-                    .foregroundColor(AppColors.textSecondary)
+                    .font(.caption) // AppFonts.caption
+                    .foregroundColor(DesignSystem.Colors.textSecondary)
                 
                 TextField("Örn: Migros", text: Binding(
                     get: { editedReceipt.merchant ?? "" },
                     set: { editedReceipt.merchant = $0.isEmpty ? nil : $0 }
                 ))
-                .font(AppFonts.body())
+                .font(.body) // AppFonts.body
                 .textFieldStyle(.roundedBorder)
             }
             
             // Date & Amount
-            HStack(spacing: AppSpacing.md) {
+            HStack(spacing: 16) { // AppSpacing.md
                 // Date
                 VStack(alignment: .leading, spacing: 4) {
                     Text("Tarih")
-                        .font(AppFonts.caption())
-                        .foregroundColor(AppColors.textSecondary)
+                        .font(.caption) // AppFonts.caption
+                        .foregroundColor(DesignSystem.Colors.textSecondary)
                     
                     DatePicker("", selection: Binding(
                         get: { editedReceipt.date ?? Date() },
@@ -218,14 +224,14 @@ struct ReceiptDetailView: View {
                 // Amount
                 VStack(alignment: .leading, spacing: 4) {
                     Text("Tutar")
-                        .font(AppFonts.caption())
-                        .foregroundColor(AppColors.textSecondary)
+                        .font(.caption) // AppFonts.caption
+                        .foregroundColor(DesignSystem.Colors.textSecondary)
                     
                     TextField("0.00", value: Binding(
                         get: { editedReceipt.total ?? 0 },
                         set: { editedReceipt.total = $0 }
                     ), format: .number)
-                    .font(AppFonts.body())
+                    .font(.body) // AppFonts.body
                     .keyboardType(.decimalPad)
                     .textFieldStyle(.roundedBorder)
                 }
@@ -235,10 +241,10 @@ struct ReceiptDetailView: View {
     
     // MARK: - Category Section
     private var categorySection: some View {
-        VStack(alignment: .leading, spacing: AppSpacing.sm) {
+        VStack(alignment: .leading, spacing: 8) { // AppSpacing.sm
             Text("Kategori")
-                .font(AppFonts.caption())
-                .foregroundColor(AppColors.textSecondary)
+                .font(.caption) // AppFonts.caption
+                .foregroundColor(DesignSystem.Colors.textSecondary)
             
             Button(action: { showingCategoryPicker = true }) {
                 HStack {
@@ -246,28 +252,32 @@ struct ReceiptDetailView: View {
                        let category = Category.defaults.first(where: { $0.id == categoryId }) {
                         Image(systemName: category.icon)
                         Text(category.name)
-                            .font(AppFonts.body())
+                            .font(.body) // AppFonts.body
                     } else if let suggestedId = editedReceipt.categorySuggestedId,
                               let category = Category.defaults.first(where: { $0.id == suggestedId }) {
                         Image(systemName: category.icon)
                         Text("\(category.name) (Önerilen)")
-                            .font(AppFonts.body())
-                            .foregroundColor(AppColors.warning)
+                            .font(.body) // AppFonts.body
+                            .foregroundColor(DesignSystem.Colors.warning)
                     } else {
                         Text("Kategori Seç")
-                            .font(AppFonts.body())
-                            .foregroundColor(AppColors.textSecondary)
+                            .font(.body) // AppFonts.body
+                            .foregroundColor(DesignSystem.Colors.textSecondary)
                     }
                     
                     Spacer()
                     
                     Image(systemName: "chevron.right")
                         .font(.caption)
-                        .foregroundColor(AppColors.textSecondary)
+                        .foregroundColor(DesignSystem.Colors.textSecondary)
                 }
                 .padding()
-                .background(AppColors.cardBackground)
-                .cornerRadius(AppCornerRadius.sm)
+                .background(DesignSystem.Colors.cardBackground)
+                .cornerRadius(8) // AppCornerRadius.sm
+                .overlay(
+                    RoundedRectangle(cornerRadius: 8)
+                        .stroke(DesignSystem.Colors.border, lineWidth: 1)
+                )
             }
             .buttonStyle(PlainButtonStyle())
         }
@@ -277,42 +287,52 @@ struct ReceiptDetailView: View {
     private var notesSection: some View {
         VStack(alignment: .leading, spacing: 4) {
             Text("Notlar")
-                .font(AppFonts.caption())
-                .foregroundColor(AppColors.textSecondary)
+                .font(.caption) // AppFonts.caption
+                .foregroundColor(DesignSystem.Colors.textSecondary)
             
             TextEditor(text: Binding(
                 get: { editedReceipt.notes ?? "" },
                 set: { editedReceipt.notes = $0.isEmpty ? nil : $0 }
             ))
-            .font(AppFonts.body())
+            .font(.body) // AppFonts.body
             .frame(height: 100)
             .padding(8)
-            .background(AppColors.cardBackground)
-            .cornerRadius(AppCornerRadius.sm)
+            .scrollContentBackground(.hidden) // Fix for TextEditor background
+            .background(DesignSystem.Colors.cardBackground)
+            .cornerRadius(8) // AppCornerRadius.sm
+             .overlay(
+                RoundedRectangle(cornerRadius: 8)
+                    .stroke(DesignSystem.Colors.border, lineWidth: 1)
+            )
         }
     }
     
     // MARK: - Actions
     private var actionsSection: some View {
-        VStack(spacing: AppSpacing.sm) {
+        VStack(spacing: 8) { // AppSpacing.sm
             if receipt.status != .approved {
                 Button(action: approveReceipt) {
                     Text("Onayla ve Kaydet")
-                        .primaryButton()
+                        .fontWeight(.semibold)
+                        .frame(maxWidth: .infinity)
+                        .frame(height: 56)
+                        .background(DesignSystem.Colors.primary)
+                        .foregroundColor(.white)
+                        .cornerRadius(12) // AppCornerRadius.md
                 }
             }
             
             Button(action: { showingDeleteConfirmation = true }) {
                 Text("Fişi Sil")
-                    .font(AppFonts.headline())
-                    .foregroundColor(AppColors.error)
+                    .font(.headline) // AppFonts.headline
+                    .foregroundColor(DesignSystem.Colors.error)
                     .padding()
                     .frame(maxWidth: .infinity)
-                    .background(AppColors.error.opacity(0.1))
-                    .cornerRadius(AppCornerRadius.md)
+                    .background(DesignSystem.Colors.error.opacity(0.1))
+                    .cornerRadius(12) // AppCornerRadius.md
             }
         }
-        .padding(.top, AppSpacing.md)
+        .padding(.top, 16) // AppSpacing.md
     }
     
     // MARK: - Computed
@@ -363,12 +383,5 @@ struct ReceiptDetailView: View {
                 print("Error deleting receipt: \(error)")
             }
         }
-    }
-}
-
-// MARK: - Preview
-#Preview {
-    NavigationView {
-        ReceiptDetailView(receipt: MockData.sampleReceipts[1])
     }
 }

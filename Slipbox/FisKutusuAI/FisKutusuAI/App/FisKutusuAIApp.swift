@@ -27,7 +27,11 @@ struct RootView: View {
             if authManager.isLoading {
                 LoadingView()
             } else if authManager.user != nil {
-                MainTabView()
+                if authManager.isOnboardingCompleted {
+                    MainTabView()
+                } else {
+                    OnboardingContainerView()
+                }
             } else {
                 WelcomeView()
             }

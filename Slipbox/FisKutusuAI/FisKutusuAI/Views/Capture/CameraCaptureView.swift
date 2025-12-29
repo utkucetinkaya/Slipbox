@@ -12,7 +12,7 @@ struct CameraCaptureView: View {
     @State private var isProcessing = false
     
     var body: some View {
-        NavigationView {
+        NavigationStack {
             ZStack {
                 Color.black.ignoresSafeArea()
                 
@@ -61,7 +61,7 @@ struct CameraCaptureView: View {
     
     // MARK: - Instructions View
     private var instructionsView: some View {
-        VStack(spacing: AppSpacing.xl) {
+        VStack(spacing: 32) { // AppSpacing.xl
             Spacer()
             
             Image(systemName: "doc.viewfinder")
@@ -69,14 +69,14 @@ struct CameraCaptureView: View {
                 .foregroundColor(.white.opacity(0.8))
             
             Text("Fişi Tara")
-                .font(AppFonts.title())
+                .font(.system(size: 32, weight: .bold)) // AppFonts.title()
                 .foregroundColor(.white)
             
             Text(simulatorInstructions)
-                .font(AppFonts.body())
+                .font(.system(size: 16)) // AppFonts.body()
                 .foregroundColor(.white.opacity(0.8))
                 .multilineTextAlignment(.center)
-                .padding(.horizontal, AppSpacing.xl)
+                .padding(.horizontal, 32) // AppSpacing.xl
             
             Button(action: {
                 #if targetEnvironment(simulator)
@@ -86,9 +86,14 @@ struct CameraCaptureView: View {
                 #endif
             }) {
                 Text("Fotoğraf Seç")
-                    .primaryButton()
+                    .fontWeight(.semibold)
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 56)
+                    .background(DesignSystem.Colors.primary)
+                    .foregroundColor(.white)
+                    .cornerRadius(16)
             }
-            .padding(.horizontal, AppSpacing.xl)
+            .padding(.horizontal, 32) // AppSpacing.xl
             
             Spacer()
         }
@@ -112,10 +117,19 @@ struct CameraCaptureView: View {
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
             
             // Actions
-            HStack(spacing: AppSpacing.md) {
+            HStack(spacing: 16) { // AppSpacing.md
                 Button(action: { capturedImage = nil }) {
                     Text("Tekrar Çek")
-                        .secondaryButton()
+                        .fontWeight(.semibold)
+                        .frame(maxWidth: .infinity)
+                        .frame(height: 56)
+                        .background(DesignSystem.Colors.inputBackground)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 16)
+                                .stroke(DesignSystem.Colors.border, lineWidth: 1)
+                        )
+                        .foregroundColor(.white)
+                        .cornerRadius(16)
                 }
                 
                 Button(action: processReceipt) {
@@ -124,12 +138,17 @@ struct CameraCaptureView: View {
                             .progressViewStyle(CircularProgressViewStyle(tint: .white))
                     } else {
                         Text("Kullan")
-                            .primaryButton()
+                            .fontWeight(.semibold)
+                            .frame(maxWidth: .infinity)
+                            .frame(height: 56)
+                            .background(DesignSystem.Colors.primary)
+                            .foregroundColor(.white)
+                            .cornerRadius(16)
                     }
                 }
                 .disabled(isProcessing)
             }
-            .padding(AppSpacing.md)
+            .padding(16) // AppSpacing.md
             .background(Color.black.opacity(0.8))
         }
     }
@@ -213,12 +232,12 @@ struct CameraCaptureView: View {
         Group {
             if let message = errorMessage {
                 Text(message)
-                    .font(AppFonts.caption())
-                    .foregroundColor(AppColors.error)
-                    .padding(AppSpacing.sm)
-                    .background(AppColors.error.opacity(0.1))
-                    .cornerRadius(AppCornerRadius.sm)
-                    .padding(.horizontal, AppSpacing.md)
+                    .font(.caption)
+                    .foregroundColor(DesignSystem.Colors.error)
+                    .padding(8) // AppSpacing.sm
+                    .background(DesignSystem.Colors.error.opacity(0.1))
+                    .cornerRadius(8) // AppCornerRadius.sm
+                    .padding(.horizontal, 16) // AppSpacing.md
             }
         }
     }

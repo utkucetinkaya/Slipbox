@@ -2,10 +2,9 @@ import SwiftUI
 
 struct ReceiptCardView: View {
     let receipt: Receipt
-   
 
     var body: some View {
-        HStack(spacing: AppSpacing.md) {
+        HStack(spacing: 16) { // AppSpacing.md
             // Receipt thumbnail/icon
             receiptThumbnail
             
@@ -13,24 +12,24 @@ struct ReceiptCardView: View {
             VStack(alignment: .leading, spacing: 4) {
                 // Merchant name
                 Text(receipt.merchant ?? "Bilinmiyor")
-                    .font(AppFonts.headline())
-                    .foregroundColor(AppColors.textPrimary)
+                    .font(.headline) // AppFonts.headline
+                    .foregroundColor(DesignSystem.Colors.textPrimary)
                     .lineLimit(1)
                 
                 // Date and amount
                 HStack {
                     if let date = receipt.date {
                         Text(formatDate(date))
-                            .font(AppFonts.caption())
-                            .foregroundColor(AppColors.textSecondary)
+                            .font(.caption) // AppFonts.caption
+                            .foregroundColor(DesignSystem.Colors.textSecondary)
                     }
                     
                     Spacer()
                     
                     if let total = receipt.total {
                         Text(formatCurrency(total, currency: receipt.currency ?? "TRY"))
-                            .font(AppFonts.title2())
-                            .foregroundColor(AppColors.textPrimary)
+                            .font(.title2) // AppFonts.title2
+                            .foregroundColor(DesignSystem.Colors.textPrimary)
                             .fontWeight(.semibold)
                     }
                 }
@@ -59,22 +58,27 @@ struct ReceiptCardView: View {
             // Chevron
             Image(systemName: "chevron.right")
                 .font(.caption)
-                .foregroundColor(AppColors.textSecondary)
+                .foregroundColor(DesignSystem.Colors.textSecondary)
         }
-        .padding(AppSpacing.md)
-        .cardStyle()
+        .padding(16) // AppSpacing.md
+        .background(DesignSystem.Colors.cardBackground) // cardStyle expansion
+        .cornerRadius(12)
+        .overlay(
+            RoundedRectangle(cornerRadius: 12)
+                .stroke(DesignSystem.Colors.border, lineWidth: 1)
+        )
     }
     
     // MARK: - Thumbnail
     private var receiptThumbnail: some View {
         ZStack {
-            RoundedRectangle(cornerRadius: AppCornerRadius.sm)
-                .fill(AppColors.cardBackground)
+            RoundedRectangle(cornerRadius: 8) // AppCornerRadius.sm
+                .fill(DesignSystem.Colors.cardBackground)
                 .frame(width: 60, height: 60)
             
             Image(systemName: "doc.text.fill")
                 .font(.title2)
-                .foregroundColor(AppColors.textSecondary)
+                .foregroundColor(DesignSystem.Colors.textSecondary)
         }
     }
     
@@ -88,13 +92,13 @@ struct ReceiptCardView: View {
                     .font(.caption2)
             }
             Text(category?.name ?? categoryId)
-                .font(AppFonts.caption2())
+                .font(.caption2) // AppFonts.caption2
         }
         .foregroundColor(.white)
         .padding(.horizontal, 8)
         .padding(.vertical, 4)
-        .background(AppColors.success)
-        .cornerRadius(AppCornerRadius.sm)
+        .background(DesignSystem.Colors.success)
+        .cornerRadius(8) // AppCornerRadius.sm
     }
     
     // MARK: - Suggested Category Badge (Needs Review)
@@ -107,16 +111,16 @@ struct ReceiptCardView: View {
                     .font(.caption2)
             }
             Text(category?.name ?? categoryId)
-                .font(AppFonts.caption2())
+                .font(.caption2) // AppFonts.caption2
             Text("?")
-                .font(AppFonts.caption2())
+                .font(.caption2) // AppFonts.caption2
                 .fontWeight(.bold)
         }
         .foregroundColor(.white)
         .padding(.horizontal, 8)
         .padding(.vertical, 4)
-        .background(AppColors.warning)
-        .cornerRadius(AppCornerRadius.sm)
+        .background(DesignSystem.Colors.warning)
+        .cornerRadius(8) // AppCornerRadius.sm
     }
     
     // MARK: - Processing Badge
@@ -125,13 +129,13 @@ struct ReceiptCardView: View {
             ProgressView()
                 .scaleEffect(0.7)
             Text("İşleniyor")
-                .font(AppFonts.caption2())
+                .font(.caption2) // AppFonts.caption2
         }
         .foregroundColor(.white)
         .padding(.horizontal, 8)
         .padding(.vertical, 4)
-        .background(AppColors.statusProcessing)
-        .cornerRadius(AppCornerRadius.sm)
+        .background(Color.blue) // AppColors.statusProcessing fallback
+        .cornerRadius(8) // AppCornerRadius.sm
     }
     
     // MARK: - Error Badge
@@ -140,13 +144,13 @@ struct ReceiptCardView: View {
             Image(systemName: "exclamationmark.triangle.fill")
                 .font(.caption2)
             Text("Hata")
-                .font(AppFonts.caption2())
+                .font(.caption2) // AppFonts.caption2
         }
         .foregroundColor(.white)
         .padding(.horizontal, 8)
         .padding(.vertical, 4)
-        .background(AppColors.error)
-        .cornerRadius(AppCornerRadius.sm)
+        .background(DesignSystem.Colors.error)
+        .cornerRadius(8) // AppCornerRadius.sm
     }
     
     // MARK: - Confidence Indicator
@@ -155,7 +159,7 @@ struct ReceiptCardView: View {
         let percentage = Int(confidence * 100)
         
         return Text("\(percentage)%")
-            .font(AppFonts.caption())
+            .font(.caption) // AppFonts.caption
             .foregroundColor(confidenceColor(confidence))
             .fontWeight(.semibold)
     }
@@ -179,36 +183,11 @@ struct ReceiptCardView: View {
     
     private func confidenceColor(_ confidence: Double) -> Color {
         if confidence >= 0.8 {
-            return AppColors.success
+            return DesignSystem.Colors.success
         } else if confidence >= 0.5 {
-            return AppColors.warning
+            return DesignSystem.Colors.warning
         } else {
-            return AppColors.error
+            return DesignSystem.Colors.error
         }
     }
-}
-
-// MARK: - Preview
-#Preview("Needs Review") {
-    VStack {
-        ReceiptCardView(receipt: MockData.sampleReceipts[1])
-        ReceiptCardView(receipt: MockData.sampleReceipts[2])
-    }
-    .padding()
-}
-
-#Preview("Approved") {
-    VStack {
-        ReceiptCardView(receipt: MockData.sampleReceipts[3])
-        ReceiptCardView(receipt: MockData.sampleReceipts[4])
-    }
-    .padding()
-}
-
-#Preview("Processing & Error") {
-    VStack {
-        ReceiptCardView(receipt: MockData.sampleReceipts[0])
-        ReceiptCardView(receipt: MockData.sampleReceipts[6])
-    }
-    .padding()
 }

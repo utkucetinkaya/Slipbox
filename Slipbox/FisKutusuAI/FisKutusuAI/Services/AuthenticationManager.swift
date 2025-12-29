@@ -14,11 +14,12 @@ final class AuthenticationManager: ObservableObject {
     @Published var user: User?
     @Published var isLoading = true
     @Published var errorMessage: String?
+    @Published var isOnboardingCompleted = false
 
     private var authStateHandler: AuthStateDidChangeListenerHandle?
     private let db = Firestore.firestore()
 
-    // Sign in with Apple nonce (RAW nonce is stored here, request gets SHA256(nonce))
+    // Sign in with Apple nonce
     private var currentNonce: String?
 
     private init() {
@@ -31,19 +32,58 @@ final class AuthenticationManager: ObservableObject {
             guard let self else { return }
             Task { @MainActor in
                 self.user = user
-                self.isLoading = false
+                if let user = user {
+                    // Fetch user doc to check onboarding status
+                    await self.fetchUserStatus(uid: user.uid)
+                } else {
+                    self.isOnboardingCompleted = false
+                    self.isLoading = false
+                }
             }
         }
     }
+    
+    // MARK: - Fetch User Status
+    func fetchUserStatus(uid: String) async {
+        do {
+            let snapshot = try await db.collection("users").document(uid).getDocument()
+            if let data = snapshot.data(), let completed = data["onboardingCompleted"] as? Bool {
+                self.isOnboardingCompleted = completed
+            } else {
+                // If field missing, assume false
+                self.isOnboardingCompleted = false
+            }
+        } catch {
+            print("Error fetching user status: \(error)")
+        }
+        self.isLoading = false
+    }
+    
+    // MARK: - Update Onboarding Status
+    func completeOnboarding() async throws {
+        guard let uid = user?.uid else { return }
+        try await db.collection("users").document(uid).updateData([
+            "onboardingCompleted": true
+        ])
+        self.isOnboardingCompleted = true
+    }
+    
+    // MARK: - Reset Onboarding (Debug)
+    func resetOnboarding() async throws {
+        guard let uid = user?.uid else { return }
+        try await db.collection("users").document(uid).updateData([
+            "onboardingCompleted": false
+        ])
+        self.isOnboardingCompleted = false
+    }
 
     // MARK: - Sign In with Apple (Request Config)
-    /// Call this inside SignInWithAppleButton onRequest closure.
     func configureAppleRequest(_ request: ASAuthorizationAppleIDRequest) {
         let nonce = randomNonceString()
         currentNonce = nonce
 
         request.requestedScopes = [.fullName, .email]
-        request.nonce = sha256(nonce) // Apple wants hashed nonce
+        request.nonce = sha256(nonce)
     }
 
     // MARK: - Sign In with Apple (Completion)
@@ -54,14 +94,11 @@ final class AuthenticationManager: ObservableObject {
         }
 
         guard let rawNonce = currentNonce else {
-            // You must call configureAppleRequest(_:) before this.
             throw AuthError.invalidCredentials
         }
 
-        // Clear nonce immediately to prevent reuse
         currentNonce = nil
 
-        // ✅ Correct Firebase Apple credential (fixes your compile error)
         let firebaseCredential = OAuthProvider.appleCredential(
             withIDToken: idTokenString,
             rawNonce: rawNonce,
@@ -74,6 +111,7 @@ final class AuthenticationManager: ObservableObject {
             if result.additionalUserInfo?.isNewUser == true {
                 try await initializeNewUser(uid: result.user.uid, email: result.user.email)
             }
+            // Status will be fetched by the auth listener
         } catch {
             throw AuthError.signInFailed(error.localizedDescription)
         }
@@ -98,7 +136,7 @@ final class AuthenticationManager: ObservableObject {
         }
     }
 
-    // MARK: - Initialize New User (Spark-first: client creates user doc)
+    // MARK: - Initialize New User
     private func initializeNewUser(uid: String, email: String?) async throws {
         do {
             let userData: [String: Any] = [
@@ -106,6 +144,7 @@ final class AuthenticationManager: ObservableObject {
                 "email": email ?? "",
                 "currencyDefault": "TRY",
                 "locale": "tr-TR",
+                "onboardingCompleted": false,
                 "createdAt": FieldValue.serverTimestamp(),
                 "updatedAt": FieldValue.serverTimestamp()
             ]
@@ -137,6 +176,7 @@ final class AuthenticationManager: ObservableObject {
     func signOut() throws {
         do {
             try Auth.auth().signOut()
+            self.isOnboardingCompleted = false
         } catch {
             throw AuthError.signOutFailed(error.localizedDescription)
         }

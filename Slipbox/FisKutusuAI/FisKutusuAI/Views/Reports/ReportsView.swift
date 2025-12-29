@@ -8,9 +8,9 @@ struct ReportsView: View {
     @State private var showingExportOptions = false
     
     var body: some View {
-        NavigationView {
+        NavigationStack {
             ScrollView {
-                VStack(alignment: .leading, spacing: AppSpacing.lg) {
+                VStack(alignment: .leading, spacing: 24) { // AppSpacing.lg
                     // Month Picker
                     monthPickerSection
                     
@@ -23,7 +23,7 @@ struct ReportsView: View {
                     // Export Actions (Pro Gated)
                     exportActions
                 }
-                .padding(AppSpacing.md)
+                .padding(16) // AppSpacing.md
             }
             .navigationTitle("Raporlar")
             .navigationBarTitleDisplayMode(.large)
@@ -35,10 +35,10 @@ struct ReportsView: View {
     
     // MARK: - Month Picker
     private var monthPickerSection: some View {
-        VStack(alignment: .leading, spacing: AppSpacing.sm) {
+        VStack(alignment: .leading, spacing: 8) { // AppSpacing.sm
             Text("Dönem")
-                .font(AppFonts.caption())
-                .foregroundColor(AppColors.textSecondary)
+                .font(.caption) // AppFonts.caption
+                .foregroundColor(DesignSystem.Colors.textSecondary)
             
             DatePicker("", selection: $selectedMonth, displayedComponents: .date)
                 .datePickerStyle(.compact)
@@ -49,21 +49,26 @@ struct ReportsView: View {
                     }
                 }
         }
-        .padding(AppSpacing.md)
-        .cardStyle()
+        .padding(16) // AppSpacing.md
+        .background(DesignSystem.Colors.cardBackground)
+        .cornerRadius(12)
+        .overlay(
+            RoundedRectangle(cornerRadius: 12)
+                .stroke(DesignSystem.Colors.border, lineWidth: 1)
+        )
     }
     
     // MARK: - Summary Card
     private var summaryCard: some View {
-        HStack(spacing: AppSpacing.lg) {
+        HStack(spacing: 24) { // AppSpacing.lg
             VStack(alignment: .leading, spacing: 4) {
                 Text("Toplam Harcama")
-                    .font(AppFonts.caption())
-                    .foregroundColor(AppColors.textSecondary)
+                    .font(.caption) // AppFonts.caption
+                    .foregroundColor(DesignSystem.Colors.textSecondary)
                 
                 Text(formatCurrency(viewModel.totalAmount))
-                    .font(AppFonts.largeTitle())
-                    .foregroundColor(AppColors.primary)
+                    .font(.largeTitle) // AppFonts.largeTitle
+                    .foregroundColor(DesignSystem.Colors.primary)
                     .fontWeight(.bold)
             }
             
@@ -71,33 +76,43 @@ struct ReportsView: View {
             
             VStack(alignment: .trailing, spacing: 4) {
                 Text("Fiş Sayısı")
-                    .font(AppFonts.caption())
-                    .foregroundColor(AppColors.textSecondary)
+                    .font(.caption) // AppFonts.caption
+                    .foregroundColor(DesignSystem.Colors.textSecondary)
                 
                 Text("\(viewModel.receiptCount)")
-                    .font(AppFonts.title())
-                    .foregroundColor(AppColors.textPrimary)
-                font(.caption.weight(.black))
+                    .font(.title) // AppFonts.title -> .title
+                    .foregroundColor(DesignSystem.Colors.textPrimary)
+                    .fontWeight(.black)
             }
         }
-        .padding(AppSpacing.md)
-        .cardStyle()
+        .padding(16) // AppSpacing.md
+        .background(DesignSystem.Colors.cardBackground)
+        .cornerRadius(12)
+        .overlay(
+            RoundedRectangle(cornerRadius: 12)
+                .stroke(DesignSystem.Colors.border, lineWidth: 1)
+        )
     }
     
     // MARK: - Category Breakdown
     private var categoryBreakdown: some View {
-        VStack(alignment: .leading, spacing: AppSpacing.md) {
+        VStack(alignment: .leading, spacing: 16) { // AppSpacing.md
             Text("Kategoriye Göre")
-                .font(AppFonts.headline())
-                .foregroundColor(AppColors.textPrimary)
+                .font(.headline) // AppFonts.headline
+                .foregroundColor(DesignSystem.Colors.textPrimary)
             
             if viewModel.categoryBreakdown.isEmpty {
                 Text("Bu dönemde harcama yok")
-                    .font(AppFonts.body())
-                    .foregroundColor(AppColors.textSecondary)
-                    .padding(AppSpacing.md)
+                    .font(.body) // AppFonts.body
+                    .foregroundColor(DesignSystem.Colors.textSecondary)
+                    .padding(16) // AppSpacing.md
                     .frame(maxWidth: .infinity)
-                    .cardStyle()
+                    .background(DesignSystem.Colors.cardBackground)
+                    .cornerRadius(12)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 12)
+                            .stroke(DesignSystem.Colors.border, lineWidth: 1)
+                    )
             } else {
                 ForEach(viewModel.categoryBreakdown) { item in
                     CategoryBreakdownRow(item: item)
@@ -108,10 +123,10 @@ struct ReportsView: View {
     
     // MARK: - Export Actions
     private var exportActions: some View {
-        VStack(spacing: AppSpacing.md) {
+        VStack(spacing: 16) { // AppSpacing.md
             Text("Dışa Aktar")
-                .font(AppFonts.headline())
-                .foregroundColor(AppColors.textPrimary)
+                .font(.headline) // AppFonts.headline
+                .foregroundColor(DesignSystem.Colors.textPrimary)
                 .frame(maxWidth: .infinity, alignment: .leading)
             
             Button(action: { exportPDF() }) {
@@ -122,10 +137,15 @@ struct ReportsView: View {
                     Image(systemName: "crown.fill")
                         .foregroundColor(.orange)
                 }
-                .font(AppFonts.body())
-                .foregroundColor(AppColors.textPrimary)
+                .font(.body) // AppFonts.body
+                .foregroundColor(DesignSystem.Colors.textPrimary)
                 .padding()
-                .cardStyle()
+                .background(DesignSystem.Colors.cardBackground)
+                .cornerRadius(12)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 12)
+                        .stroke(DesignSystem.Colors.border, lineWidth: 1)
+                )
             }
             .buttonStyle(PlainButtonStyle())
             
@@ -137,10 +157,15 @@ struct ReportsView: View {
                     Image(systemName: "crown.fill")
                         .foregroundColor(.orange)
                 }
-                .font(AppFonts.body())
-                .foregroundColor(AppColors.textPrimary)
+                .font(.body) // AppFonts.body
+                .foregroundColor(DesignSystem.Colors.textPrimary)
                 .padding()
-                .cardStyle()
+                .background(DesignSystem.Colors.cardBackground)
+                .cornerRadius(12) // cardStyle manual
+                .overlay(
+                    RoundedRectangle(cornerRadius: 12)
+                        .stroke(DesignSystem.Colors.border, lineWidth: 1)
+                )
             }
             .buttonStyle(PlainButtonStyle())
             
@@ -152,10 +177,15 @@ struct ReportsView: View {
                     Image(systemName: "crown.fill")
                         .foregroundColor(.orange)
                 }
-                .font(AppFonts.body())
-                .foregroundColor(AppColors.textPrimary)
+                .font(.body) // AppFonts.body
+                .foregroundColor(DesignSystem.Colors.textPrimary)
                 .padding()
-                .cardStyle()
+                .background(DesignSystem.Colors.cardBackground)
+                .cornerRadius(12) // cardStyle manual
+                .overlay(
+                    RoundedRectangle(cornerRadius: 12)
+                        .stroke(DesignSystem.Colors.border, lineWidth: 1)
+                )
             }
             .buttonStyle(PlainButtonStyle())
         }
@@ -180,7 +210,13 @@ struct ReportsView: View {
                 popover.permittedArrowDirections = []
             }
             
-            rootVC.present(av, animated: true)
+            // Find presented VC if exists
+            var topController = rootVC
+            while let presented = topController.presentedViewController {
+                topController = presented
+            }
+            
+            topController.present(av, animated: true)
         }
     }
     
@@ -229,19 +265,19 @@ struct CategoryBreakdownRow: View {
             // Category Icon
             if let category = Category.defaults.first(where: { $0.id == item.categoryId }) {
                 Image(systemName: category.icon)
-                    .foregroundColor(AppColors.primary)
+                    .foregroundColor(DesignSystem.Colors.primary)
                     .frame(width: 32)
             }
             
             // Category Name
             VStack(alignment: .leading, spacing: 2) {
                 Text(item.categoryName)
-                    .font(AppFonts.body())
-                    .foregroundColor(AppColors.textPrimary)
+                    .font(.body) // AppFonts.body
+                    .foregroundColor(DesignSystem.Colors.textPrimary)
                 
                 Text("\(item.count) fiş")
-                    .font(AppFonts.caption())
-                    .foregroundColor(AppColors.textSecondary)
+                    .font(.caption) // AppFonts.caption
+                    .foregroundColor(DesignSystem.Colors.textSecondary)
             }
             
             Spacer()
@@ -249,16 +285,21 @@ struct CategoryBreakdownRow: View {
             // Amount
             VStack(alignment: .trailing, spacing: 2) {
                 Text(formatCurrency(item.total))
-                    .font(AppFonts.headline())
-                    .foregroundColor(AppColors.textPrimary)
+                    .font(.headline) // AppFonts.headline
+                    .foregroundColor(DesignSystem.Colors.textPrimary)
                 
                 Text("\(Int(item.percentage))%")
-                    .font(AppFonts.caption())
-                    .foregroundColor(AppColors.textSecondary)
+                    .font(.caption) // AppFonts.caption
+                    .foregroundColor(DesignSystem.Colors.textSecondary)
             }
         }
-        .padding(AppSpacing.md)
-        .cardStyle()
+        .padding(16) // AppSpacing.md
+        .background(DesignSystem.Colors.cardBackground)
+        .cornerRadius(12) // cardStyle manual
+        .overlay(
+            RoundedRectangle(cornerRadius: 12)
+                .stroke(DesignSystem.Colors.border, lineWidth: 1)
+        )
     }
     
     private func formatCurrency(_ amount: Double) -> String {

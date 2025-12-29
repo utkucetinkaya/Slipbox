@@ -46,9 +46,9 @@ struct PaywallView: View {
     }
     
     var body: some View {
-        NavigationView {
+        NavigationStack {
             ScrollView {
-                VStack(spacing: AppSpacing.xl) {
+                VStack(spacing: 32) { // AppSpacing.xl -> 32
                     // Header
                     header
                     
@@ -67,11 +67,11 @@ struct PaywallView: View {
                     // Terms
                     terms
                 }
-                .padding(AppSpacing.lg)
+                .padding(24) // AppSpacing.lg -> 24
             }
             .background(
                 LinearGradient(
-                    colors: [AppColors.primary.opacity(0.1), AppColors.cardBackground],
+                    colors: [DesignSystem.Colors.primary.opacity(0.1), DesignSystem.Colors.background],
                     startPoint: .top,
                     endPoint: .bottom
                 )
@@ -85,43 +85,49 @@ struct PaywallView: View {
                     }
                 }
             }
+            .background(DesignSystem.Colors.background.ignoresSafeArea())
         }
     }
     
     // MARK: - Header
     private var header: some View {
-        VStack(spacing: AppSpacing.md) {
+        VStack(spacing: 16) { // AppSpacing.md -> 16
             Image(systemName: "crown.fill")
                 .font(.system(size: 60))
                 .foregroundColor(.orange)
             
             Text("Pro'ya Yükselt")
-                .font(AppFonts.largeTitle())
-                .foregroundColor(AppColors.textPrimary)
+                .font(.system(size: 32, weight: .bold)) // AppFonts.largeTitle
+                .foregroundColor(DesignSystem.Colors.textPrimary)
             
             Text("Sınırsız fiş, dışa aktarma ve paylaşım")
-                .font(AppFonts.body())
-                .foregroundColor(AppColors.textSecondary)
+                .font(.system(size: 16)) // AppFonts.body
+                .foregroundColor(DesignSystem.Colors.textSecondary)
                 .multilineTextAlignment(.center)
         }
     }
     
     // MARK: - Features
     private var features: some View {
-        VStack(alignment: .leading, spacing: AppSpacing.md) {
+        VStack(alignment: .leading, spacing: 16) { // AppSpacing.md
             FeatureRow(icon: "infinity", title: "Sınırsız Fiş", description: "Aylık 20 fiş limiti kalkıyor")
             FeatureRow(icon: "doc.fill", title: "PDF Raporları", description: "Profesyonel PDF raporları oluştur")
             FeatureRow(icon: "tablecells", title: "CSV Dışa Aktar", description: "Verilerini Excel'e aktar")
             FeatureRow(icon: "link", title: "Muhasebeci Paylaş", description: "Güvenli paylaşım linkleri oluştur")
             FeatureRow(icon: "sparkles", title: "Gelecek Özellikler", description: "Yeni Pro özelliklere ilk erişim")
         }
-        .padding(AppSpacing.md)
-        .cardStyle()
+        .padding(16) // AppSpacing.md
+        .background(DesignSystem.Colors.cardBackground) // cardStyle expansion
+        .cornerRadius(16)
+        .overlay(
+            RoundedRectangle(cornerRadius: 16)
+                .stroke(DesignSystem.Colors.border, lineWidth: 1)
+        )
     }
     
     // MARK: - Plan Selection
     private var planSelection: some View {
-        VStack(spacing: AppSpacing.sm) {
+        VStack(spacing: 8) { // AppSpacing.sm -> 8
             PlanCard(plan: .monthly, isSelected: selectedPlan == .monthly) {
                 selectedPlan = .monthly
             }
@@ -140,34 +146,39 @@ struct PaywallView: View {
                     .progressViewStyle(CircularProgressViewStyle(tint: .white))
             } else {
                 Text("Devam Et")
-                    .primaryButton()
+                    .fontWeight(.semibold)
             }
         }
+        .frame(maxWidth: .infinity)
+        .frame(height: 56)
+        .background(DesignSystem.Colors.primary)
+        .foregroundColor(.white)
+        .cornerRadius(16) // manual primaryButton style
         .disabled(isPurchasing)
     }
     
     // MARK: - Footer Actions
     private var footerActions: some View {
-        VStack(spacing: AppSpacing.sm) {
+        VStack(spacing: 8) { // AppSpacing.sm
             Button("Satın Alımları Geri Yükle") {
                 restorePurchases()
             }
-            .font(AppFonts.callout())
-            .foregroundColor(AppColors.primary)
+            .font(.callout)
+            .foregroundColor(DesignSystem.Colors.primary)
             
             Button("Ücretsiz Devam Et") {
                 dismiss()
             }
-            .font(AppFonts.callout())
-            .foregroundColor(AppColors.textSecondary)
+            .font(.callout)
+            .foregroundColor(DesignSystem.Colors.textSecondary)
         }
     }
     
     // MARK: - Terms
     private var terms: some View {
         Text("Abonelik otomatik olarak yenilenir. İptal etmek için App Store ayarlarını kullanın.")
-            .font(AppFonts.caption())
-            .foregroundColor(AppColors.textSecondary)
+            .font(.caption)
+            .foregroundColor(DesignSystem.Colors.textSecondary)
             .multilineTextAlignment(.center)
     }
     
@@ -196,20 +207,20 @@ struct FeatureRow: View {
     let description: String
     
     var body: some View {
-        HStack(spacing: AppSpacing.md) {
+        HStack(spacing: 16) { // AppSpacing.md
             Image(systemName: icon)
                 .font(.title2)
-                .foregroundColor(AppColors.primary)
+                .foregroundColor(DesignSystem.Colors.primary)
                 .frame(width: 32)
             
             VStack(alignment: .leading, spacing: 2) {
                 Text(title)
-                    .font(AppFonts.headline())
-                    .foregroundColor(AppColors.textPrimary)
+                    .font(.headline)
+                    .foregroundColor(DesignSystem.Colors.textPrimary)
                 
                 Text(description)
-                    .font(AppFonts.caption())
-                    .foregroundColor(AppColors.textSecondary)
+                    .font(.caption)
+                    .foregroundColor(DesignSystem.Colors.textSecondary)
             }
             
             Spacer()
@@ -228,13 +239,13 @@ struct PlanCard: View {
             HStack {
                 VStack(alignment: .leading, spacing: 4) {
                     Text(plan.title)
-                        .font(AppFonts.headline())
-                        .foregroundColor(AppColors.textPrimary)
+                        .font(.headline)
+                        .foregroundColor(DesignSystem.Colors.textPrimary)
                     
                     if let discount = plan.discount {
                         Text(discount)
-                            .font(AppFonts.caption())
-                            .foregroundColor(AppColors.success)
+                            .font(.caption)
+                            .foregroundColor(DesignSystem.Colors.success)
                     }
                 }
                 
@@ -242,25 +253,25 @@ struct PlanCard: View {
                 
                 HStack(alignment: .firstTextBaseline, spacing: 2) {
                     Text(plan.price)
-                        .font(AppFonts.title2())
-                        .foregroundColor(AppColors.textPrimary)
+                        .font(.title2)
+                        .foregroundColor(DesignSystem.Colors.textPrimary)
                         .fontWeight(.bold)
                     
                     Text(plan.period)
-                        .font(AppFonts.caption())
-                        .foregroundColor(AppColors.textSecondary)
+                        .font(.caption)
+                        .foregroundColor(DesignSystem.Colors.textSecondary)
                 }
                 
                 Image(systemName: isSelected ? "checkmark.circle.fill" : "circle")
-                    .foregroundColor(isSelected ? AppColors.primary : AppColors.textSecondary)
+                    .foregroundColor(isSelected ? DesignSystem.Colors.primary : DesignSystem.Colors.textSecondary)
                     .font(.title3)
             }
-            .padding(AppSpacing.md)
-            .background(isSelected ? AppColors.primary.opacity(0.1) : AppColors.cardBackground)
-            .cornerRadius(AppCornerRadius.md)
+            .padding(16) // AppSpacing.md
+            .background(isSelected ? DesignSystem.Colors.primary.opacity(0.1) : DesignSystem.Colors.cardBackground)
+            .cornerRadius(12) // AppCornerRadius.md
             .overlay(
-                RoundedRectangle(cornerRadius: AppCornerRadius.md)
-                    .stroke(isSelected ? AppColors.primary : Color.clear, lineWidth: 2)
+                RoundedRectangle(cornerRadius: 12)
+                    .stroke(isSelected ? DesignSystem.Colors.primary : Color.clear, lineWidth: 2)
             )
         }
         .buttonStyle(PlainButtonStyle())

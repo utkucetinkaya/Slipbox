@@ -6,10 +6,13 @@ import Combine
 struct SettingsView: View {
     @StateObject private var viewModel = SettingsViewModel()
     @State private var showingDeleteConfirmation = false
+    @State private var showingSignOutConfirmation = false
     @State private var showingPaywall = false
+    @State private var showingError = false
+    @State private var errorMessage = ""
     
     var body: some View {
-        NavigationView {
+        NavigationStack {
             List {
                 // Subscription Section
                 subscriptionSection
@@ -19,6 +22,9 @@ struct SettingsView: View {
                 
                 // About
                 aboutSection
+                
+                // Debug (Only visible for dev/testing, but useful here)
+                debugSection
                 
                 // Danger Zone
                 dangerZoneSection
@@ -36,9 +42,28 @@ struct SettingsView: View {
             } message: {
                 Text("Hesabınız ve tüm verileriniz kalıcı olarak silinecek. Bu işlem geri alınamaz.")
             }
+            .alert("Çıkış Yap", isPresented: $showingSignOutConfirmation) {
+                Button("İptal", role: .cancel) { }
+                Button("Çıkış Yap", role: .destructive) {
+                    signOut()
+                }
+            } message: {
+                Text("Hesabınızdan çıkış yapmak istediğinize emin misiniz?")
+            }
+            .alert("Hata", isPresented: $showingError) {
+                Button("Tamam", role: .cancel) { }
+            } message: {
+                Text(errorMessage)
+            }
         }
         .task {
             await viewModel.loadSettings()
+        }
+        .onReceive(viewModel.$errorMessage) { msg in
+            if let msg = msg {
+                self.errorMessage = msg
+                self.showingError = true
+            }
         }
     }
     
@@ -48,17 +73,17 @@ struct SettingsView: View {
             HStack {
                 VStack(alignment: .leading, spacing: 4) {
                     Text(viewModel.isPro ? "SlipBox Pro" : "SlipBox Free")
-                        .font(AppFonts.headline())
-                        .foregroundColor(AppColors.textPrimary)
+                        .font(.headline) // AppFonts.headline
+                        .foregroundColor(DesignSystem.Colors.textPrimary)
                     
                     if viewModel.isPro, let expiresAt = viewModel.expiresAt {
                         Text("Bitiş: \(formatDate(expiresAt))")
-                            .font(AppFonts.caption())
-                            .foregroundColor(AppColors.textSecondary)
+                            .font(.caption) // AppFonts.caption
+                            .foregroundColor(DesignSystem.Colors.textSecondary)
                     } else {
                         Text("Sınırlı özellikler")
-                            .font(AppFonts.caption())
-                            .foregroundColor(AppColors.textSecondary)
+                            .font(.caption)
+                            .foregroundColor(DesignSystem.Colors.textSecondary)
                     }
                 }
                 
@@ -72,24 +97,24 @@ struct SettingsView: View {
                     Button("Yükselt") {
                         showingPaywall = true
                     }
-                    .font(AppFonts.callout())
+                    .font(.callout) // AppFonts.callout
                     .foregroundColor(.white)
-                    .padding(.horizontal, AppSpacing.md)
-                    .padding(.vertical, AppSpacing.xs)
-                    .background(AppColors.primary)
-                    .cornerRadius(AppCornerRadius.sm)
+                    .padding(.horizontal, 16) // AppSpacing.md
+                    .padding(.vertical, 4) // AppSpacing.xs
+                    .background(DesignSystem.Colors.primary)
+                    .cornerRadius(8) // AppCornerRadius.sm
                 }
             }
-            .padding(.vertical, AppSpacing.xs)
+            .padding(.vertical, 4) // AppSpacing.xs
             
             if !viewModel.isPro {
                 HStack {
                     Text("Bu ay kullanılan fiş:")
                     Spacer()
                     Text("\(viewModel.receiptCount) / 20")
-                        .foregroundColor(viewModel.receiptCount >= 20 ? AppColors.error : AppColors.textSecondary)
+                        .foregroundColor(viewModel.receiptCount >= 20 ? DesignSystem.Colors.error : DesignSystem.Colors.textSecondary)
                 }
-                .font(AppFonts.body())
+                .font(.body) // AppFonts.body
             }
         } header: {
             Text("Abonelik")
@@ -116,7 +141,7 @@ struct SettingsView: View {
                 Text("Dil")
                 Spacer()
                 Text("Türkçe")
-                    .foregroundColor(AppColors.textSecondary)
+                    .foregroundColor(DesignSystem.Colors.textSecondary)
             }
         } header: {
             Text("Uygulama")
@@ -132,7 +157,7 @@ struct SettingsView: View {
                     Spacer()
                     Image(systemName: "arrow.up.right")
                         .font(.caption)
-                        .foregroundColor(AppColors.textSecondary)
+                        .foregroundColor(DesignSystem.Colors.textSecondary)
                 }
             }
             
@@ -142,7 +167,7 @@ struct SettingsView: View {
                     Spacer()
                     Image(systemName: "arrow.up.right")
                         .font(.caption)
-                        .foregroundColor(AppColors.textSecondary)
+                        .foregroundColor(DesignSystem.Colors.textSecondary)
                 }
             }
             
@@ -150,22 +175,45 @@ struct SettingsView: View {
                 Text("Sürüm")
                 Spacer()
                 Text("1.0.0")
-                    .foregroundColor(AppColors.textSecondary)
+                    .foregroundColor(DesignSystem.Colors.textSecondary)
             }
         } header: {
             Text("Hakkında")
         }
     }
     
+    // MARK: - Debug Section
+    private var debugSection: some View {
+        Section {
+            Button(action: {
+                Task {
+                    await viewModel.resetOnboarding()
+                }
+            }) {
+                Text("Onboarding'i Sıfırla")
+                    .foregroundColor(DesignSystem.Colors.primary)
+            }
+        } header: {
+            Text("Geliştirici (Debug)")
+        } footer: {
+            Text("Onboarding ekranlarını tekrar görmek için kullanın.")
+        }
+    }
+    
     // MARK: - Danger Zone
     private var dangerZoneSection: some View {
         Section {
+            Button(action: { showingSignOutConfirmation = true }) {
+                Text("Çıkış Yap")
+                    .foregroundColor(DesignSystem.Colors.textPrimary)
+            }
+            
             Button(action: { showingDeleteConfirmation = true }) {
                 Text("Hesabı Sil")
-                    .foregroundColor(AppColors.error)
+                    .foregroundColor(DesignSystem.Colors.error)
             }
         } header: {
-            Text("Tehlikeli Alan")
+            Text("Hesap")
         } footer: {
             Text("Hesabınızı sildiğinizde tüm fişleriniz, raporlarınız ve ayarlarınız kalıcı olarak silinir.")
         }
@@ -180,10 +228,16 @@ struct SettingsView: View {
         return formatter.string(from: date)
     }
     
+    private func signOut() {
+        Task {
+            // Call ViewModel sign out
+            await viewModel.signOut()
+        }
+    }
+    
     private func deleteAccount() {
         Task {
             await viewModel.deleteAccount()
-            // TODO: Sign out and navigate to welcome screen
         }
     }
 }
@@ -195,6 +249,7 @@ class SettingsViewModel: ObservableObject {
     @Published var expiresAt: Date?
     @Published var receiptCount = 0
     @Published var selectedCurrency = "TRY"
+    @Published var errorMessage: String?
     
     private let db = Firestore.firestore()
     
@@ -232,6 +287,22 @@ class SettingsViewModel: ObservableObject {
         }
     }
     
+    func resetOnboarding() async {
+        do {
+            try await AuthenticationManager.shared.resetOnboarding()
+        } catch {
+            self.errorMessage = error.localizedDescription
+        }
+    }
+    
+    func signOut() async {
+        do {
+            try AuthenticationManager.shared.signOut()
+        } catch {
+            self.errorMessage = "Çıkış başarısız: \(error.localizedDescription)"
+        }
+    }
+    
     func deleteAccount() async {
         do {
             // v1: Spark-first implementation
@@ -245,7 +316,7 @@ class SettingsViewModel: ObservableObject {
             // Sign out
             try Auth.auth().signOut()
         } catch {
-            print("Error deleting account: \(error)")
+            self.errorMessage = "Hesap silinemedi. Lütfen önce çıkış yapıp tekrar giriş yapın, ardından tekrar deneyin. (Hata: \(error.localizedDescription))"
         }
     }
 }

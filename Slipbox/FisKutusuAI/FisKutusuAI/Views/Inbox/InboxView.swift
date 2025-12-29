@@ -23,7 +23,7 @@ struct InboxView: View {
     }
     
     var body: some View {
-        NavigationView {
+        NavigationStack {
             VStack(spacing: 0) {
                 // Tabs
                 tabBar
@@ -44,13 +44,12 @@ struct InboxView: View {
                     Button(action: { showingCamera = true }) {
                         Image(systemName: "plus.circle.fill")
                             .font(.title2)
-                            .foregroundColor(AppColors.primary)
+                            .foregroundColor(DesignSystem.Colors.primary)
                     }
                 }
             }
             .sheet(isPresented: $showingCamera) {
-                Text("Camera Capture View")
-                    // CameraCaptureView() // Will implement next
+                CameraCaptureView()
             }
         }
         .task {
@@ -74,25 +73,25 @@ struct InboxView: View {
                 }) {
                     VStack(spacing: 4) {
                         Text(tab.rawValue)
-                            .font(AppFonts.callout())
-                            .foregroundColor(selectedTab == tab ? AppColors.primary : AppColors.textSecondary)
+                            .font(.callout) // AppFonts.callout
+                            .foregroundColor(selectedTab == tab ? DesignSystem.Colors.primary : DesignSystem.Colors.textSecondary)
                         
                         Rectangle()
-                            .fill(selectedTab == tab ? AppColors.primary : Color.clear)
+                            .fill(selectedTab == tab ? DesignSystem.Colors.primary : Color.clear)
                             .frame(height: 2)
                     }
                 }
                 .frame(maxWidth: .infinity)
             }
         }
-        .padding(.horizontal, AppSpacing.md)
-        .background(AppColors.background)
+        .padding(.horizontal, 16) // AppSpacing.md
+        .background(DesignSystem.Colors.background)
     }
     
     // MARK: - Receipts List
     private var receiptsList: some View {
         ScrollView {
-            LazyVStack(spacing: AppSpacing.sm) {
+            LazyVStack(spacing: 8) { // AppSpacing.sm
                 ForEach(viewModel.receipts) { receipt in
                     NavigationLink(destination: ReceiptDetailView(receipt: receipt)) {
                         ReceiptCardView(receipt: receipt)
@@ -100,7 +99,7 @@ struct InboxView: View {
                     .buttonStyle(PlainButtonStyle())
                 }
             }
-            .padding(AppSpacing.md)
+            .padding(16) // AppSpacing.md
         }
         .refreshable {
             await viewModel.loadReceipts(status: selectedTab.status)
@@ -114,39 +113,44 @@ struct InboxView: View {
             ProgressView()
                 .scaleEffect(1.5)
             Text("Yükleniyor...")
-                .font(AppFonts.caption())
-                .foregroundColor(AppColors.textSecondary)
-                .padding(.top, AppSpacing.md)
+                .font(.caption) // AppFonts.caption
+                .foregroundColor(DesignSystem.Colors.textSecondary)
+                .padding(.top, 16) // AppSpacing.md
             Spacer()
         }
     }
     
     // MARK: - Empty State
     private var emptyStateView: some View {
-        VStack(spacing: AppSpacing.lg) {
+        VStack(spacing: 24) { // AppSpacing.lg
             Spacer()
             
             Image(systemName: emptyStateIcon)
                 .font(.system(size: 64))
-                .foregroundColor(AppColors.textSecondary.opacity(0.5))
+                .foregroundColor(DesignSystem.Colors.textSecondary.opacity(0.5))
             
             Text(emptyStateTitle)
-                .font(AppFonts.title2())
-                .foregroundColor(AppColors.textPrimary)
+                .font(.title2) // AppFonts.title2
+                .foregroundColor(DesignSystem.Colors.textPrimary)
             
             Text(emptyStateMessage)
-                .font(AppFonts.body())
-                .foregroundColor(AppColors.textSecondary)
+                .font(.body) // AppFonts.body
+                .foregroundColor(DesignSystem.Colors.textSecondary)
                 .multilineTextAlignment(.center)
-                .padding(.horizontal, AppSpacing.xl)
+                .padding(.horizontal, 32) // AppSpacing.xl
             
             if selectedTab == .needsReview || selectedTab == .processing {
                 Button(action: { showingCamera = true }) {
                     Text("Fiş Ekle")
-                        .primaryButton()
+                        .fontWeight(.semibold)
+                        .frame(maxWidth: .infinity)
+                        .frame(height: 56)
+                        .background(DesignSystem.Colors.primary)
+                        .foregroundColor(.white)
+                        .cornerRadius(16)
                 }
-                .padding(.horizontal, AppSpacing.xl)
-                .padding(.top, AppSpacing.md)
+                .padding(.horizontal, 32) // AppSpacing.xl
+                .padding(.top, 16) // AppSpacing.md
             }
             
             Spacer()

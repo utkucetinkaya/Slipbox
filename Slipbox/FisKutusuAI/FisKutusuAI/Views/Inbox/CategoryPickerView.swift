@@ -15,14 +15,14 @@ struct CategoryPickerView: View {
         VStack(spacing: 0) {
             // Search Bar
             SearchBar(text: $searchText)
-                .padding(AppSpacing.md)
+                .padding(16) // AppSpacing.md
             
             // Categories Grid
             ScrollView {
                 LazyVGrid(columns: [
                     GridItem(.flexible()),
                     GridItem(.flexible())
-                ], spacing: AppSpacing.md) {
+                ], spacing: 16) { // AppSpacing.md
                     ForEach(filteredCategories) { category in
                         CategoryCell(
                             category: category,
@@ -33,7 +33,7 @@ struct CategoryPickerView: View {
                         }
                     }
                 }
-                .padding(AppSpacing.md)
+                .padding(16) // AppSpacing.md
             }
         }
     }
@@ -45,23 +45,23 @@ private struct CategoryCell: View {
     let isSelected: Bool
     
     var body: some View {
-        VStack(spacing: AppSpacing.sm) {
+        VStack(spacing: 8) { // AppSpacing.sm
             Image(systemName: category.icon)
                 .font(.system(size: 32))
-                .foregroundColor(isSelected ? .white : AppColors.primary)
+                .foregroundColor(isSelected ? .white : DesignSystem.Colors.primary)
             
             Text(category.name)
-                .font(AppFonts.callout())
-                .foregroundColor(isSelected ? .white : AppColors.textPrimary)
+                .font(.callout) // AppFonts.callout()
+                .foregroundColor(isSelected ? .white : DesignSystem.Colors.textPrimary)
                 .multilineTextAlignment(.center)
         }
         .frame(height: 100)
         .frame(maxWidth: .infinity)
-        .background(isSelected ? AppColors.primary : AppColors.cardBackground)
-        .cornerRadius(AppCornerRadius.md)
+        .background(isSelected ? DesignSystem.Colors.primary : DesignSystem.Colors.cardBackground)
+        .cornerRadius(12) // AppCornerRadius.md
         .overlay(
-            RoundedRectangle(cornerRadius: AppCornerRadius.md)
-                .stroke(isSelected ? AppColors.primary : Color.clear, lineWidth: 2)
+            RoundedRectangle(cornerRadius: 12)
+                .stroke(isSelected ? DesignSystem.Colors.primary : Color.clear, lineWidth: 2)
         )
     }
 }
@@ -73,21 +73,21 @@ private struct SearchBar: View {
     var body: some View {
         HStack {
             Image(systemName: "magnifyingglass")
-                .foregroundColor(AppColors.textSecondary)
+                .foregroundColor(DesignSystem.Colors.textSecondary)
             
             TextField("Kategori Ara", text: $text)
-                .font(AppFonts.body())
+                .font(.body) // AppFonts.body()
             
             if !text.isEmpty {
                 Button(action: { text = "" }) {
                     Image(systemName: "xmark.circle.fill")
-                        .foregroundColor(AppColors.textSecondary)
+                        .foregroundColor(DesignSystem.Colors.textSecondary)
                 }
             }
         }
-        .padding(AppSpacing.sm)
-        .background(AppColors.cardBackground)
-        .cornerRadius(AppCornerRadius.sm)
+        .padding(8) // AppSpacing.sm
+        .background(DesignSystem.Colors.cardBackground)
+        .cornerRadius(8) // AppCornerRadius.sm
     }
 }
 

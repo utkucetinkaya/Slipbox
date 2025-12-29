@@ -1,0 +1,37 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Helper function to check auth
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    // User Profile
+    match /users/{userId} {
+      allow read, write: if isOwner(userId);
+      
+      // Receipts Subcollection
+      match /receipts/{receiptId} {
+        allow read, write: if isOwner(userId);
+        
+        // Optional: Validate data size (Spark Optimization)
+        // allow write: if request.resource.data.diff(resource.data).affectedKeys().hasOnly(['merchant', 'total', ...]) 
+        // && request.resource.data.rawText.size() < 4096;
+      }
+      
+      // Categories Subcollection
+      match /categories/{categoryId} {
+        allow read, write: if isOwner(userId);
+      }
+      
+      // Rules Subcollection
+      match /rules/{ruleId} {
+        allow read, write: if isOwner(userId);
+      }
+    }
+  }
+}

@@ -1,0 +1,38 @@
+{
+  "name": "slipbox-functions",
+  "version": "1.0.0",
+  "description": "Cloud Functions for SlipBox",
+  "main": "lib/index.js",
+  "scripts": {
+    "lint": "eslint --ext .js,.ts .",
+    "build": "tsc",
+    "serve": "npm run build && firebase emulators:start --only functions",
+    "shell": "npm run build && firebase functions:shell",
+    "start": "npm run shell",
+    "deploy": "firebase deploy --only functions",
+    "logs": "firebase functions:log"
+  },
+  "engines": {
+    "node": "18"
+  },
+  "dependencies": {
+    "axios": "^1.6.0",
+    "firebase-admin": "^12.0.0",
+    "firebase-functions": "^4.5.0",
+    "openai": "^4.24.0",
+    "pdfkit": "^0.14.0"
+  },
+  "devDependencies": {
+    "@types/connect": "^3.4.38",
+    "@types/express": "^5.0.6",
+    "@types/http-errors": "^2.0.5",
+    "@types/node": "^20.0.0",
+    "@types/uuid": "^10.0.0",
+    "@typescript-eslint/eslint-plugin": "^6.0.0",
+    "@typescript-eslint/parser": "^6.0.0",
+    "eslint": "^8.50.0",
+    "eslint-plugin-import": "^2.29.0",
+    "typescript": "^5.2.0"
+  },
+  "private": true
+}

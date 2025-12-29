@@ -1,0 +1,417 @@
+SlipBox Project - Handoff Document (Devam İçin Özet)
+Tarih: 2025-12-28
+Proje Adı: SlipBox (eski adı: FişKutusu AI)
+Platform: iOS (SwiftUI) + Firebase Backend
+Durum: Phase 3A tamamlandı, Firebase kurulumu ve test aşamasına geçiş hazır
+
+📌 Proje Özeti
+SlipBox Nedir?
+
+iOS expense tracking uygulaması
+Fiş fotoğrafı → OCR → otomatik kategorilendirme → raporlama
+Free tier: 20 fiş/ay, Pro: Unlimited + PDF/CSV export + share links
+Firebase backend (Cloud Functions, Firestore, Storage)
+Apple Sign-In + Email authentication
+Rebrand:
+
+Eski: "FişKutusu AI" → Yeni: "SlipBox"
+Küresel pazar için İngilizce isim
+Tüm kod ve dokümanlarda rebrand tamamlandı
+✅ Tamamlanan Fazlar
+Phase 1: Backend Infrastructure (COMPLETE ✅)
+Tamamlanan Bileşenler:
+
+✅ 9 Cloud Functions (TypeScript)
+
+initializeUser - Yeni kullanıcı kurulumu
+deleteUserData - Hesap silme + cleanup
+processReceipt - OCR + kategorilendirme (Storage trigger)
+generateExport - PDF/CSV oluşturma
+createShareLink - Muhasebeci paylaşım linki
+viewSharedExport - Public share link viewer (HTTP)
+validatePurchase - StoreKit transaction validation
+appleServerNotification - Apple webhook (HTTP)
+createReceiptUploadSession - Free tier limit check
+✅ Firestore Security Rules
+
+Server-only entitlements
+Granular field-level control
+Free tier enforcement
+✅ Storage Rules
+
+User-scoped access (receipts/{userId}/...)
+✅ Data Models (Swift + TypeScript)
+
+Receipt, UserProfile, Entitlements, Category, etc.
+✅ Firebase Hosting
+
+Landing page (
+public/index.html
+)
+Share link viewer HTML template
+Dosyalar:
+
+firebase-backend/functions/src/*.ts (8 dosya)
+firebase-backend/firestore.rules
+firebase-backend/storage.rules
+firebase-backend/firebase.json
+firebase-backend/public/index.html
+Doğrulama:
+
+TypeScript derleme: ✅ 0 hata
+npm dependencies: ✅ 491 paket yüklü
+Phase 2: Frontend UI (COMPLETE ✅)
+Tamamlanan Bileşenler:
+
+✅ Design System (
+DesignSystem.swift
+)
+
+Dark mode support
+Dynamic type
+Semantic colors + fonts
+✅ Repository Pattern
+
+ReceiptRepository protocol
+MockReceiptRepository (Phase 2)
+FirestoreReceiptRepository (Phase 3A)
+✅ Inbox System (4 views)
+
+InboxView - 3 tabs (Processing, Needs Review, Approved)
+ReceiptCardView - State-aware badges
+ReceiptDetailView - Full-screen editor
+CategoryPickerView - Grid selector
+✅ Camera Capture
+
+CameraCaptureView - Simulator-friendly (PHPicker + VNDocumentCamera)
+OCRService - Vision framework (TR/EN)
+✅ Reports
+
+ReportsView - Month picker, summary, category breakdown
+✅ Settings & Subscription
+
+SettingsView - Profile, currency, account delete
+PaywallView - Monthly/yearly plans
+✅ Onboarding
+
+OnboardingView - 3-screen carousel
+Dosyalar:
+
+FisKutusuAI/FisKutusuAI/Views/**/*.swift (13 views)
+FisKutusuAI/FisKutusuAI/Utilities/DesignSystem.swift
+FisKutusuAI/FisKutusuAI/Utilities/MockData.swift
+FisKutusuAI/FisKutusuAI/Repositories/ReceiptRepository.swift
+Özellikler:
+
+Tüm UI mock data ile çalışıyor
+Dark mode full support
+Repository pattern sayesinde Firebase swap kolay
+Phase 3A: Core Firebase Integration (COMPLETE ✅)
+Tamamlanan Bileşenler:
+
+✅ 
+FirestoreReceiptRepository.swift
+
+Correct path: users/{uid}/receipts
+orderBy: createdAt descending
+Offline persistence enabled
+✅ 
+StorageManager.swift
+
+Upload/download/delete images
+Path: receipts/{uid}/{receiptId}.jpg
+✅ 
+ReceiptUploadSessionManager.swift
+ (iOS)
+
+Free tier limit check BEFORE upload
+✅ 
+uploadSession.ts
+ (Cloud Function)
+
+App Check enforcement
+20 receipts/month limit
+Auto month reset
+✅ 
+middleware/appCheck.ts
+
+HTTP middleware for public endpoints
+Enforcer helper for Callable functions
+✅ ViewModels Firebase Entegrasyonu
+
+InboxViewModel → Real-time Firestore listeners
+CameraCaptureView → Stub-first upload flow
+ReportsViewModel → FirestoreRepository
+SettingsViewModel → Firestore entitlements fetch
+Upload Akışı (Stub-First):
+
+1. Check limit (createReceiptUploadSession)
+2. OCR text extraction
+3. Create Firestore stub (status: processing)
+4. Upload to Storage
+5. Storage triggers processReceipt Cloud Function
+6. Real-time listener updates UI
+Dosyalar:
+
+FisKutusuAI/FisKutusuAI/Repositories/FirestoreReceiptRepository.swift
+FisKutusuAI/FisKutusuAI/Services/StorageManager.swift
+FisKutusuAI/FisKutusuAI/Services/ReceiptUploadSessionManager.swift
+firebase-backend/functions/src/uploadSession.ts
+firebase-backend/functions/src/middleware/appCheck.ts
+🏗️ Mimari Kararlar
+P0 Refinements (Uygulandı)
+✅ Firestore Listener Path: collection("users").document(uid).collection("receipts") + orderBy("createdAt", descending: true)
+✅ Receipt Flow: Stub-first (Firestore → Storage), not Storage → Firestore
+✅ StoreKit: transaction.jwsRepresentation kullan (jsonRepresentation değil)
+✅ App Check: Callable functions'da 
+enforceAppCheck()
+, HTTP'de middleware
+✅ Free Limit: Upload öncesi createReceiptUploadSession() callable ile enforce
+Repository Pattern
+ViewModel → ReceiptRepository (Protocol)
+                ↓
+    [MockReceiptRepository] - Phase 2 test
+    [FirestoreReceiptRepository] - Phase 3 production
+Avantaj: Mock ↔ Firebase geçişi 1 satır kod değişikliği!
+
+Receipt State Machine
+.processing → OCR → {
+    confidence >= 0.8 → .approved
+    confidence < 0.8 → .needsReview
+    error → .error
+}
+📁 Proje Yapısı
+iosappidea/
+├── FisKutusuAI/                    # iOS App (Xcode project)
+│   └── FisKutusuAI/
+│       ├── App/
+│       │   ├── FisKutusuAIApp.swift
+│       │   └── AppDelegate.swift
+│       ├── Models/
+│       │   └── Models.swift        # Receipt, UserProfile, Entitlements
+│       ├── Views/
+│       │   ├── Auth/
+│       │   │   ├── WelcomeView.swift
+│       │   │   └── OnboardingView.swift
+│       │   ├── Inbox/
+│       │   │   ├── InboxView.swift (real-time listeners ✅)
+│       │   │   ├── ReceiptCardView.swift
+│       │   │   ├── ReceiptDetailView.swift
+│       │   │   └── CategoryPickerView.swift
+│       │   ├── Capture/
+│       │   │   └── CameraCaptureView.swift (stub-first ✅)
+│       │   ├── Reports/
+│       │   │   └── ReportsView.swift (Firestore ✅)
+│       │   ├── Settings/
+│       │   │   └── SettingsView.swift (Firestore ✅)
+│       │   ├── Subscription/
+│       │   │   └── PaywallView.swift
+│       │   └── MainTabView.swift
+│       ├── Services/
+│       │   ├── AuthenticationManager.swift
+│       │   ├── OCRService.swift
+│       │   ├── StorageManager.swift (✅)
+│       │   └── ReceiptUploadSessionManager.swift (✅)
+│       ├── Repositories/
+│       │   ├── ReceiptRepository.swift (protocol)
+│       │   ├── MockReceiptRepository.swift
+│       │   └── FirestoreReceiptRepository.swift (✅)
+│       └── Utilities/
+│           ├── DesignSystem.swift
+│           └── MockData.swift
+│
+├── firebase-backend/               # Firebase Backend
+│   ├── functions/
+│   │   ├── src/
+│   │   │   ├── index.ts
+│   │   │   ├── userManagement.ts
+│   │   │   ├── receiptProcessor.ts
+│   │   │   ├── exportGenerator.ts
+│   │   │   ├── shareLinks.ts
+│   │   │   ├── subscriptions.ts
+│   │   │   ├── uploadSession.ts (✅)
+│   │   │   └── middleware/
+│   │   │       └── appCheck.ts (✅)
+│   │   ├── package.json
+│   │   └── tsconfig.json
+│   ├── firestore.rules
+│   ├── storage.rules
+│   ├── firebase.json
+│   └── public/
+│       └── index.html              # Landing page
+│
+├── .gemini/antigravity/brain/.../  # Artifacts (planning docs)
+│   ├── task.md
+│   ├── implementation_plan.md
+│   ├── phase3_plan.md
+│   ├── phase3a_walkthrough.md
+│   └── ...
+│
+├── README.md
+├── SETUP.md
+├── FIREBASE_SETUP_GUIDE.md (✅ YENİ)
+├── TODO.md
+└── DEPLOYMENT.md
+🚧 Kalan İşler
+🔴 P0 (ÖNCELİKLİ - Firebase Kurulumu Gerekli)
+1. Firebase Project Setup
+Dosya: 
+FIREBASE_SETUP_GUIDE.md
+ (tüm adımlar mevcut)
+
+Yapılacaklar:
+
+ Firebase Console'da proje oluştur (slipbox-dev)
+ iOS app ekle, GoogleService-Info.plist indir
+ Authentication aktif et (Email + Apple)
+ Firestore + Storage oluştur
+ Cloud Functions deploy (firebase deploy --only functions)
+ Rules deploy (firebase deploy --only firestore:rules,storage:rules)
+ Hosting deploy (firebase deploy --only hosting)
+ App Check kur (debug token)
+2. Xcode Setup
+ Yeni Xcode projesi oluştur (veya mevcut projeyi aç)
+ GoogleService-Info.plist ekle
+ Firebase SDK paketleri ekle (SPM)
+ Tüm 
+.swift
+ dosyalarını projeye ekle
+ Info.plist permissions ekle (Camera, Photo Library)
+ Bundle ID: com.yourcompany.slipbox
+3. İlk Test
+ Build & Run (Simulator)
+ Email ile sign in test
+ initializeUser Cloud Function çalışıyor mu?
+ Firestore'da users/{uid} ve entitlements/{uid} oluşuyor mu?
+ Fiş upload test (galeri → OCR → Firestore → Storage)
+ Real-time listener UI'yi güncelliyor mu?
+🟡 P1 (Özellikler - Firebase Kurulu Olduktan Sonra)
+4. AuthenticationManager Completion (3A)
+Dosya: 
+FisKutusuAI/FisKutusuAI/Services/AuthenticationManager.swift
+
+Eksikler:
+
+ Apple Sign-In test (real device)
+ Email sign-in akışı test
+ Sign-out functionality ekle
+ Error handling iyileştir
+5. Cloud Functions Integration (3E)
+Dosyalar: 
+ReportsView.swift
+, 
+SettingsView.swift
+
+Yapılacaklar:
+
+ generateExport callable function'ı bağla
+ PDF download + display (PDFKit)
+ createShareLink callable function'ı bağla
+ Share sheet ile link paylaş
+ CSV export ekle
+6. StoreKit 2 (3G)
+Yeni Dosya: Services/StoreKitManager.swift
+
+Yapılacaklar:
+
+ StoreKit configuration file oluştur
+ StoreKitManager implement et
+ PaywallView purchase flow bağla
+ App Store Connect'te IAP oluştur:
+slipbox_pro_monthly (49.99 TRY)
+slipbox_pro_yearly (499.99 TRY)
+ Sandbox test
+ Restore purchases
+7. App Check Production (3F)
+ DeviceCheck provider kur (App Store Connect)
+ Production build'de DeviceCheck kullan
+ Debug/production ayırımı yap
+🎯 Hemen Devam İçin Prompt
+Yeni Antigravity Session'una Söylenmesi Gerekenler:
+
+Merhaba! SlipBox iOS expense tracking uygulaması üzerinde çalışıyoruz. 
+ŞU ANA KADAR TAMAMLANANLAR:
+✅ Phase 1: Firebase backend (9 Cloud Functions, Firestore/Storage rules)
+✅ Phase 2: Tam UI (SwiftUI, 13 view, dark mode, Repository pattern)
+✅ Phase 3A: Core Firebase integration (FirestoreRepository, real-time listeners, stub-first upload, Free tier enforcement)
+MEVCUT DURUM:
+- Tüm kod yazıldı ve 0 hata
+- Firebase projesi HENÜZ KURULMADI
+- Xcode projesi HENÜZ OLUŞTURULMADI (dosyalar hazır)
+SONRAKİ ADIM:
+1. FIREBASE_SETUP_GUIDE.md dosyasını oku (15 adımlık detaylı kurulum)
+2. Firebase Console'da proje oluştur
+3. Cloud Functions deploy et
+4. Xcode projesi oluştur ve test et
+ÖNEMLI DOSYALAR:
+- FIREBASE_SETUP_GUIDE.md - Adım adım kurulum
+- task.md - Tüm taskların listesi
+- phase3a_walkthrough.md - Son yapılanlar özeti
+- phase3_plan.md - Firebase integration planı
+DEVAM İÇİN:
+Firebase kurulumundan başlayarak test aşamasına geçmemiz gerek. 
+Sorularım varsa sor, yoksa "Devam edelim" de, Firebase kurulumuna başlayalım.
+📚 Önemli Dokümanlar (Sırayla Oku)
+FIREBASE_SETUP_GUIDE.md - Firebase kurulum rehberi (EN ÖNEMLİ)
+task.md - Tüm taskların durumu
+phase3a_walkthrough.md - Son yapılanlar detayı
+phase3_plan.md - Firebase integration stratejisi
+README.md - Proje genel bakış
+SETUP.md - Genel kurulum (Firebase öncesi)
+🔧 Teknik Detaylar
+Kullanılan Teknolojiler
+iOS:
+
+SwiftUI (iOS 16+)
+Firebase iOS SDK (11.0+)
+Vision framework (OCR)
+StoreKit 2 (IAP)
+VisionKit (Document Camera)
+Backend:
+
+Firebase Cloud Functions (Node.js 18, TypeScript)
+Firestore (NoSQL database)
+Cloud Storage (image files)
+Firebase Hosting (static site)
+App Check (security)
+Önemli Kütüphaneler
+iOS (SPM):
+
+FirebaseAuth
+FirebaseFirestore
+FirebaseStorage
+FirebaseFunctions
+FirebaseAnalytics
+FirebaseAppCheck
+Backend (npm):
+
+firebase-admin
+firebase-functions
+@types/node
+Product IDs
+Monthly: slipbox_pro_monthly
+Yearly: slipbox_pro_yearly
+Rebrand History
+Eski: FişKutusu AI
+Yeni: SlipBox
+Değişen: App name, function descriptions, landing page
+Değişmeyen: Collection names, storage paths (migration yok)
+⚠️ Bilinen Sorunlar / Notlar
+Windows npm install: Eğer PowerShell hata verirse 
+INSTALL_FIX.md
+ dosyasına bak
+Simulator Camera: Simulator'da VNDocumentCamera çalışmaz, PHPicker kullanılıyor (galeri)
+Apple Sign-In: Simulator'da test için configuration gerekli, real device önerilir
+App Check Debug Token: Her build'de değişir, Firebase Console'a eklemen gerekir
+🚀 Success Criteria (Kurulum Başarılı mı?)
+ Firebase Console'da 9 Cloud Function görünüyor
+ Firestore'da ilk kullanıcı oluştu
+ Storage'da ilk fiş görseli upload oldu
+ Real-time listener çalışıyor (fiş upload → UI güncelleme)
+ Free tier limit (20) enforce ediliyor
+ OCR Türkçe metin okuyabiliyor
+ PDF export çalışıyor (Pro user)
+ Share link oluşuyor ve açılıyor
+İyi Çalışmalar! 🎉
+
+Son güncelleme: 2025-12-28 23:35 Proje Durumu: Phase 3A Complete, Firebase Setup Ready

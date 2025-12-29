@@ -6,6 +6,15 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		B8F10DD02F01E1F8002F2DB7 /* FirebaseAnalytics in Frameworks */ = {isa = PBXBuildFile; productRef = B8F10DCF2F01E1F8002F2DB7 /* FirebaseAnalytics */; };
+		B8F10DD22F01E1F8002F2DB7 /* FirebaseAppCheck in Frameworks */ = {isa = PBXBuildFile; productRef = B8F10DD12F01E1F8002F2DB7 /* FirebaseAppCheck */; };
+		B8F10DD42F01E1F8002F2DB7 /* FirebaseAuth in Frameworks */ = {isa = PBXBuildFile; productRef = B8F10DD32F01E1F8002F2DB7 /* FirebaseAuth */; };
+		B8F10DD62F01E1F8002F2DB7 /* FirebaseCore in Frameworks */ = {isa = PBXBuildFile; productRef = B8F10DD52F01E1F8002F2DB7 /* FirebaseCore */; };
+		B8F10DD82F01E1F8002F2DB7 /* FirebaseCrashlytics in Frameworks */ = {isa = PBXBuildFile; productRef = B8F10DD72F01E1F8002F2DB7 /* FirebaseCrashlytics */; };
+		B8F10DDA2F01E1F8002F2DB7 /* FirebaseFirestore in Frameworks */ = {isa = PBXBuildFile; productRef = B8F10DD92F01E1F8002F2DB7 /* FirebaseFirestore */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXFileReference section */
 		B8FC45352F01D13B009C491E /* Slipbox.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Slipbox.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
@@ -36,6 +45,12 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				B8F10DD22F01E1F8002F2DB7 /* FirebaseAppCheck in Frameworks */,
+				B8F10DD42F01E1F8002F2DB7 /* FirebaseAuth in Frameworks */,
+				B8F10DD82F01E1F8002F2DB7 /* FirebaseCrashlytics in Frameworks */,
+				B8F10DD62F01E1F8002F2DB7 /* FirebaseCore in Frameworks */,
+				B8F10DD02F01E1F8002F2DB7 /* FirebaseAnalytics in Frameworks */,
+				B8F10DDA2F01E1F8002F2DB7 /* FirebaseFirestore in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -78,6 +93,12 @@
 			);
 			name = Slipbox;
 			packageProductDependencies = (
+				B8F10DCF2F01E1F8002F2DB7 /* FirebaseAnalytics */,
+				B8F10DD12F01E1F8002F2DB7 /* FirebaseAppCheck */,
+				B8F10DD32F01E1F8002F2DB7 /* FirebaseAuth */,
+				B8F10DD52F01E1F8002F2DB7 /* FirebaseCore */,
+				B8F10DD72F01E1F8002F2DB7 /* FirebaseCrashlytics */,
+				B8F10DD92F01E1F8002F2DB7 /* FirebaseFirestore */,
 			);
 			productName = Slipbox;
 			productReference = B8FC45352F01D13B009C491E /* Slipbox.app */;
@@ -107,6 +128,9 @@
 			);
 			mainGroup = B8FC452C2F01D13B009C491E;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				B8F10DCE2F01E1F8002F2DB7 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = B8FC45362F01D13B009C491E /* Products */;
 			projectDirPath = "";
@@ -150,7 +174,7 @@
 				INFOPLIST_FILE = Slipbox/Info.plist;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
-				INFOPLIST_KEY_UIMainStoryboardFile = Main;
+				INFOPLIST_KEY_UIMainStoryboardFile = "";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -182,7 +206,7 @@
 				INFOPLIST_FILE = Slipbox/Info.plist;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
-				INFOPLIST_KEY_UIMainStoryboardFile = Main;
+				INFOPLIST_KEY_UIMainStoryboardFile = "";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -345,6 +369,50 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		B8F10DCE2F01E1F8002F2DB7 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/firebase/firebase-ios-sdk.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 12.7.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		B8F10DCF2F01E1F8002F2DB7 /* FirebaseAnalytics */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = B8F10DCE2F01E1F8002F2DB7 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseAnalytics;
+		};
+		B8F10DD12F01E1F8002F2DB7 /* FirebaseAppCheck */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = B8F10DCE2F01E1F8002F2DB7 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseAppCheck;
+		};
+		B8F10DD32F01E1F8002F2DB7 /* FirebaseAuth */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = B8F10DCE2F01E1F8002F2DB7 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseAuth;
+		};
+		B8F10DD52F01E1F8002F2DB7 /* FirebaseCore */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = B8F10DCE2F01E1F8002F2DB7 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseCore;
+		};
+		B8F10DD72F01E1F8002F2DB7 /* FirebaseCrashlytics */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = B8F10DCE2F01E1F8002F2DB7 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseCrashlytics;
+		};
+		B8F10DD92F01E1F8002F2DB7 /* FirebaseFirestore */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = B8F10DCE2F01E1F8002F2DB7 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseFirestore;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = B8FC452D2F01D13B009C491E /* Project object */;
 }

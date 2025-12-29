@@ -1,293 +1,335 @@
 import SwiftUI
-import VisionKit
+import AVFoundation
 import PhotosUI
-import FirebaseAuth
-import FirebaseFirestore
 
 struct CameraCaptureView: View {
-    @Environment(\.dismiss) private var dismiss
-    @State private var showingDocumentCamera = false
+    var onImageCaptured: (UIImage) -> Void
+    var onDismiss: () -> Void
+    
     @State private var showingPhotoPicker = false
+    @State private var cameraService = CameraService() // Custom simple camera service wrapper
     @State private var capturedImage: UIImage?
-    @State private var isProcessing = false
     
     var body: some View {
-        NavigationStack {
-            ZStack {
-                Color.black.ignoresSafeArea()
-                
-                if let image = capturedImage {
-                    // Show captured image
-                    capturedImageView(image)
-                } else {
-                    // Show instructions
-                    instructionsView
+        ZStack {
+            // Camera Layer
+            CameraPreview(session: cameraService.session)
+                .ignoresSafeArea()
+                .onAppear {
+                    cameraService.checkPermissions()
+                    cameraService.start()
                 }
-            }
-            .navigationTitle("Fiş Ekle")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .navigationBarLeading) {
-                    Button("İptal") {
-                        dismiss()
-                    }
-                    .foregroundColor(.white)
+                .onDisappear {
+                    cameraService.stop()
                 }
-            }
-            .sheet(isPresented: $showingDocumentCamera) {
-                #if targetEnvironment(simulator)
-                // Simulator: Document camera not supported. Use gallery picker instead.
-                PhotoPickerView(selectedImage: $capturedImage)
-                #else
-                // Real device: Use VNDocumentCameraViewController
-                DocumentCameraView(image: $capturedImage, isShowing: $showingDocumentCamera)
-                #endif
-            }
-            .sheet(isPresented: $showingPhotoPicker) {
-                PhotoPickerView(selectedImage: $capturedImage)
-            }
-            .onAppear {
-                #if targetEnvironment(simulator)
-                showingPhotoPicker = true
-                #else
-                showingDocumentCamera = true
-                #endif
-            }
-        }
-        .overlay(alignment: .bottom) {
-            errorAlert
-        }
-    }
-    
-    // MARK: - Instructions View
-    private var instructionsView: some View {
-        VStack(spacing: 32) { // AppSpacing.xl
-            Spacer()
             
-            Image(systemName: "doc.viewfinder")
-                .font(.system(size: 80))
-                .foregroundColor(.white.opacity(0.8))
-            
-            Text("Fişi Tara")
-                .font(.system(size: 32, weight: .bold)) // AppFonts.title()
-                .foregroundColor(.white)
-            
-            Text(simulatorInstructions)
-                .font(.system(size: 16)) // AppFonts.body()
-                .foregroundColor(.white.opacity(0.8))
-                .multilineTextAlignment(.center)
-                .padding(.horizontal, 32) // AppSpacing.xl
-            
-            Button(action: {
-                #if targetEnvironment(simulator)
-                showingPhotoPicker = true
-                #else
-                showingDocumentCamera = true
-                #endif
-            }) {
-                Text("Fotoğraf Seç")
-                    .fontWeight(.semibold)
-                    .frame(maxWidth: .infinity)
-                    .frame(height: 56)
-                    .background(DesignSystem.Colors.primary)
-                    .foregroundColor(.white)
-                    .cornerRadius(16)
-            }
-            .padding(.horizontal, 32) // AppSpacing.xl
-            
-            Spacer()
-        }
-    }
-    
-    private var simulatorInstructions: String {
-        #if targetEnvironment(simulator)
-        return "Simulator'da galeriden fotoğraf seçebilirsiniz"
-        #else
-        return "Fişi kamera çerçevesine yerleştirin"
-        #endif
-    }
-    
-    // MARK: - Captured Image View
-    private func capturedImageView(_ image: UIImage) -> some View {
-        VStack(spacing: 0) {
-            // Image preview
-            Image(uiImage: image)
-                .resizable()
-                .aspectRatio(contentMode: .fit)
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-            
-            // Actions
-            HStack(spacing: 16) { // AppSpacing.md
-                Button(action: { capturedImage = nil }) {
-                    Text("Tekrar Çek")
-                        .fontWeight(.semibold)
-                        .frame(maxWidth: .infinity)
-                        .frame(height: 56)
-                        .background(DesignSystem.Colors.inputBackground)
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 16)
-                                .stroke(DesignSystem.Colors.border, lineWidth: 1)
-                        )
+            // Overlay Layer
+            VStack {
+                // Top Custom Bar
+                HStack {
+                    Spacer()
+                    Text("Fişi kadraja hizala")
+                        .font(.system(size: 14, weight: .medium))
                         .foregroundColor(.white)
-                        .cornerRadius(16)
+                        .padding(.horizontal, 16)
+                        .padding(.vertical, 8)
+                        .background(Color.black.opacity(0.5))
+                        .cornerRadius(20)
+                    Spacer()
                 }
+                .padding(.top, 60)
                 
-                Button(action: processReceipt) {
-                    if isProcessing {
-                        ProgressView()
-                            .progressViewStyle(CircularProgressViewStyle(tint: .white))
-                    } else {
-                        Text("Kullan")
-                            .fontWeight(.semibold)
-                            .frame(maxWidth: .infinity)
-                            .frame(height: 56)
-                            .background(DesignSystem.Colors.primary)
-                            .foregroundColor(.white)
-                            .cornerRadius(16)
+                Spacer()
+                
+                // Crop Guide Overlay (Visual only)
+                ZStack {
+                    RoundedRectangle(cornerRadius: 24)
+                        .stroke(Color.white.opacity(0.2), lineWidth: 1)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                        .padding(40)
+                    
+                    // Corner Markers
+                    VStack {
+                        HStack {
+                            CornerMarker(color: Color(hex: "4F46E5"), topLeft: true)
+                            Spacer()
+                            CornerMarker(color: Color(hex: "4F46E5"), topRight: true)
+                        }
+                        Spacer()
+                        HStack {
+                            CornerMarker(color: Color(hex: "4F46E5"), bottomLeft: true)
+                            Spacer()
+                            CornerMarker(color: Color(hex: "4F46E5"), bottomRight: true)
+                        }
                     }
+                    .padding(40)
+                    
+                    // Scanning line visual
+                    Rectangle()
+                        .fill(LinearGradient(
+                            gradient: Gradient(colors: [Color(hex: "4F46E5").opacity(0), Color(hex: "4F46E5"), Color(hex: "4F46E5").opacity(0)]),
+                            startPoint: .leading,
+                            endPoint: .trailing
+                        ))
+                        .frame(height: 2)
+                        .shadow(color: Color(hex: "4F46E5"), radius: 4)
+                        .opacity(0.5)
                 }
-                .disabled(isProcessing)
-            }
-            .padding(16) // AppSpacing.md
-            .background(Color.black.opacity(0.8))
-        }
-    }
-    
-    // MARK: - Process Receipt (On-Device / Spark-First)
-    private func processReceipt() {
-        guard let image = capturedImage,
-              let uid = Auth.auth().currentUser?.uid else { return }
-        
-        isProcessing = true
-        
-        Task {
-            do {
-                // 1. Check Free tier limit (Local check or removed for v1)
-                // For v1, we skip strict server-side enforcement. 
-                // We can add local check here if needed later.
                 
-                // 2. Extract text using OCR (On-Device)
-                let rawText = try await OCRService.shared.recognizeText(from: image)
+                Spacer()
                 
-                // 3. Parse Data (On-Device)
-                let parsedData = OCRService.shared.parseReceiptData(from: rawText)
-                
-                // 4. Suggest Category (On-Device)
-                let suggestedCategory = CategoryService.shared.suggestCategory(
-                    merchant: parsedData.merchant, 
-                    rawText: rawText
+                // Bottom Controls
+                HStack {
+                    // Gallery Button
+                    Button(action: { showingPhotoPicker = true }) {
+                        VStack(spacing: 4) {
+                            Image(systemName: "photo.on.rectangle")
+                                .font(.system(size: 24))
+                            Text("Galeriden Seç")
+                                .font(.system(size: 10))
+                        }
+                        .foregroundColor(.white)
+                    }
+                    .padding(.leading, 32)
+                    
+                    Spacer()
+                    
+                    // Capture Button
+                    Button(action: {
+                        cameraService.capturePhoto { image in
+                            if let image = image {
+                                onImageCaptured(image)
+                            }
+                        }
+                    }) {
+                        ZStack {
+                            Circle()
+                                .stroke(Color.white, lineWidth: 4)
+                                .frame(width: 80, height: 80)
+                            
+                            Circle()
+                                .fill(Color(hex: "4F46E5"))
+                                .frame(width: 70, height: 70)
+                        }
+                    }
+                    
+                    Spacer()
+                    
+                    // Close Button
+                    Button(action: onDismiss) {
+                        Image(systemName: "xmark.circle.fill")
+                            .font(.system(size: 32))
+                            .foregroundColor(.white.opacity(0.6))
+                    }
+                    .padding(.trailing, 32)
+                }
+                .padding(.bottom, 50)
+                .background(
+                    LinearGradient(colors: [.black.opacity(0), .black.opacity(0.8)], startPoint: .top, endPoint: .bottom)
+                        .ignoresSafeArea()
                 )
-                
-                // 5. Create receipt ID
-                let receiptId = UUID().uuidString
-                
-                // 6. Save Image Locally
-                let localFilename = try LocalImageManager.shared.saveImage(image: image, id: receiptId)
-                
-                // 7. Create Receipt Object
-                // Note: We use confidence 1.0 since user manually took the photo, but 
-                // if parsing is weak we might set it lower. For now assume user review needed if fields missing.
-                let status: ReceiptStatus = (parsedData.total != nil && parsedData.merchant != nil) ? .approved : .needsReview
-                
-                let receipt = Receipt(
-                    id: receiptId,
-                    status: status,
-                    imagePath: localFilename, // Changed semantics: now local filename
-                    rawText: rawText.count > 4000 ? String(rawText.prefix(4000)) : rawText, // Limit size
-                    merchant: parsedData.merchant,
-                    date: parsedData.date ?? Date(),
-                    total: parsedData.total,
-                    currency: parsedData.currency,
-                    categoryId: suggestedCategory, // Pre-fill category
-                    categorySuggestedId: suggestedCategory,
-                    confidence: 0.9,
-                    notes: nil,
-                    source: .camera,
-                    createdAt: Timestamp(date: Date()),
-                    updatedAt: Timestamp(date: Date()),
-                    error: nil
-                )
-                
-                // 8. Save Metadata to Firestore
-                try await FirestoreReceiptRepository.shared.saveReceipt(receipt)
-                
-                // Done!
-                await MainActor.run {
-                    dismiss()
-                }
-            } catch {
-                print("Error processing receipt: \(error)")
-                await MainActor.run {
-                    errorMessage = error.localizedDescription
-                    isProcessing = false
-                }
             }
         }
-    }
-    
-    // MARK: - Error Handling
-    @State private var errorMessage: String?
-    
-    private var errorAlert: some View {
-        Group {
-            if let message = errorMessage {
-                Text(message)
-                    .font(.caption)
-                    .foregroundColor(DesignSystem.Colors.error)
-                    .padding(8) // AppSpacing.sm
-                    .background(DesignSystem.Colors.error.opacity(0.1))
-                    .cornerRadius(8) // AppCornerRadius.sm
-                    .padding(.horizontal, 16) // AppSpacing.md
-            }
+        .sheet(isPresented: $showingPhotoPicker) {
+             #if targetEnvironment(simulator)
+             PhotoPickerView(selectedImage: .init(get: { nil }, set: { img in
+                 if let img = img {
+                     onImageCaptured(img)
+                 }
+             }))
+             #else
+             PhotoPickerView(selectedImage: .init(get: { nil }, set: { img in
+                 if let img = img {
+                     onImageCaptured(img)
+                 }
+             }))
+             #endif
         }
     }
 }
 
-// MARK: - Document Camera View (Real Device Only)
-#if !targetEnvironment(simulator)
-struct DocumentCameraView: UIViewControllerRepresentable {
-    @Binding var image: UIImage?
-    @Binding var isShowing: Bool
+// MARK: - Components
+
+struct CornerMarker: View {
+    let color: Color
+    var topLeft: Bool = false
+    var topRight: Bool = false
+    var bottomLeft: Bool = false
+    var bottomRight: Bool = false
     
-    func makeUIViewController(context: Context) -> VNDocumentCameraViewController {
-        let controller = VNDocumentCameraViewController()
-        controller.delegate = context.coordinator
-        return controller
-    }
-    
-    func updateUIViewController(_ uiViewController: VNDocumentCameraViewController, context: Context) {}
-    
-    func makeCoordinator() -> Coordinator {
-        Coordinator(self)
-    }
-    
-    class Coordinator: NSObject, VNDocumentCameraViewControllerDelegate {
-        let parent: DocumentCameraView
-        
-        init(_ parent: DocumentCameraView) {
-            self.parent = parent
-        }
-        
-        func documentCameraViewController(_ controller: VNDocumentCameraViewController, didFinishWith scan: VNDocumentCameraScan) {
-            if scan.pageCount > 0 {
-                parent.image = scan.imageOfPage(at: 0)
+    var body: some View {
+        Path { path in
+            let w: CGFloat = 40
+            let h: CGFloat = 40
+            let r: CGFloat = 10
+            
+            if topLeft {
+                path.move(to: CGPoint(x: 0, y: h))
+                path.addLine(to: CGPoint(x: 0, y: r))
+                path.addQuadCurve(to: CGPoint(x: r, y: 0), control: CGPoint(x: 0, y: 0))
+                path.addLine(to: CGPoint(x: w, y: 0))
+            } else if topRight {
+                path.move(to: CGPoint(x: -w, y: 0)) // Relative to frame... tricky in Path
+                // Simpler approach: Just strokes
             }
-            parent.isShowing = false
         }
-        
-        func documentCameraViewControllerDidCancel(_ controller: VNDocumentCameraViewController) {
-            parent.isShowing = false
-        }
-        
-        func documentCameraViewController(_ controller: VNDocumentCameraViewController, didFailWithError error: Error) {
-            print("Document camera error: \(error)")
-            parent.isShowing = false
-        }
+        .stroke(color, lineWidth: 4)
+        .frame(width: 40, height: 40)
+        // Actually simpler to use clear frame with overlay logic or just Images if assets existed.
+        // Let's use simple shapes for now.
+        .overlay(
+            Group {
+                if topLeft {
+                    CameraCorner(rotation: 0, color: color)
+                } else if topRight {
+                    CameraCorner(rotation: 90, color: color)
+                } else if bottomRight {
+                    CameraCorner(rotation: 180, color: color)
+                } else if bottomLeft {
+                    CameraCorner(rotation: 270, color: color)
+                }
+            }
+        )
     }
 }
-#endif
 
-// MARK: - Photo Picker View (Simulator)
+struct CameraCorner: View {
+    let rotation: Double
+    let color: Color
+    
+    var body: some View {
+        ZStack(alignment: .topLeading) {
+            RoundedRectangle(cornerRadius: 12)
+                .trim(from: 0, to: 0.25)
+                .stroke(color, style: StrokeStyle(lineWidth: 4, lineCap: .round))
+                .frame(width: 60, height: 60)
+                .rotationEffect(.degrees(rotation))
+        }
+        .frame(width: 40, height: 40) // Clip frame
+    }
+}
+
+// MARK: - Camera Service & Preview
+
+class CameraService: NSObject {
+    let session = AVCaptureSession()
+    private let output = AVCapturePhotoOutput()
+    private var captureCompletion: ((UIImage?) -> Void)?
+    
+    override init() {
+        super.init()
+        setupSession()
+    }
+    
+    func checkPermissions() {
+        switch AVCaptureDevice.authorizationStatus(for: .video) {
+        case .notDetermined:
+            AVCaptureDevice.requestAccess(for: .video) { _ in }
+        case .denied, .restricted:
+            // Handle error state
+            break
+        default: break
+        }
+    }
+    
+    func setupSession() {
+        guard let device = AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: .back),
+              let input = try? AVCaptureDeviceInput(device: device) else {
+            print("❌ Camera Error: Could not create input device")
+            return
+        }
+        
+        session.beginConfiguration()
+        // Ensure atomic commit
+        defer { session.commitConfiguration() }
+        
+        if session.canAddInput(input) {
+            session.addInput(input)
+        }
+        if session.canAddOutput(output) {
+            session.addOutput(output)
+        }
+    }
+    
+    func start() {
+        // Run on background thread to prevent UI freezing
+        DispatchQueue.global(qos: .userInitiated).async { [weak self] in
+            if let self = self, !self.session.isRunning {
+                self.session.startRunning()
+            }
+        }
+    }
+    
+    func stop() {
+        DispatchQueue.global(qos: .userInitiated).async { [weak self] in
+            if let self = self, self.session.isRunning {
+                self.session.stopRunning()
+            }
+        }
+    }
+    
+    func capturePhoto(completion: @escaping (UIImage?) -> Void) {
+        self.captureCompletion = completion
+        
+        // Check for active video connection
+        guard let connection = output.connection(with: .video), connection.isActive, connection.isEnabled else {
+            #if targetEnvironment(simulator)
+            print("📱 Simulator detected: Generating mock receipt image.")
+            let renderer = UIGraphicsImageRenderer(size: CGSize(width: 720, height: 1280))
+            let image = renderer.image { ctx in
+                UIColor.black.setFill()
+                ctx.fill(CGRect(x: 0, y: 0, width: 720, height: 1280))
+                
+                // Draw a simple receipt shape
+                UIColor.white.setFill()
+                ctx.fill(CGRect(x: 100, y: 200, width: 520, height: 800))
+                
+                // Draw dummy text
+                let attrs: [NSAttributedString.Key: Any] = [
+                    .font: UIFont.systemFont(ofSize: 40, weight: .bold),
+                    .foregroundColor: UIColor.black
+                ]
+                "MOCK RECEIPT".draw(at: CGPoint(x: 200, y: 300), withAttributes: attrs)
+            }
+            completion(image)
+            #else
+            print("❌ Camera Error: No active video connection.")
+            completion(nil)
+            #endif
+            return
+        }
+        
+        let settings = AVCapturePhotoSettings()
+        output.capturePhoto(with: settings, delegate: self)
+    }
+}
+
+extension CameraService: AVCapturePhotoCaptureDelegate {
+    func photoOutput(_ output: AVCapturePhotoOutput, didFinishProcessingPhoto photo: AVCapturePhoto, error: Error?) {
+        guard let data = photo.fileDataRepresentation(), let image = UIImage(data: data) else {
+            captureCompletion?(nil)
+            return
+        }
+        captureCompletion?(image)
+    }
+}
+
+struct CameraPreview: UIViewRepresentable {
+    let session: AVCaptureSession
+    
+    func makeUIView(context: Context) -> UIView {
+        let view = UIView(frame: UIScreen.main.bounds)
+        let previewLayer = AVCaptureVideoPreviewLayer(session: session)
+        previewLayer.frame = view.frame
+        previewLayer.videoGravity = .resizeAspectFill
+        view.layer.addSublayer(previewLayer)
+        return view
+    }
+    
+    func updateUIView(_ uiView: UIView, context: Context) {}
+}
+
+// MARK: - Photo Picker View
 struct PhotoPickerView: UIViewControllerRepresentable {
     @Binding var selectedImage: UIImage?
     @Environment(\.dismiss) private var dismiss
@@ -329,9 +371,4 @@ struct PhotoPickerView: UIViewControllerRepresentable {
             }
         }
     }
-}
-
-// MARK: - Preview
-#Preview {
-    CameraCaptureView()
 }

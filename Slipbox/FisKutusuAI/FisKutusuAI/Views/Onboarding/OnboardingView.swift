@@ -8,17 +8,17 @@ struct OnboardingView: View {
         OnboardingPage(
             title: "Fişi Çek",
             description: "Fişlerinizi saniyeler içinde tarayın. Akıllı kameramız detayları otomatik yakalar.",
-            imageName: "download-4"
+            imageName: "onboarding_scan"
         ),
         OnboardingPage(
             title: "Otomatik Kategorile",
             description: "Fişlerinizi tarayın, yapay zeka onları saniyeler içinde harcama türüne göre ayırsın.",
-            imageName: "download-5"
+            imageName: "onboarding_ai"
         ),
         OnboardingPage(
             title: "Raporla",
             description: "Harcamalarınızı grafiklerle analiz edin ve bütçenizi kontrol altında tutun.",
-            imageName: "download-6"
+            imageName: "onboarding_report"
         )
     ]
     
@@ -109,15 +109,16 @@ struct OnboardingPageView: View {
             if let uiImage = UIImage(named: page.imageName) {
                 Image(uiImage: uiImage)
                     .resizable()
-                    .aspectRatio(contentMode: .fit) // Changed to .fit for better display
+                    .aspectRatio(contentMode: .fit)
                     .frame(maxWidth: .infinity)
                     .frame(height: 350)
-                    .cornerRadius(24)
-                    .shadow(color: Color.black.opacity(0.3), radius: 20, x: 0, y: 10)
+                    .cornerRadius(48) // Extra soft rounded corners
+                    .shadow(color: DesignSystem.Colors.primary.opacity(0.3), radius: 30, x: 0, y: 0) // Glow effect
+                    .shadow(color: Color.black.opacity(0.2), radius: 20, x: 0, y: 10) // Depth shadow
                     .padding(.horizontal, 24)
             } else {
                 // Fallback
-                RoundedRectangle(cornerRadius: 24)
+                RoundedRectangle(cornerRadius: 48)
                     .fill(DesignSystem.Colors.inputBackground)
                     .frame(height: 350)
                     .padding(.horizontal, 24)

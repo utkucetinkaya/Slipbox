@@ -1,256 +1,258 @@
 import SwiftUI
-import FirebaseFirestore
-import FirebaseAuth
-import Combine
 
 struct InboxView: View {
     @StateObject private var viewModel = InboxViewModel()
-    @State private var selectedTab: ReceiptTab = .needsReview
-    @State private var showingCamera = false
-    
-    enum ReceiptTab: String, CaseIterable {
-        case processing = "Yeni"
-        case needsReview = "Onay Bekleyen"
-        case approved = "Tamam"
-        
-        var status: ReceiptStatus {
-            switch self {
-            case .processing: return .processing
-            case .needsReview: return .needsReview
-            case .approved: return .approved
-            }
-        }
-    }
+    @State private var showingAddReceipt = false
+    @State private var showingScanner = false
     
     var body: some View {
         NavigationStack {
-            VStack(spacing: 0) {
-                // Tabs
-                tabBar
-                
-                // Content
-                if viewModel.isLoading {
-                    loadingView
-                } else if viewModel.receipts.isEmpty {
-                    emptyStateView
-                } else {
-                    receiptsList
+            ZStack {
+                // Dark gradient background
+                LinearGradient(
+                    gradient: Gradient(colors: [
+                        Color(hex: "0A0A14"),
+                        Color(hex: "050511")
+                    ]),
+                    startPoint: .top,
+                    endPoint: .bottom
+                )
+                .ignoresSafeArea()
+            
+                VStack(spacing: 0) {
+                    // Header
+                    header
+                        .padding(.horizontal, 20)
+                        .padding(.top, 8)
+                    
+                    // Divider
+                    Rectangle()
+                        .fill(Color.white.opacity(0.05))
+                        .frame(height: 1)
+                        .padding(.top, 16)
+                    
+                    // Segmented Control
+                    segmentedControl
+                        .padding(.horizontal, 20)
+                        .padding(.top, 20)
+                    
+                    // Receipt List
+                    if viewModel.filteredReceipts.isEmpty {
+                        emptyState
+                    } else {
+                        receiptsList
+                    }
                 }
-            }
-            .navigationTitle("Gelen Kutusu")
-            .navigationBarTitleDisplayMode(.large)
-            .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button(action: { showingCamera = true }) {
-                        Image(systemName: "plus.circle.fill")
-                            .font(.title2)
-                            .foregroundColor(DesignSystem.Colors.primary)
+                
+                // Floating Action Button
+                VStack {
+                    Spacer()
+                    HStack {
+                        Spacer()
+                        Button(action: {
+                            showingScanner = true
+                        }) {
+                            Image(systemName: "plus")
+                                .font(.system(size: 24, weight: .semibold))
+                                .foregroundColor(.white)
+                                .frame(width: 64, height: 64)
+                                .background(Color(hex: "4F46E5"))
+                                .clipShape(Circle())
+                                .shadow(color: Color(hex: "4F46E5").opacity(0.4), radius: 20, x: 0, y: 10)
+                        }
+                        .padding(.trailing, 24)
+                        .padding(.bottom, 24)
                     }
                 }
             }
-            .sheet(isPresented: $showingCamera) {
-                CameraCaptureView()
+            .fullScreenCover(isPresented: $showingScanner) {
+                ScannerCoordinator()
             }
-        }
-        .task {
-            // Start real-time listener instead of one-time fetch
-            viewModel.startListening(status: selectedTab.status)
-        }
-        .onDisappear {
-            // Clean up listener when view disappears
-            viewModel.stopListening()
+            .navigationBarHidden(true)
         }
     }
     
-    // MARK: - Tab Bar
-    private var tabBar: some View {
-        HStack(spacing: 0) {
-            ForEach(ReceiptTab.allCases, id: \.self) { tab in
-                Button(action: {
-                    selectedTab = tab
-                    // Switch listener to new status
-                    viewModel.startListening(status: tab.status)
-                }) {
-                    VStack(spacing: 4) {
-                        Text(tab.rawValue)
-                            .font(.callout) // AppFonts.callout
-                            .foregroundColor(selectedTab == tab ? DesignSystem.Colors.primary : DesignSystem.Colors.textSecondary)
-                        
-                        Rectangle()
-                            .fill(selectedTab == tab ? DesignSystem.Colors.primary : Color.clear)
-                            .frame(height: 2)
-                    }
-                }
-                .frame(maxWidth: .infinity)
+    // MARK: - Header
+    private var header: some View {
+        HStack {
+            Text("Inbox")
+                .font(.system(size: 34, weight: .bold))
+                .foregroundColor(.white)
+            
+            Spacer()
+            
+            Button(action: {
+                // Search action
+            }) {
+                Image(systemName: "magnifyingglass")
+                    .font(.system(size: 20))
+                    .foregroundColor(.white.opacity(0.6))
             }
         }
-        .padding(.horizontal, 16) // AppSpacing.md
-        .background(DesignSystem.Colors.background)
+    }
+    
+    // MARK: - Segmented Control
+    private var segmentedControl: some View {
+        HStack(spacing: 12) {
+            segmentButton(label: "Yeni", status: .processing)
+            segmentButton(label: "Onay Bekleyen", status: .needsReview)
+            segmentButton(label: "Tamam", status: .approved)
+        }
+        .padding(4)
+        .background(Color.white.opacity(0.05))
+        .cornerRadius(20)
+    }
+    
+    private func segmentButton(label: String, status: ReceiptStatus) -> some View {
+        Button(action: {
+            withAnimation(.easeInOut(duration: 0.3)) {
+                viewModel.setFilter(viewModel.selectedFilter == status ? nil : status)
+            }
+        }) {
+            Text(label)
+                .font(.system(size: 15, weight: .medium))
+                .foregroundColor(viewModel.selectedFilter == status ? .white : .white.opacity(0.5))
+                .padding(.horizontal, 16)
+                .padding(.vertical, 10)
+                .background(
+                    Capsule()
+                        .fill(viewModel.selectedFilter == status ? Color(hex: "4F46E5") : Color.clear)
+                )
+        }
     }
     
     // MARK: - Receipts List
     private var receiptsList: some View {
-        ScrollView {
-            LazyVStack(spacing: 8) { // AppSpacing.sm
-                ForEach(viewModel.receipts) { receipt in
-                    NavigationLink(destination: ReceiptDetailView(receipt: receipt)) {
-                        ReceiptCardView(receipt: receipt)
+        List {
+            ForEach(viewModel.filteredReceipts) { receipt in
+                ZStack {
+                    // Hidden Navigation Link for Tap
+                    NavigationLink(destination: ReceiptDetailView(receipt: receipt, viewModel: viewModel)) {
+                        EmptyView()
                     }
-                    .buttonStyle(PlainButtonStyle())
+                    .opacity(0)
+                    
+                    // Visible Card
+                    ReceiptCardView(receipt: receipt)
+                }
+                .listRowSeparator(.hidden)
+                .listRowBackground(Color.clear)
+                .listRowInsets(EdgeInsets(top: 6, leading: 20, bottom: 6, trailing: 20))
+                .swipeActions(edge: .trailing, allowsFullSwipe: false) {
+                    Button(role: .destructive) {
+                        print("👉 Swipe Delete triggered for \(receipt.merchant ?? "")")
+                        withAnimation {
+                            viewModel.deleteReceipt(receipt)
+                        }
+                    } label: {
+                        Image(systemName: "trash")
+                            .font(.system(size: 24))
+                    }
+                    .tint(.red)
+                    
+                    NavigationLink(destination: ReceiptDetailView(receipt: receipt, viewModel: viewModel)) {
+                        Image(systemName: "pencil")
+                            .font(.system(size: 24))
+                    }
+                    .tint(Color(hex: "4F46E5"))
                 }
             }
-            .padding(16) // AppSpacing.md
         }
-        .refreshable {
-            await viewModel.loadReceipts(status: selectedTab.status)
-        }
-    }
-    
-    // MARK: - Loading View
-    private var loadingView: some View {
-        VStack {
-            Spacer()
-            ProgressView()
-                .scaleEffect(1.5)
-            Text("Yükleniyor...")
-                .font(.caption) // AppFonts.caption
-                .foregroundColor(DesignSystem.Colors.textSecondary)
-                .padding(.top, 16) // AppSpacing.md
-            Spacer()
-        }
+        .listStyle(.plain)
+        .scrollContentBackground(.hidden)
+        .padding(.bottom, 100)
     }
     
     // MARK: - Empty State
-    private var emptyStateView: some View {
-        VStack(spacing: 24) { // AppSpacing.lg
+    private var emptyState: some View {
+        VStack(spacing: 24) {
             Spacer()
             
-            Image(systemName: emptyStateIcon)
-                .font(.system(size: 64))
-                .foregroundColor(DesignSystem.Colors.textSecondary.opacity(0.5))
+            ZStack {
+                RoundedRectangle(cornerRadius: 24)
+                    .fill(Color(hex: "1C1C1E"))
+                    .frame(width: 200, height: 200)
+                    .rotationEffect(.degrees(-6))
+                
+                RoundedRectangle(cornerRadius: 24)
+                    .fill(Color(hex: "2C2C2E"))
+                    .frame(width: 200, height: 200)
+                    .rotationEffect(.degrees(6))
+                
+                Image(systemName: "doc.text")
+                    .font(.system(size: 80))
+                    .foregroundColor(Color(hex: "4F46E5"))
+            }
+            .padding(.bottom, 16)
             
-            Text(emptyStateTitle)
-                .font(.title2) // AppFonts.title2
-                .foregroundColor(DesignSystem.Colors.textPrimary)
+            Text("No Receipts Yet")
+                .font(.system(size: 24, weight: .bold))
+                .foregroundColor(.white)
             
-            Text(emptyStateMessage)
-                .font(.body) // AppFonts.body
-                .foregroundColor(DesignSystem.Colors.textSecondary)
+            Text("Your inbox is empty. Scan your first receipt to\nstart organizing your expenses effortlessly.")
+                .font(.system(size: 16))
+                .foregroundColor(.white.opacity(0.6))
                 .multilineTextAlignment(.center)
-                .padding(.horizontal, 32) // AppSpacing.xl
+                .padding(.horizontal, 40)
             
-            if selectedTab == .needsReview || selectedTab == .processing {
-                Button(action: { showingCamera = true }) {
-                    Text("Fiş Ekle")
-                        .fontWeight(.semibold)
-                        .frame(maxWidth: .infinity)
-                        .frame(height: 56)
-                        .background(DesignSystem.Colors.primary)
-                        .foregroundColor(.white)
-                        .cornerRadius(16)
+            Button(action: {
+                showingScanner = true
+            }) {
+                HStack {
+                    Image(systemName: "qrcode.viewfinder")
+                    Text("Scan Receipt")
                 }
-                .padding(.horizontal, 32) // AppSpacing.xl
-                .padding(.top, 16) // AppSpacing.md
+                .font(.system(size: 16, weight: .semibold))
+                .foregroundColor(.white)
+                .frame(width: 200, height: 56)
+                .background(Color(hex: "4F46E5"))
+                .cornerRadius(16)
+                .shadow(color: Color(hex: "4F46E5").opacity(0.4), radius: 20, x: 0, y: 10)
             }
+            .padding(.top, 16)
             
             Spacer()
         }
     }
-    
-    private var emptyStateIcon: String {
-        switch selectedTab {
-        case .processing: return "clock.arrow.circlepath"
-        case .needsReview: return "exclamationmark.circle"
-        case .approved: return "checkmark.circle"
-        }
-    }
-    
-    private var emptyStateTitle: String {
-        switch selectedTab {
-        case .processing: return "İşleniyor..."
-        case .needsReview: return "Onay Bekleyen Fiş Yok"
-        case .approved: return "Onaylanmış Fiş Yok"
-        }
-    }
-    
-    private var emptyStateMessage: String {
-        switch selectedTab {
-        case .processing: return "Yüklenen fişler otomatik olarak işleniyor"
-        case .needsReview: return "Onaylanması gereken fiş bulunmuyor"
-        case .approved: return "Henüz onaylanmış fiş yok. Fiş ekleyerek başlayın!"
-        }
-    }
 }
 
-// MARK: - ViewModel
-@MainActor
-class InboxViewModel: ObservableObject {
-    @Published var receipts: [Receipt] = []
-    @Published var isLoading = false
-    @Published var errorMessage: String?
+// MARK: - Add Receipt Placeholder
+struct AddReceiptPlaceholderView: View {
+    @Environment(\.dismiss) var dismiss
     
-    // Use Firestore repository (Phase 3)
-    private let repository: ReceiptRepository = FirestoreReceiptRepository.shared
-    private var listener: ListenerRegistration?
-    
-    func loadReceipts(status: ReceiptStatus) async {
-        isLoading = true
-        defer { isLoading = false }
-        
-        do {
-            receipts = try await repository.fetchReceipts(status: status)
-        } catch {
-            errorMessage = error.localizedDescription
-        }
-    }
-    
-    // Real-time listener for automatic updates
-    func startListening(status: ReceiptStatus) {
-        guard let uid = Auth.auth().currentUser?.uid else { return }
-        
-        // Remove previous listener
-        listener?.remove()
-        
-        // Create new listener with correct path + orderBy
-        listener = Firestore.firestore()
-            .collection("users")
-            .document(uid)
-            .collection("receipts")
-            .whereField("status", isEqualTo: status.rawValue)
-            .order(by: "createdAt", descending: true)
-            .addSnapshotListener { [weak self] snapshot, error in
-                guard let self = self else { return }
+    var body: some View {
+        NavigationStack {
+            ZStack {
+                Color(hex: "050511")
+                    .ignoresSafeArea()
                 
-                if let error = error {
-                    self.errorMessage = error.localizedDescription
-                    return
+                VStack(spacing: 24) {
+                    Image(systemName: "camera.fill")
+                    .font(.system(size: 64))
+                    .foregroundColor(Color(hex: "4F46E5"))
+                
+                Text("Fiş Ekleme")
+                    .font(.system(size: 24, weight: .bold))
+                    .foregroundColor(.white)
+                
+                Text("Kamera akışı burada görünecek")
+                    .font(.system(size: 16))
+                    .foregroundColor(.white.opacity(0.6))
                 }
-                
-                guard let documents = snapshot?.documents else { return }
-                self.receipts = documents.compactMap { try? $0.data(as: Receipt.self) }
             }
-    }
-    
-    func stopListening() {
-        listener?.remove()
-        listener = nil
-    }
-    
-    func deleteReceipt(id: String) async {
-        do {
-            try await repository.deleteReceipt(id: id)
-            receipts.removeAll { $0.id == id }
-        } catch {
-            errorMessage = error.localizedDescription
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button("Kapat") {
+                        dismiss()
+                    }
+                    .foregroundColor(Color(hex: "4F46E5"))
+                }
+            }
         }
-    }
-    
-    deinit {
-        listener?.remove()
     }
 }
 
-// MARK: - Preview
 #Preview {
     InboxView()
 }

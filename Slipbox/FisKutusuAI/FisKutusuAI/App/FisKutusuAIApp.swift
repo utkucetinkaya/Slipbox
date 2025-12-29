@@ -21,21 +21,24 @@ struct FisKutusuAIApp: App {
 // MARK: - Root View Router
 struct RootView: View {
     @EnvironmentObject var authManager: AuthenticationManager
+    @StateObject private var launchManager = LaunchManager.shared
     
     var body: some View {
         Group {
-            if authManager.isLoading {
-                LoadingView()
-            } else if authManager.user != nil {
-                if authManager.isOnboardingCompleted {
-                    MainTabView()
-                } else {
-                    OnboardingContainerView()
-                }
-            } else {
+            switch launchManager.state {
+            case .splash:
+                SplashView()
+            case .auth:
                 WelcomeView()
+            case .onboarding:
+                OnboardingContainerView()
+            case .permissions:
+                PermissionView()
+            case .main:
+                MainTabView()
             }
         }
+        .animation(.default, value: launchManager.state)
     }
 }
 

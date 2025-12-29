@@ -52,7 +52,6 @@ struct PermissionView: View {
                             Image(systemName: "checkmark.shield.fill")
                                 .font(.title)
                                 .foregroundColor(DesignSystem.Colors.primary)
-                                .background(Circle().fill(.white).padding(2))
                                 .offset(x: -10, y: -10)
                         }
                     }
@@ -176,9 +175,7 @@ struct PermissionView: View {
     }
     
     private func skipOnboarding() {
-        Task {
-            try? await authManager.completeOnboarding()
-        }
+        LaunchManager.shared.completePermissions()
     }
 }
 

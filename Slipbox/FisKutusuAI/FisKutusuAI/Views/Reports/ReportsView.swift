@@ -1,390 +1,347 @@
 import SwiftUI
-import Combine
-import FirebaseFirestore
 
 struct ReportsView: View {
-    @StateObject private var viewModel = ReportsViewModel()
-    @State private var selectedMonth = Date()
-    @State private var showingExportOptions = false
+    // Mock Data State
+    @State private var currentMonth = "Ekim 2023"
+    @State private var totalExpense: Double = 12450.00
+    @State private var receiptCount = 42
+    @State private var topCategory = "Gıda"
+    
+    @State private var showingPaywall = false
     
     var body: some View {
         NavigationStack {
-            ScrollView {
-                VStack(alignment: .leading, spacing: 24) { // AppSpacing.lg
-                    // Month Picker
-                    monthPickerSection
-                    
-                    // Summary Card
-                    summaryCard
-                    
-                    // Category Breakdown
-                    categoryBreakdown
-                    
-                    // Export Actions (Pro Gated)
-                    exportActions
+            ZStack {
+                // Background
+                Color(hex: "050511")
+                    .ignoresSafeArea()
+                
+                ScrollView {
+                    VStack(spacing: 24) {
+                        // Month Selector
+                        monthSelector
+                        
+                        // Summary Card
+                        summaryCard
+                        
+                        // Category Breakdown
+                        categoryBreakdown
+                        
+                        // Export Section
+                        exportSection
+                        
+                        Spacer(minLength: 40)
+                    }
+                    .padding(.horizontal, 20)
+                    .padding(.top, 10)
                 }
-                .padding(16) // AppSpacing.md
+                .scrollContentBackground(.hidden) // Fix for overscroll background
             }
             .navigationTitle("Raporlar")
-            .navigationBarTitleDisplayMode(.large)
-        }
-        .task {
-            await viewModel.loadReceipts(for: selectedMonth)
+            .navigationBarTitleDisplayMode(.inline)
+            .sheet(isPresented: $showingPaywall) {
+                PaywallView()
+            }
         }
     }
     
-    // MARK: - Month Picker
-    private var monthPickerSection: some View {
-        VStack(alignment: .leading, spacing: 8) { // AppSpacing.sm
-            Text("Dönem")
-                .font(.caption) // AppFonts.caption
-                .foregroundColor(DesignSystem.Colors.textSecondary)
+    // MARK: - Month Selector
+    private var monthSelector: some View {
+        HStack {
+            Button(action: {}) {
+                Image(systemName: "chevron.left")
+                    .foregroundColor(.white.opacity(0.6))
+            }
             
-            DatePicker("", selection: $selectedMonth, displayedComponents: .date)
-                .datePickerStyle(.compact)
-                .labelsHidden()
-                .onChange(of: selectedMonth) { newMonth in
-                    Task {
-                        await viewModel.loadReceipts(for: newMonth)
-                    }
-                }
+            Spacer()
+            
+            Text(currentMonth)
+                .font(.system(size: 16, weight: .medium))
+                .foregroundColor(.white)
+            
+            Spacer()
+            
+            Button(action: {}) {
+                Image(systemName: "chevron.right")
+                    .foregroundColor(.white.opacity(0.6))
+            }
         }
-        .padding(16) // AppSpacing.md
-        .background(DesignSystem.Colors.cardBackground)
+        .padding()
+        .background(Color(hex: "1C1C1E"))
         .cornerRadius(12)
-        .overlay(
-            RoundedRectangle(cornerRadius: 12)
-                .stroke(DesignSystem.Colors.border, lineWidth: 1)
-        )
     }
     
     // MARK: - Summary Card
     private var summaryCard: some View {
-        HStack(spacing: 24) { // AppSpacing.lg
+        VStack(alignment: .leading, spacing: 16) {
             VStack(alignment: .leading, spacing: 4) {
-                Text("Toplam Harcama")
-                    .font(.caption) // AppFonts.caption
-                    .foregroundColor(DesignSystem.Colors.textSecondary)
+                Text("Toplam Gider")
+                    .font(.system(size: 14))
+                    .foregroundColor(.white.opacity(0.6))
                 
-                Text(formatCurrency(viewModel.totalAmount))
-                    .font(.largeTitle) // AppFonts.largeTitle
-                    .foregroundColor(DesignSystem.Colors.primary)
-                    .fontWeight(.bold)
+                Text(formatCurrency(totalExpense))
+                    .font(.system(size: 34, weight: .bold))
+                    .foregroundColor(Color(hex: "4F46E5"))
             }
+            .padding(.bottom, 8)
             
-            Spacer()
-            
-            VStack(alignment: .trailing, spacing: 4) {
-                Text("Fiş Sayısı")
-                    .font(.caption) // AppFonts.caption
-                    .foregroundColor(DesignSystem.Colors.textSecondary)
+            HStack(spacing: 16) {
+                // Receipt Count
+                VStack(alignment: .leading, spacing: 8) {
+                    Circle()
+                        .fill(Color(hex: "FFCC00").opacity(0.2))
+                        .frame(width: 32, height: 32)
+                        .overlay(
+                            Image(systemName: "doc.text.fill")
+                                .font(.system(size: 14))
+                                .foregroundColor(Color(hex: "FFCC00"))
+                        )
+                    
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Fiş Sayısı")
+                            .font(.system(size: 12))
+                            .foregroundColor(.white.opacity(0.6))
+                        Text("\(receiptCount)")
+                            .font(.system(size: 18, weight: .semibold))
+                            .foregroundColor(.white)
+                    }
+                }
+                .padding()
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .background(Color(hex: "2C2C2E"))
+                .cornerRadius(16)
                 
-                Text("\(viewModel.receiptCount)")
-                    .font(.title) // AppFonts.title -> .title
-                    .foregroundColor(DesignSystem.Colors.textPrimary)
-                    .fontWeight(.black)
+                // Top Category
+                VStack(alignment: .leading, spacing: 8) {
+                    Circle()
+                        .fill(Color(hex: "34C759").opacity(0.2))
+                        .frame(width: 32, height: 32)
+                        .overlay(
+                            Image(systemName: "cart.fill")
+                                .font(.system(size: 14))
+                                .foregroundColor(Color(hex: "34C759"))
+                        )
+                    
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("En Çok")
+                            .font(.system(size: 12))
+                            .foregroundColor(.white.opacity(0.6))
+                        Text(topCategory)
+                            .font(.system(size: 18, weight: .semibold))
+                            .foregroundColor(.white)
+                    }
+                }
+                .padding()
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .background(Color(hex: "2C2C2E"))
+                .cornerRadius(16)
             }
         }
-        .padding(16) // AppSpacing.md
-        .background(DesignSystem.Colors.cardBackground)
-        .cornerRadius(12)
-        .overlay(
-            RoundedRectangle(cornerRadius: 12)
-                .stroke(DesignSystem.Colors.border, lineWidth: 1)
-        )
+        .padding(20)
+        .background(Color(hex: "1C1C1E"))
+        .cornerRadius(24)
     }
     
     // MARK: - Category Breakdown
     private var categoryBreakdown: some View {
-        VStack(alignment: .leading, spacing: 16) { // AppSpacing.md
-            Text("Kategoriye Göre")
-                .font(.headline) // AppFonts.headline
-                .foregroundColor(DesignSystem.Colors.textPrimary)
+        VStack(alignment: .leading, spacing: 16) {
+            HStack {
+                Text("Kategori Detayı")
+                    .font(.system(size: 18, weight: .semibold))
+                    .foregroundColor(.white)
+                
+                Spacer()
+                
+                NavigationLink(destination: AllCategoriesView()) {
+                    Text("Tümü")
+                        .font(.system(size: 14))
+                        .foregroundColor(Color(hex: "4F46E5"))
+                }
+            }
             
-            if viewModel.categoryBreakdown.isEmpty {
-                Text("Bu dönemde harcama yok")
-                    .font(.body) // AppFonts.body
-                    .foregroundColor(DesignSystem.Colors.textSecondary)
-                    .padding(16) // AppSpacing.md
-                    .frame(maxWidth: .infinity)
-                    .background(DesignSystem.Colors.cardBackground)
-                    .cornerRadius(12)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 12)
-                            .stroke(DesignSystem.Colors.border, lineWidth: 1)
-                    )
-            } else {
-                ForEach(viewModel.categoryBreakdown) { item in
-                    CategoryBreakdownRow(item: item)
+            VStack(spacing: 12) {
+                CategoryRow(name: "Market", amount: 4200.00, count: 14, percent: 0.35, color: Color(hex: "4F46E5"))
+                CategoryRow(name: "Ulaşım", amount: 2100.00, count: 8, percent: 0.17, color: Color(hex: "A855F7"))
+                CategoryRow(name: "Eğlence", amount: 1500.00, count: 5, percent: 0.12, color: Color(hex: "FF3B30"))
+            }
+        }
+    }
+    
+    // MARK: - Export Section
+    private var exportSection: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            HStack {
+                Image(systemName: "star.fill")
+                    .foregroundColor(Color(hex: "FFCC00"))
+                Text("Dışa Aktar")
+                    .font(.system(size: 18, weight: .semibold))
+                    .foregroundColor(.white)
+            }
+            
+            HStack(spacing: 16) {
+                Button(action: { showingPaywall = true }) {
+                    ExportButtonContent(title: "PDF İndir", icon: "doc.text.fill", color: Color(hex: "FF3B30"))
+                }
+                
+                Button(action: { showingPaywall = true }) {
+                    ExportButtonContent(title: "CSV İndir", icon: "tablecells.fill", color: Color(hex: "34C759"))
                 }
             }
         }
     }
     
-    // MARK: - Export Actions
-    private var exportActions: some View {
-        VStack(spacing: 16) { // AppSpacing.md
-            Text("Dışa Aktar")
-                .font(.headline) // AppFonts.headline
-                .foregroundColor(DesignSystem.Colors.textPrimary)
-                .frame(maxWidth: .infinity, alignment: .leading)
-            
-            Button(action: { exportPDF() }) {
-                HStack {
-                    Image(systemName: "doc.fill")
-                    Text("PDF İndir")
-                    Spacer()
-                    Image(systemName: "crown.fill")
-                        .foregroundColor(.orange)
-                }
-                .font(.body) // AppFonts.body
-                .foregroundColor(DesignSystem.Colors.textPrimary)
-                .padding()
-                .background(DesignSystem.Colors.cardBackground)
-                .cornerRadius(12)
-                .overlay(
-                    RoundedRectangle(cornerRadius: 12)
-                        .stroke(DesignSystem.Colors.border, lineWidth: 1)
-                )
-            }
-            .buttonStyle(PlainButtonStyle())
-            
-            Button(action: { exportCSV() }) {
-                HStack {
-                    Image(systemName: "tablecells")
-                    Text("CSV İndir")
-                    Spacer()
-                    Image(systemName: "crown.fill")
-                        .foregroundColor(.orange)
-                }
-                .font(.body) // AppFonts.body
-                .foregroundColor(DesignSystem.Colors.textPrimary)
-                .padding()
-                .background(DesignSystem.Colors.cardBackground)
-                .cornerRadius(12) // cardStyle manual
-                .overlay(
-                    RoundedRectangle(cornerRadius: 12)
-                        .stroke(DesignSystem.Colors.border, lineWidth: 1)
-                )
-            }
-            .buttonStyle(PlainButtonStyle())
-            
-            Button(action: { createShareLink() }) {
-                HStack {
-                    Image(systemName: "link")
-                    Text("Muhasebeci Linki")
-                    Spacer()
-                    Image(systemName: "crown.fill")
-                        .foregroundColor(.orange)
-                }
-                .font(.body) // AppFonts.body
-                .foregroundColor(DesignSystem.Colors.textPrimary)
-                .padding()
-                .background(DesignSystem.Colors.cardBackground)
-                .cornerRadius(12) // cardStyle manual
-                .overlay(
-                    RoundedRectangle(cornerRadius: 12)
-                        .stroke(DesignSystem.Colors.border, lineWidth: 1)
-                )
-            }
-            .buttonStyle(PlainButtonStyle())
-        }
-    }
-    
-    // MARK: - Actions
-    @State private var shareURL: URL?
-    
-    // Helper to open Share Sheet
-    private func shareFile(url: URL) {
-        shareURL = url
-        let av = UIActivityViewController(activityItems: [url], applicationActivities: nil)
-        
-        // Find topmost view controller to present
-        if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
-           let rootVC = windowScene.windows.first?.rootViewController {
-            
-            // iPad support
-            if let popover = av.popoverPresentationController {
-                popover.sourceView = rootVC.view
-                popover.sourceRect = CGRect(x: rootVC.view.bounds.midX, y: rootVC.view.bounds.midY, width: 0, height: 0)
-                popover.permittedArrowDirections = []
-            }
-            
-            // Find presented VC if exists
-            var topController = rootVC
-            while let presented = topController.presentedViewController {
-                topController = presented
-            }
-            
-            topController.present(av, animated: true)
-        }
-    }
-    
-    private func exportPDF() {
-        // Enforce Pro check locally if needed (StoreKit)
-        // For now just generate
-        let monthName = DateFormatter().monthSymbols[Calendar.current.component(.month, from: selectedMonth) - 1]
-        
-        if let url = ExportService.shared.generatePDF(receipts: viewModel.receipts, month: monthName) {
-            shareFile(url: url)
-        }
-    }
-    
-    private func exportCSV() {
-         let monthName = DateFormatter().monthSymbols[Calendar.current.component(.month, from: selectedMonth) - 1]
-        
-        if let url = ExportService.shared.generateCSV(receipts: viewModel.receipts, month: monthName) {
-            shareFile(url: url)
-        }
-    }
-    
-    private func createShareLink() {
-        // v1: Removed or simply share CSV file as "link" alternative
-         let monthName = DateFormatter().monthSymbols[Calendar.current.component(.month, from: selectedMonth) - 1]
-        
-        if let url = ExportService.shared.generatePDF(receipts: viewModel.receipts, month: monthName) {
-             shareFile(url: url)
-        }
-    }
-    
-    private func formatCurrency(_ amount: Double) -> String {
-        let formatter = NumberFormatter()
-        formatter.numberStyle = .currency
-        formatter.currencyCode = "TRY"
-        formatter.locale = Locale(identifier: "tr-TR")
-        return formatter.string(from: NSNumber(value: amount)) ?? "\(amount) TL"
-    }
+    // ... formatCurrency unchanged ...
 }
 
-// MARK: - Category Breakdown Row
-struct CategoryBreakdownRow: View {
-    let item: CategoryBreakdownItem
+// ... CategoryRow unchanged ...
+
+struct ExportButtonContent: View {
+    let title: String
+    let icon: String
+    let color: Color
     
     var body: some View {
         HStack {
-            // Category Icon
-            if let category = Category.defaults.first(where: { $0.id == item.categoryId }) {
-                Image(systemName: category.icon)
-                    .foregroundColor(DesignSystem.Colors.primary)
-                    .frame(width: 32)
-            }
+            Circle()
+                .fill(color.opacity(0.2))
+                .frame(width: 32, height: 32)
+                .overlay(
+                    Image(systemName: icon)
+                        .foregroundColor(color)
+                        .font(.system(size: 14))
+                )
             
-            // Category Name
-            VStack(alignment: .leading, spacing: 2) {
-                Text(item.categoryName)
-                    .font(.body) // AppFonts.body
-                    .foregroundColor(DesignSystem.Colors.textPrimary)
-                
-                Text("\(item.count) fiş")
-                    .font(.caption) // AppFonts.caption
-                    .foregroundColor(DesignSystem.Colors.textSecondary)
-            }
+            Text(title)
+                .font(.system(size: 14, weight: .semibold))
+                .foregroundColor(.white)
             
             Spacer()
             
-            // Amount
-            VStack(alignment: .trailing, spacing: 2) {
-                Text(formatCurrency(item.total))
-                    .font(.headline) // AppFonts.headline
-                    .foregroundColor(DesignSystem.Colors.textPrimary)
-                
-                Text("\(Int(item.percentage))%")
-                    .font(.caption) // AppFonts.caption
-                    .foregroundColor(DesignSystem.Colors.textSecondary)
-            }
+            Image(systemName: "lock.fill")
+                .font(.system(size: 12))
+                .foregroundColor(Color(hex: "FFCC00"))
         }
-        .padding(16) // AppSpacing.md
-        .background(DesignSystem.Colors.cardBackground)
-        .cornerRadius(12) // cardStyle manual
-        .overlay(
-            RoundedRectangle(cornerRadius: 12)
-                .stroke(DesignSystem.Colors.border, lineWidth: 1)
-        )
+        .padding()
+        .background(Color(hex: "1C1C1E"))
+        .cornerRadius(16)
     }
+}
     
-    private func formatCurrency(_ amount: Double) -> String {
+    private func formatCurrency(_ value: Double) -> String {
         let formatter = NumberFormatter()
         formatter.numberStyle = .currency
         formatter.currencyCode = "TRY"
-        formatter.locale = Locale(identifier: "tr-TR")
-        return formatter.string(from: NSNumber(value: amount)) ?? "\(amount) TL"
+        formatter.locale = Locale(identifier: "tr_TR")
+        formatter.minimumFractionDigits = 2
+        return formatter.string(from: NSNumber(value: value)) ?? "₺0,00"
     }
-}
 
-// MARK: - ViewModel
-@MainActor
-class ReportsViewModel: ObservableObject {
-    @Published var receipts: [Receipt] = []
-    @Published var totalAmount: Double = 0
-    @Published var receiptCount: Int = 0
-    @Published var categoryBreakdown: [CategoryBreakdownItem] = []
-    
-    // Use Firestore repository (Phase 3)
-    private let repository: ReceiptRepository = FirestoreReceiptRepository.shared
-    
-    func loadReceipts(for month: Date) async {
-        do {
-            // Fetch all approved receipts
-            let allReceipts = try await repository.fetchReceipts(status: .approved)
-            
-            // Filter by month
-            let calendar = Calendar.current
-            receipts = allReceipts.filter { receipt in
-                guard let receiptDate = receipt.date else { return false }
-                return calendar.isDate(receiptDate, equalTo: month, toGranularity: .month)
-            }
-            
-            // Calculate summary
-            receiptCount = receipts.count
-            totalAmount = receipts.compactMap { $0.total }.reduce(0, +)
-            
-            // Calculate category breakdown
-            calculateCategoryBreakdown()
-        } catch {
-            print("Error loading receipts: \(error)")
-        }
-    }
-    
-    private func calculateCategoryBreakdown() {
-        var breakdown: [String: (count: Int, total: Double)] = [:]
-        
-        for receipt in receipts {
-            guard let categoryId = receipt.categoryId,
-                  let total = receipt.total else { continue }
-            
-            if var existing = breakdown[categoryId] {
-                existing.count += 1
-                existing.total += total
-                breakdown[categoryId] = existing
-            } else {
-                breakdown[categoryId] = (count: 1, total: total)
-            }
-        }
-        
-        categoryBreakdown = breakdown.map { categoryId, data in
-            let category = Category.defaults.first { $0.id == categoryId }
-            return CategoryBreakdownItem(
-                categoryId: categoryId,
-                categoryName: category?.name ?? categoryId,
-                count: data.count,
-                total: data.total,
-                percentage: totalAmount > 0 ? (data.total / totalAmount) * 100 : 0
-            )
-        }.sorted { $0.total > $1.total }
-    }
-}
-
-// MARK: - Models
-struct CategoryBreakdownItem: Identifiable {
-    let id = UUID()
-    let categoryId: String
-    let categoryName: String
+struct CategoryRow: View {
+    let name: String
+    let amount: Double
     let count: Int
-    let total: Double
-    let percentage: Double
+    let percent: Double
+    let color: Color
+    
+    var body: some View {
+        VStack(spacing: 12) {
+            HStack {
+                Circle()
+                    .fill(color.opacity(0.2))
+                    .frame(width: 40, height: 40)
+                    .overlay(
+                        Image(systemName: "bag.fill") // Generic icon for now
+                            .foregroundColor(color)
+                    )
+                
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(name)
+                        .font(.system(size: 16, weight: .medium))
+                        .foregroundColor(.white)
+                    Text("\(count) Fiş")
+                        .font(.system(size: 12))
+                        .foregroundColor(.white.opacity(0.6))
+                }
+                
+                Spacer()
+                
+                Text(formatCurrency(amount))
+                    .font(.system(size: 16, weight: .bold))
+                    .foregroundColor(.white)
+            }
+            
+            // Progress Bar
+            HStack {
+                GeometryReader { geometry in
+                    ZStack(alignment: .leading) {
+                        Capsule()
+                            .fill(Color(hex: "2C2C2E"))
+                            .frame(height: 6)
+                        
+                        Capsule()
+                            .fill(color)
+                            .frame(width: geometry.size.width * CGFloat(percent), height: 6)
+                    }
+                }
+                .frame(height: 6)
+                
+                Text("%\(Int(percent * 100))")
+                    .font(.system(size: 12))
+                    .foregroundColor(.white.opacity(0.6))
+                    .frame(width: 30, alignment: .trailing)
+            }
+        }
+        .padding()
+        .background(Color(hex: "1C1C1E"))
+        .cornerRadius(16)
+    }
+    
+    private func formatCurrency(_ value: Double) -> String {
+        let formatter = NumberFormatter()
+        formatter.numberStyle = .currency
+        formatter.currencyCode = "TRY"
+        formatter.locale = Locale(identifier: "tr_TR")
+        formatter.minimumFractionDigits = 2
+        return formatter.string(from: NSNumber(value: value)) ?? "₺0,00"
+    }
 }
 
-// MARK: - Preview
+struct ExportButton: View {
+    let title: String
+    let icon: String
+    let color: Color
+    
+    var body: some View {
+        Button(action: {
+            // Stub action
+        }) {
+            HStack {
+                Circle()
+                    .fill(color.opacity(0.2))
+                    .frame(width: 32, height: 32)
+                    .overlay(
+                        Image(systemName: icon)
+                            .foregroundColor(color)
+                            .font(.system(size: 14))
+                    )
+                
+                Text(title)
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundColor(.white)
+                
+                Spacer()
+                
+                Image(systemName: "lock.fill")
+                    .font(.system(size: 12))
+                    .foregroundColor(Color(hex: "FFCC00"))
+            }
+            .padding()
+            .background(Color(hex: "1C1C1E"))
+            .cornerRadius(16)
+        }
+    }
+}
+
 #Preview {
     ReportsView()
 }

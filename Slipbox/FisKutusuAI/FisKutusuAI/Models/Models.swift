@@ -19,6 +19,7 @@ struct Receipt: Codable, Identifiable {
     var createdAt: Timestamp?
     var updatedAt: Timestamp?
     var error: String?
+    var autoCategorizeMerchant: Bool? // New field for auto-categorization toggle
     
     enum CodingKeys: String, CodingKey {
         case id
@@ -37,6 +38,7 @@ struct Receipt: Codable, Identifiable {
         case createdAt
         case updatedAt
         case error
+        case autoCategorizeMerchant
     }
 }
 

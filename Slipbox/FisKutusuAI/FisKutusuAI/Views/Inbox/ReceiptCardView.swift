@@ -2,192 +2,168 @@ import SwiftUI
 
 struct ReceiptCardView: View {
     let receipt: Receipt
-
+    
     var body: some View {
-        HStack(spacing: 16) { // AppSpacing.md
-            // Receipt thumbnail/icon
-            receiptThumbnail
-            
-            // Content
-            VStack(alignment: .leading, spacing: 4) {
-                // Merchant name
-                Text(receipt.merchant ?? "Bilinmiyor")
-                    .font(.headline) // AppFonts.headline
-                    .foregroundColor(DesignSystem.Colors.textPrimary)
-                    .lineLimit(1)
-                
-                // Date and amount
-                HStack {
-                    if let date = receipt.date {
-                        Text(formatDate(date))
-                            .font(.caption) // AppFonts.caption
-                            .foregroundColor(DesignSystem.Colors.textSecondary)
-                    }
-                    
-                    Spacer()
-                    
-                    if let total = receipt.total {
-                        Text(formatCurrency(total, currency: receipt.currency ?? "TRY"))
-                            .font(.title2) // AppFonts.title2
-                            .foregroundColor(DesignSystem.Colors.textPrimary)
-                            .fontWeight(.semibold)
-                    }
-                }
-                
-                // Category badge or status
-                HStack {
-                    if receipt.status == .approved, let categoryId = receipt.categoryId {
-                        categoryBadge(for: categoryId)
-                    } else if receipt.status == .needsReview, let suggestedId = receipt.categorySuggestedId {
-                        suggestedCategoryBadge(for: suggestedId, confidence: receipt.confidence ?? 0)
-                    } else if receipt.status == .processing {
-                        processingBadge
-                    } else if receipt.status == .error {
-                        errorBadge
-                    }
-                    
-                    Spacer()
-                    
-                    // Confidence indicator for needs review
-                    if receipt.status == .needsReview {
-                        confidenceIndicator
-                    }
-                }
-            }
-            
-            // Chevron
-            Image(systemName: "chevron.right")
-                .font(.caption)
-                .foregroundColor(DesignSystem.Colors.textSecondary)
+        HStack(spacing: 16) {
+            thumbnailView
+            contentView
         }
-        .padding(16) // AppSpacing.md
-        .background(DesignSystem.Colors.cardBackground) // cardStyle expansion
-        .cornerRadius(12)
+        .padding(16)
+        .background(cardBackground)
         .overlay(
-            RoundedRectangle(cornerRadius: 12)
-                .stroke(DesignSystem.Colors.border, lineWidth: 1)
+            RoundedRectangle(cornerRadius: 24)
+                .stroke(Color.white.opacity(0.05), lineWidth: 1)
         )
+        .shadow(color: Color.black.opacity(0.2), radius: 10, x: 0, y: 4)
     }
     
-    // MARK: - Thumbnail
-    private var receiptThumbnail: some View {
-        ZStack {
-            RoundedRectangle(cornerRadius: 8) // AppCornerRadius.sm
-                .fill(DesignSystem.Colors.cardBackground)
+    private var thumbnailView: some View {
+        ZStack(alignment: .bottomTrailing) {
+            Circle()
+                .fill(Color(hex: "2C2C2E"))
                 .frame(width: 60, height: 60)
+                .overlay(
+                    Image(systemName: "doc.text.fill")
+                        .font(.system(size: 24))
+                        .foregroundColor(.white.opacity(0.6))
+                )
             
-            Image(systemName: "doc.text.fill")
-                .font(.title2)
-                .foregroundColor(DesignSystem.Colors.textSecondary)
+            statusBadge
         }
     }
     
-    // MARK: - Category Badge (Approved)
-    private func categoryBadge(for categoryId: String) -> some View {
-        let category = Category.defaults.first { $0.id == categoryId }
-        
-        return HStack(spacing: 4) {
-            if let icon = category?.icon {
-                Image(systemName: icon)
-                    .font(.caption2)
-            }
-            Text(category?.name ?? categoryId)
-                .font(.caption2) // AppFonts.caption2
-        }
-        .foregroundColor(.white)
-        .padding(.horizontal, 8)
-        .padding(.vertical, 4)
-        .background(DesignSystem.Colors.success)
-        .cornerRadius(8) // AppCornerRadius.sm
+    private var statusBadge: some View {
+        Circle()
+            .fill(receipt.status.badgeColor)
+            .frame(width: 24, height: 24)
+            .overlay(badgeIcon)
+            .offset(x: 4, y: 4)
     }
     
-    // MARK: - Suggested Category Badge (Needs Review)
-    private func suggestedCategoryBadge(for categoryId: String, confidence: Double) -> some View {
-        let category = Category.defaults.first { $0.id == categoryId }
-        
-        return HStack(spacing: 4) {
-            if let icon = category?.icon {
-                Image(systemName: icon)
-                    .font(.caption2)
-            }
-            Text(category?.name ?? categoryId)
-                .font(.caption2) // AppFonts.caption2
-            Text("?")
-                .font(.caption2) // AppFonts.caption2
-                .fontWeight(.bold)
-        }
-        .foregroundColor(.white)
-        .padding(.horizontal, 8)
-        .padding(.vertical, 4)
-        .background(DesignSystem.Colors.warning)
-        .cornerRadius(8) // AppCornerRadius.sm
-    }
-    
-    // MARK: - Processing Badge
-    private var processingBadge: some View {
-        HStack(spacing: 4) {
+    @ViewBuilder
+    private var badgeIcon: some View {
+        if receipt.status == .processing {
             ProgressView()
+                .progressViewStyle(CircularProgressViewStyle(tint: .white))
                 .scaleEffect(0.7)
-            Text("İşleniyor")
-                .font(.caption2) // AppFonts.caption2
+        } else {
+            Image(systemName: receipt.status.iconName)
+                .font(.system(size: 12, weight: .bold))
+                .foregroundColor(.white)
         }
-        .foregroundColor(.white)
-        .padding(.horizontal, 8)
-        .padding(.vertical, 4)
-        .background(Color.blue) // AppColors.statusProcessing fallback
-        .cornerRadius(8) // AppCornerRadius.sm
     }
     
-    // MARK: - Error Badge
-    private var errorBadge: some View {
+    private var contentView: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            headerRow
+            dateStatusRow
+            categoryRow
+        }
+    }
+    
+    private var headerRow: some View {
+        HStack {
+            Text(receipt.displayMerchant)
+                .font(.system(size: 17, weight: .bold))
+                .foregroundColor(.white)
+            
+            Spacer()
+            
+            Text(formatAmount(receipt.displayAmount))
+                .font(.system(size: 17, weight: .semibold))
+                .foregroundColor(Color(hex: "4F46E5"))
+        }
+    }
+    
+    private var dateStatusRow: some View {
+        HStack(spacing: 8) {
+            Text(formatDate(receipt.displayDate))
+                .font(.system(size: 14))
+                .foregroundColor(.white.opacity(0.6))
+            
+            Text("•")
+                .foregroundColor(.white.opacity(0.4))
+            
+            Text(receipt.status.displayText)
+                .font(.system(size: 14))
+                .foregroundColor(.white.opacity(0.6))
+        }
+    }
+    
+    private var categoryRow: some View {
+        HStack(spacing: 8) {
+            if let categoryName = receipt.displayCategoryName {
+                categoryPill(categoryName)
+            }
+            
+            if let confidence = receipt.confidence, receipt.status == .approved {
+                confidencePill(confidence)
+            }
+        }
+        .padding(.top, 4)
+    }
+    
+    private func categoryPill(_ name: String) -> some View {
         HStack(spacing: 4) {
-            Image(systemName: "exclamationmark.triangle.fill")
-                .font(.caption2)
-            Text("Hata")
-                .font(.caption2) // AppFonts.caption2
+            Circle()
+                .fill(receipt.displayCategoryColor)
+                .frame(width: 6, height: 6)
+            
+            Text(name)
+                .font(.system(size: 12, weight: .medium))
+                .foregroundColor(receipt.displayCategoryColor)
         }
-        .foregroundColor(.white)
-        .padding(.horizontal, 8)
+        .padding(.horizontal, 10)
         .padding(.vertical, 4)
-        .background(DesignSystem.Colors.error)
-        .cornerRadius(8) // AppCornerRadius.sm
+        .background(receipt.displayCategoryColor.opacity(0.15))
+        .cornerRadius(12)
     }
     
-    // MARK: - Confidence Indicator
-    private var confidenceIndicator: some View {
-        let confidence = receipt.confidence ?? 0
-        let percentage = Int(confidence * 100)
-        
-        return Text("\(percentage)%")
-            .font(.caption) // AppFonts.caption
-            .foregroundColor(confidenceColor(confidence))
-            .fontWeight(.semibold)
+    private func confidencePill(_ confidence: Double) -> some View {
+        Text("\(Int(confidence * 100))%")
+            .font(.system(size: 12, weight: .semibold))
+            .foregroundColor(Color(hex: "34C759"))
+            .padding(.horizontal, 8)
+            .padding(.vertical, 4)
+            .background(Color(hex: "34C759").opacity(0.15))
+            .cornerRadius(12)
     }
     
-    // MARK: - Helpers
+    private var cardBackground: some View {
+        RoundedRectangle(cornerRadius: 24)
+            .fill(Color(hex: "1C1C1E").opacity(0.6))
+            .background(
+                RoundedRectangle(cornerRadius: 24)
+                    .fill(.ultraThinMaterial)
+            )
+    }
+    
+    private func formatAmount(_ amount: Decimal) -> String {
+        let formatter = NumberFormatter()
+        formatter.numberStyle = .currency
+        formatter.currencyCode = "TRY"
+        formatter.locale = Locale(identifier: "tr-TR")
+        return formatter.string(from: amount as NSDecimalNumber) ?? "₺0,00"
+    }
+    
     private func formatDate(_ date: Date) -> String {
         let formatter = DateFormatter()
-        formatter.dateStyle = .medium
-        formatter.timeStyle = .none
+        formatter.dateFormat = "d MMM yyyy"
         formatter.locale = Locale(identifier: "tr-TR")
         return formatter.string(from: date)
     }
-    
-    private func formatCurrency(_ amount: Double, currency: String) -> String {
-        let formatter = NumberFormatter()
-        formatter.numberStyle = .currency
-        formatter.currencyCode = currency
-        formatter.locale = Locale(identifier: "tr-TR")
-        return formatter.string(from: NSNumber(value: amount)) ?? "\(amount) \(currency)"
-    }
-    
-    private func confidenceColor(_ confidence: Double) -> Color {
-        if confidence >= 0.8 {
-            return DesignSystem.Colors.success
-        } else if confidence >= 0.5 {
-            return DesignSystem.Colors.warning
-        } else {
-            return DesignSystem.Colors.error
+}
+
+#Preview {
+    ZStack {
+        Color.black
+            .ignoresSafeArea()
+        
+        VStack(spacing: 16) {
+            ReceiptCardView(receipt: MockData.inboxReceipts[0])
+            ReceiptCardView(receipt: MockData.inboxReceipts[1])
+            ReceiptCardView(receipt: MockData.inboxReceipts[2])
         }
+        .padding()
     }
 }

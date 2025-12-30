@@ -1,5 +1,6 @@
 import SwiftUI
 
+
 struct OnboardingView: View {
     @Binding var showPermissions: Bool
     @State private var currentPage = 0
@@ -8,7 +9,7 @@ struct OnboardingView: View {
         OnboardingPage(
             title: "Fişi Çek",
             description: "Fişlerinizi saniyeler içinde tarayın. Akıllı kameramız detayları otomatik yakalar.",
-            imageName: "onboarding_scan"
+            imageName: "onboarding1"
         ),
         OnboardingPage(
             title: "Otomatik Kategorile",
@@ -37,7 +38,7 @@ struct OnboardingView: View {
                     }
                 }
                 .tabViewStyle(PageTabViewStyle(indexDisplayMode: .never))
-                .frame(height: 550) // Increased height for better layout
+                .frame(height: 650) // Increased height for better layout
                 
                 Spacer()
                 
@@ -106,24 +107,39 @@ struct OnboardingPageView: View {
     var body: some View {
         VStack(spacing: 32) {
             // Image with Styling
-            if let uiImage = UIImage(named: page.imageName) {
-                Image(uiImage: uiImage)
-                    .resizable()
-                    .aspectRatio(contentMode: .fit)
-                    .frame(maxWidth: .infinity)
-                    .frame(height: 350)
-                    .cornerRadius(48) // Extra soft rounded corners
-                    .shadow(color: DesignSystem.Colors.primary.opacity(0.3), radius: 30, x: 0, y: 0) // Glow effect
-                    .shadow(color: Color.black.opacity(0.2), radius: 20, x: 0, y: 10) // Depth shadow
-                    .padding(.horizontal, 24)
-            } else {
-                // Fallback
-                RoundedRectangle(cornerRadius: 48)
-                    .fill(DesignSystem.Colors.inputBackground)
-                    .frame(height: 350)
-                    .padding(.horizontal, 24)
-                    .overlay(Text("Görsel: \(page.imageName)").foregroundColor(.gray))
+            ZStack {
+                // Background Glow Effects
+                // Background Glow Effects
+                Circle()
+                    .fill(DesignSystem.Colors.primary.opacity(0.4))
+                    .frame(width: 300, height: 300) // Increased glow size
+                    .blur(radius: 70) // Increased blur
+                    .offset(x: -40, y: -40)
+                
+                Circle()
+                    .fill(Color(hex: "A855F7").opacity(0.3)) // Secondary purple glow
+                    .frame(width: 250, height: 250) // Increased glow size
+                    .blur(radius: 60) // Increased blur
+                    .offset(x: 40, y: 40)
+                
+                if let uiImage = UIImage(named: page.imageName) {
+                    Image(uiImage: uiImage)
+                        .resizable()
+                        .aspectRatio(contentMode: .fit)
+                        .frame(maxWidth: .infinity)
+                        .frame(height: 420) // Increased image height from 350
+                        // .cornerRadius(48) // Removed to allow transparent PNG to blend nicely if needed, or keep if card style
+                        .shadow(color: DesignSystem.Colors.primary.opacity(0.3), radius: 30, x: 0, y: 0) // Glow effect
+                        .shadow(color: Color.black.opacity(0.2), radius: 20, x: 0, y: 10) // Depth shadow
+                } else {
+                    // Fallback
+                    RoundedRectangle(cornerRadius: 48)
+                        .fill(DesignSystem.Colors.inputBackground)
+                        .frame(height: 420) // Increased fallback height
+                        .overlay(Text("Görsel: \(page.imageName)").foregroundColor(.gray))
+                }
             }
+            .padding(.horizontal, 24)
             
             VStack(spacing: 16) {
                 Text(page.title)

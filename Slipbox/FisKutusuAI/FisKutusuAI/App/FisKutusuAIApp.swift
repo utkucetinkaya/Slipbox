@@ -9,11 +9,13 @@ import FirebaseAppCheck
 struct FisKutusuAIApp: App {
     @UIApplicationDelegateAdaptor(AppDelegate.self) var delegate
     @StateObject private var authManager = AuthenticationManager.shared
+    @StateObject private var userPreferences = AppUserPreferences()
     
     var body: some Scene {
         WindowGroup {
             RootView()
                 .environmentObject(authManager)
+                .environmentObject(userPreferences)
         }
     }
 }
@@ -22,6 +24,28 @@ struct FisKutusuAIApp: App {
 struct RootView: View {
     @EnvironmentObject var authManager: AuthenticationManager
     @StateObject private var launchManager = LaunchManager.shared
+    
+    init() {
+        // Global Appearance Configuration
+        let appearance = UINavigationBarAppearance()
+        appearance.configureWithOpaqueBackground()
+        appearance.backgroundColor = UIColor(Color(hex: "050511")) // Dark background
+        appearance.titleTextAttributes = [.foregroundColor: UIColor.white]
+        appearance.largeTitleTextAttributes = [.foregroundColor: UIColor.white]
+        
+        UINavigationBar.appearance().standardAppearance = appearance
+        UINavigationBar.appearance().compactAppearance = appearance
+        UINavigationBar.appearance().scrollEdgeAppearance = appearance
+        UINavigationBar.appearance().tintColor = .white
+        
+        // Tab Bar Appearance is also configured here to ensure consistency
+        let tabAppearance = UITabBarAppearance()
+        tabAppearance.configureWithOpaqueBackground()
+        tabAppearance.backgroundColor = UIColor(Color(hex: "1C1C1E")) // Slightly lighter for tab bar
+        
+        UITabBar.appearance().standardAppearance = tabAppearance
+        UITabBar.appearance().scrollEdgeAppearance = tabAppearance
+    }
     
     var body: some View {
         Group {

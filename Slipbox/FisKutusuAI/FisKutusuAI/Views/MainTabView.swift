@@ -33,27 +33,6 @@ struct MainTabView: View {
                 .tag(2)
         }
         .accentColor(Color(hex: "4F46E5"))
-        .onAppear {
-            // Customize tab bar appearance
-            let appearance = UITabBarAppearance()
-            appearance.configureWithOpaqueBackground()
-            appearance.backgroundColor = UIColor(Color(hex: "0A0A14"))
-            
-            // Normal state
-            appearance.stackedLayoutAppearance.normal.iconColor = UIColor(Color.white.opacity(0.5))
-            appearance.stackedLayoutAppearance.normal.titleTextAttributes = [
-                .foregroundColor: UIColor(Color.white.opacity(0.5))
-            ]
-            
-            // Selected state
-            appearance.stackedLayoutAppearance.selected.iconColor = UIColor(Color(hex: "4F46E5"))
-            appearance.stackedLayoutAppearance.selected.titleTextAttributes = [
-                .foregroundColor: UIColor(Color(hex: "4F46E5"))
-            ]
-            
-            UITabBar.appearance().standardAppearance = appearance
-            UITabBar.appearance().scrollEdgeAppearance = appearance
-        }
     }
 }
 

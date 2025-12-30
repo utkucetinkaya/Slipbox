@@ -1,6 +1,8 @@
 import SwiftUI
 
 struct SettingsView: View {
+    @EnvironmentObject var userPreferences: AppUserPreferences
+    
     var body: some View {
         NavigationStack {
             ZStack {
@@ -16,8 +18,14 @@ struct SettingsView: View {
                         // Preferences
                         VStack(alignment: .leading, spacing: 8) {
                             sectionHeader("TERCİHLER")
-                            SettingsRow(icon: "arrow.triangle.2.circlepath", title: "Para Birimi", value: "TRY (₺)", color: Color(hex: "4F46E5"))
-                            SettingsRow(icon: "globe", title: "Dil", value: "Türkçe (TR)", color: Color(hex: "4F46E5"))
+                            
+                            NavigationLink(destination: CurrencySelectionView()) {
+                                SettingsRow(icon: "arrow.triangle.2.circlepath", title: "Para Birimi", value: "\(userPreferences.currencySymbol) (\(userPreferences.currencyCode))", color: Color(hex: "4F46E5"))
+                            }
+                            
+                            NavigationLink(destination: LanguageSelectionView()) {
+                                SettingsRow(icon: "globe", title: "Dil", value: userPreferences.languageName(for: userPreferences.languageCode), color: Color(hex: "4F46E5"))
+                            }
                         }
                         
                         // Support & Legal
@@ -89,10 +97,11 @@ struct SettingsView: View {
                             .padding(.top, 20)
                     }
                     .padding(.horizontal, 20)
-                    .padding(.top, 20)
+                    .padding(.top, 0) // Removed extra top padding
                 }
             }
             .navigationTitle("Ayarlar")
+            .navigationBarTitleDisplayMode(.inline) // Ensure title is visible and compact
         }
     }
     

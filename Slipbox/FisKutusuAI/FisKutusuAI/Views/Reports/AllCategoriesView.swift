@@ -1,7 +1,9 @@
 import SwiftUI
 
+
 struct AllCategoriesView: View {
-    @State private var currentMonth = "Ekim 2023"
+    @EnvironmentObject var userPreferences: AppUserPreferences
+    @State private var currentDate = Date()
     
     // Mock Data based on design
     struct CategoryData: Identifiable {
@@ -25,6 +27,13 @@ struct AllCategoriesView: View {
         CategoryData(name: "Diğer", icon: "ellipsis", color: .gray, count: 8, amount: 3150.00, percentage: 0.128)
     ]
     
+    private var formattedMonth: String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "MMMM yyyy"
+        formatter.locale = userPreferences.locale
+        return formatter.string(from: currentDate)
+    }
+    
     var body: some View {
         ZStack {
             Color(hex: "050511")
@@ -34,9 +43,18 @@ struct AllCategoriesView: View {
                 // Month Selector
                 HStack {
                     Spacer()
-                    Button(action: {}) {
+                    Menu {
+                        ForEach(0..<12, id: \.self) { i in
+                            let date = Calendar.current.date(byAdding: .month, value: -i, to: Date()) ?? Date()
+                            Button(action: {
+                                currentDate = date
+                            }) {
+                                Text(formatMonth(date))
+                            }
+                        }
+                    } label: {
                         HStack {
-                            Text(currentMonth)
+                            Text(formattedMonth)
                             Image(systemName: "chevron.down")
                         }
                         .font(.system(size: 14, weight: .medium))
@@ -56,7 +74,7 @@ struct AllCategoriesView: View {
                         .font(.system(size: 12, weight: .semibold))
                         .foregroundColor(.white.opacity(0.6))
                     
-                    Text("₺24.500,00")
+                    Text(formatCurrency(24500.00))
                         .font(.system(size: 32, weight: .bold))
                         .foregroundColor(.white)
                 }
@@ -85,10 +103,28 @@ struct AllCategoriesView: View {
             }
         }
     }
+    
+    private func formatMonth(_ date: Date) -> String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "MMMM yyyy"
+        formatter.locale = userPreferences.locale
+        return formatter.string(from: date)
+    }
+
+    private func formatCurrency(_ value: Double) -> String {
+        let formatter = NumberFormatter()
+        formatter.numberStyle = .currency
+        formatter.currencyCode = userPreferences.currencyCode
+        formatter.currencySymbol = userPreferences.currencySymbol
+        formatter.locale = userPreferences.locale
+        formatter.minimumFractionDigits = 2
+        return formatter.string(from: NSNumber(value: value)) ?? "\(userPreferences.currencySymbol)0.00"
+    }
 }
 
 struct AllCategoryRow: View {
     let data: AllCategoriesView.CategoryData
+    @EnvironmentObject var userPreferences: AppUserPreferences
     
     var body: some View {
         VStack(spacing: 16) {
@@ -150,11 +186,12 @@ struct AllCategoryRow: View {
     private func formatCurrency(_ value: Double) -> String {
         let formatter = NumberFormatter()
         formatter.numberStyle = .currency
-        formatter.currencyCode = "TRY"
-        formatter.locale = Locale(identifier: "tr_TR")
-        formatter.currencySymbol = "₺" // Explicitly ensure symbol if needed, though currencyCode usually handles it
-        formatter.maximumFractionDigits = 0 // Based on design "8.200"
-        return formatter.string(from: NSNumber(value: value)) ?? "₺0"
+        formatter.currencyCode = userPreferences.currencyCode
+        formatter.currencySymbol = userPreferences.currencySymbol
+        formatter.locale = userPreferences.locale
+        formatter.minimumFractionDigits = 0
+        formatter.maximumFractionDigits = 0 
+        return formatter.string(from: NSNumber(value: value)) ?? "\(userPreferences.currencySymbol)0"
     }
 }
 

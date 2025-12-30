@@ -18,12 +18,12 @@ struct WelcomeView: View {
                     
                     // Header: Logo
                     HStack(spacing: 8) {
-                        Image(systemName: "doc.text.magnifyingglass") // Fallback icon
-                            .font(.system(size: 24))
-                            .foregroundColor(.white)
-                            .padding(8)
-                            .background(DesignSystem.Colors.primary)
-                            .clipShape(Circle())
+                        Image("AppLogo")
+                            .resizable()
+                            .aspectRatio(contentMode: .fit)
+                            .frame(width: 60, height: 60)
+                            .clipShape(RoundedRectangle(cornerRadius: 14)) // Matching app icon style essentially
+                            .shadow(color: DesignSystem.Colors.primary.opacity(0.5), radius: 10, x: 0, y: 0) // Glow effect
                         
                         Text("SlipBox")
                             .font(.system(size: 22, weight: .bold))

@@ -1,13 +1,39 @@
 import SwiftUI
 
 struct ReportsView: View {
+    @EnvironmentObject var userPreferences: AppUserPreferences
+    
     // Mock Data State
-    @State private var currentMonth = "Ekim 2023"
+    @State private var currentDate = Date()
     @State private var totalExpense: Double = 12450.00
     @State private var receiptCount = 42
     @State private var topCategory = "Gıda"
     
     @State private var showingPaywall = false
+    
+    private var formattedMonth: String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "MMMM yyyy"
+        formatter.locale = userPreferences.locale
+        return formatter.string(from: currentDate)
+    }
+    
+    private func changeMonth(by value: Int) {
+        if let newDate = Calendar.current.date(byAdding: .month, value: value, to: currentDate) {
+            currentDate = newDate
+            // In a real app, strict fetching logic would go here
+        }
+    }
+    
+    private func formatCurrency(_ value: Double) -> String {
+        let formatter = NumberFormatter()
+        formatter.numberStyle = .currency
+        formatter.currencyCode = userPreferences.currencyCode
+        formatter.currencySymbol = userPreferences.currencySymbol
+        formatter.locale = userPreferences.locale
+        formatter.minimumFractionDigits = 2
+        return formatter.string(from: NSNumber(value: value)) ?? "\(userPreferences.currencySymbol)0.00"
+    }
     
     var body: some View {
         NavigationStack {
@@ -48,20 +74,20 @@ struct ReportsView: View {
     // MARK: - Month Selector
     private var monthSelector: some View {
         HStack {
-            Button(action: {}) {
+            Button(action: { changeMonth(by: -1) }) {
                 Image(systemName: "chevron.left")
                     .foregroundColor(.white.opacity(0.6))
             }
             
             Spacer()
             
-            Text(currentMonth)
+            Text(formattedMonth)
                 .font(.system(size: 16, weight: .medium))
                 .foregroundColor(.white)
             
             Spacer()
             
-            Button(action: {}) {
+            Button(action: { changeMonth(by: 1) }) {
                 Image(systemName: "chevron.right")
                     .foregroundColor(.white.opacity(0.6))
             }
@@ -178,13 +204,19 @@ struct ReportsView: View {
                     .foregroundColor(.white)
             }
             
-            HStack(spacing: 16) {
-                Button(action: { showingPaywall = true }) {
-                    ExportButtonContent(title: "PDF İndir", icon: "doc.text.fill", color: Color(hex: "FF3B30"))
+            VStack(spacing: 12) {
+                HStack(spacing: 12) {
+                    Button(action: { showingPaywall = true }) {
+                        ExportButtonContent(title: "PDF İndir", icon: "doc.text.fill", color: Color(hex: "FF3B30"))
+                    }
+                    
+                    Button(action: { showingPaywall = true }) {
+                        ExportButtonContent(title: "CSV İndir", icon: "tablecells.fill", color: Color(hex: "34C759"))
+                    }
                 }
                 
                 Button(action: { showingPaywall = true }) {
-                    ExportButtonContent(title: "CSV İndir", icon: "tablecells.fill", color: Color(hex: "34C759"))
+                    ExportButtonContent(title: "Muhasebeci Linki Paylaş", icon: "link", color: Color(hex: "007AFF"))
                 }
             }
         }
@@ -242,6 +274,7 @@ struct CategoryRow: View {
     let count: Int
     let percent: Double
     let color: Color
+    @EnvironmentObject var userPreferences: AppUserPreferences
     
     var body: some View {
         VStack(spacing: 12) {
@@ -299,10 +332,11 @@ struct CategoryRow: View {
     private func formatCurrency(_ value: Double) -> String {
         let formatter = NumberFormatter()
         formatter.numberStyle = .currency
-        formatter.currencyCode = "TRY"
-        formatter.locale = Locale(identifier: "tr_TR")
+        formatter.currencyCode = userPreferences.currencyCode
+        formatter.currencySymbol = userPreferences.currencySymbol
+        formatter.locale = userPreferences.locale
         formatter.minimumFractionDigits = 2
-        return formatter.string(from: NSNumber(value: value)) ?? "₺0,00"
+        return formatter.string(from: NSNumber(value: value)) ?? "\(userPreferences.currencySymbol)0.00"
     }
 }
 

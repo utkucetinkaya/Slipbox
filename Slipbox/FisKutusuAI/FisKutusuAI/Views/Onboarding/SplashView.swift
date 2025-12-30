@@ -11,9 +11,12 @@ struct SplashView: View {
             
             VStack {
                 VStack(spacing: 20) {
-                    Image(systemName: "doc.text.viewfinder")
-                        .font(.system(size: 80))
-                        .foregroundColor(Color(hex: "4F46E5"))
+                    Image("AppLogo")
+                        .resizable()
+                        .aspectRatio(contentMode: .fit)
+                        .frame(width: 250, height: 250) // Adjust size for splash
+                        .cornerRadius(48) // Rounded corners for icon look
+                        .shadow(color: DesignSystem.Colors.primary.opacity(0.6), radius: 20, x: 0, y: 0) // Glow effect
                     
                     Text("SlipBox")
                         .font(.system(size: 32, weight: .bold))

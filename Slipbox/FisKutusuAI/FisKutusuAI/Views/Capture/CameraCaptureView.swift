@@ -158,54 +158,59 @@ struct CornerMarker: View {
     var bottomRight: Bool = false
     
     var body: some View {
-        Path { path in
-            let w: CGFloat = 40
-            let h: CGFloat = 40
-            let r: CGFloat = 10
-            
-            if topLeft {
-                path.move(to: CGPoint(x: 0, y: h))
-                path.addLine(to: CGPoint(x: 0, y: r))
-                path.addQuadCurve(to: CGPoint(x: r, y: 0), control: CGPoint(x: 0, y: 0))
-                path.addLine(to: CGPoint(x: w, y: 0))
-            } else if topRight {
-                path.move(to: CGPoint(x: -w, y: 0)) // Relative to frame... tricky in Path
-                // Simpler approach: Just strokes
-            }
-        }
-        .stroke(color, lineWidth: 4)
-        .frame(width: 40, height: 40)
-        // Actually simpler to use clear frame with overlay logic or just Images if assets existed.
-        // Let's use simple shapes for now.
-        .overlay(
-            Group {
-                if topLeft {
-                    CameraCorner(rotation: 0, color: color)
-                } else if topRight {
-                    CameraCorner(rotation: 90, color: color)
-                } else if bottomRight {
-                    CameraCorner(rotation: 180, color: color)
-                } else if bottomLeft {
-                    CameraCorner(rotation: 270, color: color)
-                }
-            }
+        CornerPath(
+            topLeft: topLeft,
+            topRight: topRight,
+            bottomLeft: bottomLeft,
+            bottomRight: bottomRight
         )
+        .stroke(color, style: StrokeStyle(lineWidth: 4, lineCap: .round, lineJoin: .round))
+        .frame(width: 40, height: 40)
     }
 }
 
-struct CameraCorner: View {
-    let rotation: Double
-    let color: Color
+struct CornerPath: Shape {
+    var topLeft: Bool
+    var topRight: Bool
+    var bottomLeft: Bool
+    var bottomRight: Bool
     
-    var body: some View {
-        ZStack(alignment: .topLeading) {
-            RoundedRectangle(cornerRadius: 12)
-                .trim(from: 0, to: 0.25)
-                .stroke(color, style: StrokeStyle(lineWidth: 4, lineCap: .round))
-                .frame(width: 60, height: 60)
-                .rotationEffect(.degrees(rotation))
+    func path(in rect: CGRect) -> Path {
+        var path = Path()
+        let w = rect.width
+        let h = rect.height
+        // Length of the arm
+        let l: CGFloat = 40 
+        // Radius of the corner
+        let r: CGFloat = 12 
+        
+        // We act based on which corner is active.
+        // We assume the view frame is exactly the corner size (e.g. 40x40 or visual area).
+        // Actually, let's draw relative to the specific corner of the frame.
+        
+        if topLeft {
+            path.move(to: CGPoint(x: 0, y: l))
+            path.addLine(to: CGPoint(x: 0, y: r))
+            path.addQuadCurve(to: CGPoint(x: r, y: 0), control: CGPoint(x: 0, y: 0))
+            path.addLine(to: CGPoint(x: l, y: 0))
+        } else if topRight {
+            path.move(to: CGPoint(x: w - l, y: 0))
+            path.addLine(to: CGPoint(x: w - r, y: 0))
+            path.addQuadCurve(to: CGPoint(x: w, y: r), control: CGPoint(x: w, y: 0))
+            path.addLine(to: CGPoint(x: w, y: l))
+        } else if bottomLeft {
+            path.move(to: CGPoint(x: 0, y: h - l))
+            path.addLine(to: CGPoint(x: 0, y: h - r))
+            path.addQuadCurve(to: CGPoint(x: r, y: h), control: CGPoint(x: 0, y: h))
+            path.addLine(to: CGPoint(x: l, y: h))
+        } else if bottomRight {
+            path.move(to: CGPoint(x: w - l, y: h))
+            path.addLine(to: CGPoint(x: w - r, y: h))
+            path.addQuadCurve(to: CGPoint(x: w, y: h - r), control: CGPoint(x: w, y: h))
+            path.addLine(to: CGPoint(x: w, y: h - l))
         }
-        .frame(width: 40, height: 40) // Clip frame
+        
+        return path
     }
 }
 

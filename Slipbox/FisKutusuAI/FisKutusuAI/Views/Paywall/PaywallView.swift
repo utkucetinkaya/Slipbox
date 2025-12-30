@@ -22,34 +22,25 @@ struct PaywallView: View {
             )
             .ignoresSafeArea()
             
-            VStack(spacing: 0) {
-                // Close Button
-                HStack {
-                    Spacer()
-                    Button(action: { dismiss() }) {
-                        Image(systemName: "xmark.circle.fill")
-                            .font(.system(size: 32))
-                            .foregroundColor(.white.opacity(0.3))
-                    }
-                }
-                .padding()
-                
+            ZStack(alignment: .top) {
                 ScrollView {
                     VStack(spacing: 32) {
                         // Header
-                        VStack(spacing: 16) {
+                        VStack(spacing: 24) {
                             ZStack {
                                 Circle()
                                     .fill(Color(hex: "1C1C1E"))
-                                    .frame(width: 80, height: 80)
-                                    .shadow(color: .black.opacity(0.3), radius: 10, x: 0, y: 5)
+                                    .frame(width: 100, height: 100)
+                                    .shadow(color: DesignSystem.Colors.primary.opacity(0.5), radius: 20, x: 0, y: 0) // Glow effect
                                 
-                                Image(systemName: "doc.text.viewfinder")
-                                    .font(.system(size: 36))
-                                    .foregroundColor(Color(hex: "4F46E5"))
+                                Image("AppLogo")
+                                    .resizable()
+                                    .aspectRatio(contentMode: .fit)
+                                    .frame(width: 60, height: 60)
+                                    .cornerRadius(14)
                             }
                             
-                            VStack(spacing: 4) {
+                            VStack(spacing: 8) {
                                 Text("SlipBox Pro ile")
                                     .font(.system(size: 28, weight: .bold))
                                     .foregroundColor(.white)
@@ -57,14 +48,21 @@ struct PaywallView: View {
                                 Text("raporlarını hızlandır.")
                                     .font(.system(size: 28, weight: .bold))
                                     .foregroundColor(Color(hex: "4F46E5"))
+                                
+                                Text("Muhasebecine tek tıkla rapor gönder, sınırsız fiş tarat ve harcamalarını kontrol altına al.")
+                                    .font(.system(size: 16))
+                                    .foregroundColor(.white.opacity(0.7))
+                                    .multilineTextAlignment(.center)
+                                    .padding(.horizontal, 24)
+                                    .padding(.top, 8)
                             }
                             .multilineTextAlignment(.center)
                         }
                         
                         // Features
                         VStack(alignment: .leading, spacing: 16) {
-                            FeatureRow(text: "Sınırsız fiş")
-                            FeatureRow(text: "PDF/CSV export")
+                            FeatureRow(text: "Sınırsız fiş tarama")
+                            FeatureRow(text: "PDF, CSV ve Link paylaşımı")
                             FeatureRow(text: "Gelişmiş filtreler")
                         }
                         .padding(.horizontal, 32)
@@ -90,47 +88,64 @@ struct PaywallView: View {
                         }
                         .padding(.horizontal, 20)
                         
-                        Spacer(minLength: 20)
+                        // Bottom Section (Moved inside ScrollView or kept at bottom? Kept at bottom of scroll usually for long content, but here fits.)
+                        // BUT common pattern is sticky bottom button OR scrollable.
+                        // Let's keep it scrollable for safety on small screens.
+                        
+                        VStack(spacing: 16) {
+                            Button(action: {
+                                print("🛒 Purchase initiated for \(selectedPlan)")
+                                // Mock purchase success
+                                dismiss()
+                            }) {
+                                Text("Pro'ya Geç")
+                                    .font(.system(size: 18, weight: .bold))
+                                    .foregroundColor(.white)
+                                    .frame(maxWidth: .infinity)
+                                    .frame(height: 56)
+                                    .background(Color(hex: "4F46E5"))
+                                    .cornerRadius(28)
+                                    .shadow(color: Color(hex: "4F46E5").opacity(0.4), radius: 10, x: 0, y: 5)
+                            }
+                            
+                            HStack(spacing: 6) {
+                                Image(systemName: "shield.fill")
+                                    .font(.system(size: 12))
+                                Text("İptal etmesi kolay")
+                                    .font(.system(size: 12))
+                            }
+                            .foregroundColor(.white.opacity(0.7)) // More neutral and clean
+                            
+                            HStack(spacing: 16) {
+                                Button("Satın alımı geri yükle") {}
+                                Text("•")
+                                Button("Şartlar") {}
+                                Text("•")
+                                Button("Gizlilik") {}
+                            }
+                            .font(.system(size: 11))
+                            .foregroundColor(.white.opacity(0.4))
+                        }
+                        .padding(20)
+                        // Removed discordant background to blend with page
+                        
+                        Spacer(minLength: 40)
                     }
+                    .padding(.top, 60) // Space for the close button
                 }
                 
-                // Bottom Section
-                VStack(spacing: 16) {
-                    Button(action: {
-                        print("🛒 Purchase initiated for \(selectedPlan)")
-                        // Mock purchase success
-                        dismiss()
-                    }) {
-                        Text("Pro'ya Geç")
-                            .font(.system(size: 18, weight: .bold))
-                            .foregroundColor(.white)
-                            .frame(maxWidth: .infinity)
-                            .frame(height: 56)
-                            .background(Color(hex: "4F46E5"))
-                            .cornerRadius(28)
-                            .shadow(color: Color(hex: "4F46E5").opacity(0.4), radius: 10, x: 0, y: 5)
+                // Close Button
+                HStack {
+                    Spacer()
+                    Button(action: { dismiss() }) {
+                        Image(systemName: "xmark.circle.fill")
+                            .font(.system(size: 32))
+                            .foregroundColor(.white.opacity(0.3))
+                            .padding() // Touch target
                     }
-                    
-                    HStack(spacing: 6) {
-                        Image(systemName: "shield.fill")
-                            .font(.system(size: 12))
-                        Text("İptal etmesi kolay")
-                            .font(.system(size: 12))
-                    }
-                    .foregroundColor(Color(hex: "4F46E5").opacity(0.8))
-                    
-                    HStack(spacing: 16) {
-                        Button("Satın alımı geri yükle") {}
-                        Text("•")
-                        Button("Şartlar") {}
-                        Text("•")
-                        Button("Gizlilik") {}
-                    }
-                    .font(.system(size: 11))
-                    .foregroundColor(.white.opacity(0.4))
                 }
-                .padding(20)
-                .background(Color(hex: "0A0A14").opacity(0.8))
+                .padding(.top, 10) // Small status bar buffer if needed
+                .padding(.trailing, 10)
             }
         }
     }

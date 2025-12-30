@@ -10,12 +10,14 @@ struct FisKutusuAIApp: App {
     @UIApplicationDelegateAdaptor(AppDelegate.self) var delegate
     @StateObject private var authManager = AuthenticationManager.shared
     @StateObject private var userPreferences = AppUserPreferences()
+    @StateObject private var localizationManager = LocalizationManager.shared
     
     var body: some Scene {
         WindowGroup {
             RootView()
                 .environmentObject(authManager)
                 .environmentObject(userPreferences)
+                .environmentObject(localizationManager)
                 .environment(\.locale, userPreferences.locale)
         }
     }

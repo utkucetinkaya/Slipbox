@@ -17,14 +17,14 @@ struct SettingsView: View {
                         
                         // Preferences
                         VStack(alignment: .leading, spacing: 8) {
-                            sectionHeader("preferences")
+                            sectionHeader("preferences".localized.uppercased())
                             
                             NavigationLink(destination: CurrencySelectionView()) {
-                                SettingsRow(icon: "arrow.triangle.2.circlepath", title: "currency", value: "\(userPreferences.currencySymbol) (\(userPreferences.currencyCode))", color: Color(hex: "4F46E5"))
+                                SettingsRow(icon: "arrow.triangle.2.circlepath", title: "currency".localized, value: "\(userPreferences.currencySymbol) (\(userPreferences.currencyCode))", color: Color(hex: "4F46E5"))
                             }
                             
                             NavigationLink(destination: LanguageSelectionView()) {
-                                SettingsRow(icon: "globe", title: "language", value: userPreferences.languageName(for: userPreferences.languageCode), color: Color(hex: "4F46E5"))
+                                SettingsRow(icon: "globe", title: "language".localized, value: userPreferences.languageName(for: userPreferences.languageCode), color: Color(hex: "4F46E5"))
                             }
                         }
                         
@@ -32,8 +32,8 @@ struct SettingsView: View {
                         VStack(alignment: .leading, spacing: 8) {
                             sectionHeader("SUPPORT & LEGAL")
                             SettingsRow(icon: "bubble.left.fill", title: "Send Feedback", color: Color(hex: "06B6D4"))
-                            SettingsRow(icon: "lock.fill", title: "privacy", color: Color(hex: "A855F7"))
-                            SettingsRow(icon: "doc.text.fill", title: "terms", color: Color(hex: "FFCC00"))
+                            SettingsRow(icon: "lock.fill", title: "privacy".localized, color: Color(hex: "A855F7"))
+                            SettingsRow(icon: "doc.text.fill", title: "terms".localized, color: Color(hex: "FFCC00"))
                         }
                         
                         // Danger Zone
@@ -100,7 +100,7 @@ struct SettingsView: View {
                     .padding(.top, 0) // Removed extra top padding
                 }
             }
-            .navigationTitle("settings")
+            .navigationTitle("settings".localized)
             .navigationBarTitleDisplayMode(.inline) // Ensure title is visible and compact
         }
     }

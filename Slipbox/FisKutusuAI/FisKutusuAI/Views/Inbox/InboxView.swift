@@ -75,7 +75,7 @@ struct InboxView: View {
     // MARK: - Header
     private var header: some View {
         HStack {
-            Text("inbox")
+            Text("inbox".localized)
                 .font(.system(size: 34, weight: .bold))
                 .foregroundColor(.white)
             
@@ -94,7 +94,7 @@ struct InboxView: View {
     // MARK: - Segmented Control
     private var segmentedControl: some View {
         HStack(spacing: 12) {
-            segmentButton(label: "processing", status: .processing)
+            segmentButton(label: "processing".localized, status: .processing)
             segmentButton(label: "Needs Review", status: .needsReview)
             segmentButton(label: "Approved", status: .approved)
         }
@@ -189,11 +189,11 @@ struct InboxView: View {
             }
             .padding(.bottom, 16)
             
-            Text("inbox_empty")
+            Text("inbox_empty".localized)
                 .font(.system(size: 24, weight: .bold))
                 .foregroundColor(.white)
             
-            Text("inbox_subtitle")
+            Text("inbox_subtitle".localized)
                 .font(.system(size: 16))
                 .foregroundColor(.white.opacity(0.6))
                 .multilineTextAlignment(.center)

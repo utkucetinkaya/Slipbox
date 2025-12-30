@@ -41,15 +41,15 @@ struct PaywallView: View {
                             }
                             
                             VStack(spacing: 8) {
-                                Text("paywall_title")
+                                Text("paywall_title".localized)
                                     .font(.system(size: 28, weight: .bold))
                                     .foregroundColor(.white)
                                 
-                                Text("paywall_subtitle")
+                                Text("paywall_subtitle".localized)
                                     .font(.system(size: 28, weight: .bold))
                                     .foregroundColor(Color(hex: "4F46E5"))
                                 
-                                Text("paywall_description")
+                                Text("paywall_description".localized)
                                     .font(.system(size: 16))
                                     .foregroundColor(.white.opacity(0.7))
                                     .multilineTextAlignment(.center)
@@ -61,16 +61,16 @@ struct PaywallView: View {
                         
                         // Features
                         VStack(alignment: .leading, spacing: 16) {
-                            FeatureRow(text: "paywall_feature_unlimited")
-                            FeatureRow(text: "paywall_feature_export")
-                            FeatureRow(text: "paywall_feature_filters")
+                            FeatureRow(text: "paywall_feature_unlimited".localized)
+                            FeatureRow(text: "paywall_feature_export".localized)
+                            FeatureRow(text: "paywall_feature_filters".localized)
                         }
                         .padding(.horizontal, 32)
                         
                         // Plans
                         HStack(spacing: 16) {
                             PlanCard(
-                                title: "paywall_monthly",
+                                title: "paywall_monthly".localized,
                                 price: "₺29.99",
                                 period: "/mo",
                                 isSelected: selectedPlan == .monthly,
@@ -78,10 +78,10 @@ struct PaywallView: View {
                             )
                             
                             PlanCard(
-                                title: "paywall_yearly",
+                                title: "paywall_yearly".localized,
                                 price: "₺299.99",
                                 period: "/yr",
-                                badge: "paywall_badge_best",
+                                badge: "paywall_badge_best".localized,
                                 isSelected: selectedPlan == .yearly,
                                 action: { selectedPlan = .yearly }
                             )
@@ -98,7 +98,7 @@ struct PaywallView: View {
                                 // Mock purchase success
                                 dismiss()
                             }) {
-                                Text("paywall_cta")
+                                Text("paywall_cta".localized)
                                     .font(.system(size: 18, weight: .bold))
                                     .foregroundColor(.white)
                                     .frame(maxWidth: .infinity)
@@ -111,17 +111,17 @@ struct PaywallView: View {
                             HStack(spacing: 6) {
                                 Image(systemName: "shield.fill")
                                     .font(.system(size: 12))
-                                Text("paywall_easy_cancel")
+                                Text("paywall_easy_cancel".localized)
                                     .font(.system(size: 12))
                             }
                             .foregroundColor(.white.opacity(0.7)) // More neutral and clean
                             
                             HStack(spacing: 16) {
-                                Button("paywall_restore") {}
+                                Button("paywall_restore".localized) {}
                                 Text("•")
-                                Button("terms") {}
+                                Button("terms".localized) {}
                                 Text("•")
-                                Button("privacy") {}
+                                Button("privacy".localized) {}
                             }
                             .font(.system(size: 11))
                             .foregroundColor(.white.opacity(0.4))

@@ -41,15 +41,15 @@ struct PaywallView: View {
                             }
                             
                             VStack(spacing: 8) {
-                                Text("SlipBox Pro ile")
+                                Text("paywall_title")
                                     .font(.system(size: 28, weight: .bold))
                                     .foregroundColor(.white)
                                 
-                                Text("raporlarını hızlandır.")
+                                Text("paywall_subtitle")
                                     .font(.system(size: 28, weight: .bold))
                                     .foregroundColor(Color(hex: "4F46E5"))
                                 
-                                Text("Muhasebecine tek tıkla rapor gönder, sınırsız fiş tarat ve harcamalarını kontrol altına al.")
+                                Text("paywall_description")
                                     .font(.system(size: 16))
                                     .foregroundColor(.white.opacity(0.7))
                                     .multilineTextAlignment(.center)
@@ -61,27 +61,27 @@ struct PaywallView: View {
                         
                         // Features
                         VStack(alignment: .leading, spacing: 16) {
-                            FeatureRow(text: "Sınırsız fiş tarama")
-                            FeatureRow(text: "PDF, CSV ve Link paylaşımı")
-                            FeatureRow(text: "Gelişmiş filtreler")
+                            FeatureRow(text: "paywall_feature_unlimited")
+                            FeatureRow(text: "paywall_feature_export")
+                            FeatureRow(text: "paywall_feature_filters")
                         }
                         .padding(.horizontal, 32)
                         
                         // Plans
                         HStack(spacing: 16) {
                             PlanCard(
-                                title: "Aylık",
+                                title: "paywall_monthly",
                                 price: "₺29.99",
-                                period: "/ay",
+                                period: "/mo",
                                 isSelected: selectedPlan == .monthly,
                                 action: { selectedPlan = .monthly }
                             )
                             
                             PlanCard(
-                                title: "Yıllık",
+                                title: "paywall_yearly",
                                 price: "₺299.99",
-                                period: "/yıl",
-                                badge: "En avantajlı",
+                                period: "/yr",
+                                badge: "paywall_badge_best",
                                 isSelected: selectedPlan == .yearly,
                                 action: { selectedPlan = .yearly }
                             )
@@ -98,7 +98,7 @@ struct PaywallView: View {
                                 // Mock purchase success
                                 dismiss()
                             }) {
-                                Text("Pro'ya Geç")
+                                Text("paywall_cta")
                                     .font(.system(size: 18, weight: .bold))
                                     .foregroundColor(.white)
                                     .frame(maxWidth: .infinity)
@@ -111,17 +111,17 @@ struct PaywallView: View {
                             HStack(spacing: 6) {
                                 Image(systemName: "shield.fill")
                                     .font(.system(size: 12))
-                                Text("İptal etmesi kolay")
+                                Text("paywall_easy_cancel")
                                     .font(.system(size: 12))
                             }
                             .foregroundColor(.white.opacity(0.7)) // More neutral and clean
                             
                             HStack(spacing: 16) {
-                                Button("Satın alımı geri yükle") {}
+                                Button("paywall_restore") {}
                                 Text("•")
-                                Button("Şartlar") {}
+                                Button("terms") {}
                                 Text("•")
-                                Button("Gizlilik") {}
+                                Button("privacy") {}
                             }
                             .font(.system(size: 11))
                             .foregroundColor(.white.opacity(0.4))

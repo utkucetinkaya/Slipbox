@@ -37,6 +37,6 @@ struct LanguageSelectionView: View {
                 .padding(20)
             }
         }
-        .navigationTitle("Dil")
+        .navigationTitle("language")
     }
 }

@@ -75,7 +75,7 @@ struct InboxView: View {
     // MARK: - Header
     private var header: some View {
         HStack {
-            Text("Inbox")
+            Text("inbox")
                 .font(.system(size: 34, weight: .bold))
                 .foregroundColor(.white)
             
@@ -94,9 +94,9 @@ struct InboxView: View {
     // MARK: - Segmented Control
     private var segmentedControl: some View {
         HStack(spacing: 12) {
-            segmentButton(label: "Yeni", status: .processing)
-            segmentButton(label: "Onay Bekleyen", status: .needsReview)
-            segmentButton(label: "Tamam", status: .approved)
+            segmentButton(label: "processing", status: .processing)
+            segmentButton(label: "Needs Review", status: .needsReview)
+            segmentButton(label: "Approved", status: .approved)
         }
         .padding(4)
         .background(Color.white.opacity(0.05))
@@ -135,6 +135,10 @@ struct InboxView: View {
                     // Visible Card
                     ReceiptCardView(receipt: receipt)
                 }
+                .transition(.asymmetric(
+                    insertion: .move(edge: .trailing).combined(with: .opacity),
+                    removal: .move(edge: .leading).combined(with: .opacity)
+                ))
                 .listRowSeparator(.hidden)
                 .listRowBackground(Color.clear)
                 .listRowInsets(EdgeInsets(top: 6, leading: 20, bottom: 6, trailing: 20))
@@ -185,11 +189,11 @@ struct InboxView: View {
             }
             .padding(.bottom, 16)
             
-            Text("No Receipts Yet")
+            Text("inbox_empty")
                 .font(.system(size: 24, weight: .bold))
                 .foregroundColor(.white)
             
-            Text("Your inbox is empty. Scan your first receipt to\nstart organizing your expenses effortlessly.")
+            Text("inbox_subtitle")
                 .font(.system(size: 16))
                 .foregroundColor(.white.opacity(0.6))
                 .multilineTextAlignment(.center)

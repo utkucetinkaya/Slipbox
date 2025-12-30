@@ -1,0 +1,81 @@
+/* General */
+"ok" = "Tamam";
+"cancel" = "İptal";
+"save" = "Kaydet";
+"delete" = "Sil";
+"edit" = "Düzenle";
+"done" = "Bitti";
+"continue" = "Devam Et";
+
+/* Settings */
+"settings" = "Ayarlar";
+"language" = "Dil";
+"currency" = "Para Birimi";
+"preferences" = "TERCİHLER";
+"about" = "Hakkında";
+"privacy" = "Gizlilik";
+"terms" = "Şartlar";
+
+/* Welcome & Auth */
+"welcome_title" = "SlipBox'a Hoş Geldin";
+"welcome_subtitle" = "Fişlerini akıllıca yönet";
+"sign_in_apple" = "Apple ile Giriş Yap";
+"sign_in_email" = "E-posta ile Giriş Yap";
+"create_account" = "Hesap Oluştur";
+
+/* Onboarding */
+"onboarding_scan_title" = "Fişlerini Tara";
+"onboarding_scan_description" = "Kameranla fişlerini anında dijitalleştir";
+"onboarding_ai_title" = "AI ile Analiz";
+"onboarding_ai_description" = "Yapay zeka otomatik kategorize eder";
+"onboarding_report_title" = "Raporla ve Paylaş";
+"onboarding_report_description" = "Detaylı raporlar oluştur ve kolayca paylaş";
+"get_started" = "Başlayalım";
+"skip" = "Geç";
+
+/* Main Tabs */
+"inbox" = "Gelen Kutusu";
+"capture" = "Tara";
+"reports" = "Raporlar";
+
+/* Paywall */
+"paywall_title" = "SlipBox Pro ile";
+"paywall_subtitle" = "raporlarını hızlandır.";
+"paywall_description" = "Muhasebecine tek tıkla rapor gönder, sınırsız fiş tarat ve harcamalarını kontrol altına al.";
+"paywall_feature_unlimited" = "Sınırsız fiş tarama";
+"paywall_feature_export" = "PDF, CSV ve Link paylaşımı";
+"paywall_feature_filters" = "Gelişmiş filtreler";
+"paywall_monthly" = "Aylık";
+"paywall_yearly" = "Yıllık";
+"paywall_badge_best" = "En avantajlı";
+"paywall_cta" = "Pro'ya Geç";
+"paywall_easy_cancel" = "İptal etmesi kolay";
+"paywall_restore" = "Satın alımı geri yükle";
+
+/* Reports */
+"reports_title" = "Raporlar";
+"total_expense" = "Toplam Gider";
+"receipt_count" = "Fiş Sayısı";
+"top_category" = "En Çok";
+"category_detail" = "Kategori Detayı";
+"view_all" = "Tümü";
+"export" = "Dışa Aktar";
+"export_pdf" = "PDF İndir";
+"export_csv" = "CSV İndir";
+"export_link" = "Muhasebeci Linki Paylaş";
+
+/* Categories */
+"category_market" = "Market";
+"category_transport" = "Ulaşım";
+"category_entertainment" = "Eğlence";
+"category_food" = "Gıda";
+"category_other" = "Diğer";
+
+/* Camera */
+"camera_instruction" = "Fişi kadraja hizala";
+"select_from_gallery" = "Galeriden Seç";
+
+/* Inbox */
+"inbox_empty" = "Henüz fiş yok";
+"inbox_subtitle" = "Fişlerini tarayarak başla";
+"processing" = "İşleniyor...";

@@ -17,28 +17,28 @@ struct SettingsView: View {
                         
                         // Preferences
                         VStack(alignment: .leading, spacing: 8) {
-                            sectionHeader("TERCİHLER")
+                            sectionHeader("preferences")
                             
                             NavigationLink(destination: CurrencySelectionView()) {
-                                SettingsRow(icon: "arrow.triangle.2.circlepath", title: "Para Birimi", value: "\(userPreferences.currencySymbol) (\(userPreferences.currencyCode))", color: Color(hex: "4F46E5"))
+                                SettingsRow(icon: "arrow.triangle.2.circlepath", title: "currency", value: "\(userPreferences.currencySymbol) (\(userPreferences.currencyCode))", color: Color(hex: "4F46E5"))
                             }
                             
                             NavigationLink(destination: LanguageSelectionView()) {
-                                SettingsRow(icon: "globe", title: "Dil", value: userPreferences.languageName(for: userPreferences.languageCode), color: Color(hex: "4F46E5"))
+                                SettingsRow(icon: "globe", title: "language", value: userPreferences.languageName(for: userPreferences.languageCode), color: Color(hex: "4F46E5"))
                             }
                         }
                         
                         // Support & Legal
                         VStack(alignment: .leading, spacing: 8) {
-                            sectionHeader("DESTEK & YASAL")
-                            SettingsRow(icon: "bubble.left.fill", title: "Geri bildirim gönder", color: Color(hex: "06B6D4"))
-                            SettingsRow(icon: "lock.fill", title: "Gizlilik", color: Color(hex: "A855F7"))
-                            SettingsRow(icon: "doc.text.fill", title: "Şartlar", color: Color(hex: "FFCC00"))
+                            sectionHeader("SUPPORT & LEGAL")
+                            SettingsRow(icon: "bubble.left.fill", title: "Send Feedback", color: Color(hex: "06B6D4"))
+                            SettingsRow(icon: "lock.fill", title: "privacy", color: Color(hex: "A855F7"))
+                            SettingsRow(icon: "doc.text.fill", title: "terms", color: Color(hex: "FFCC00"))
                         }
                         
                         // Danger Zone
                         VStack(alignment: .leading, spacing: 8) {
-                            sectionHeader("TEHLİKELİ BÖLGE")
+                            sectionHeader("DANGER ZONE")
                             NavigationLink(destination: DeleteAccountView()) {
                                 HStack {
                                     Circle()
@@ -50,7 +50,7 @@ struct SettingsView: View {
                                                 .font(.system(size: 14))
                                         )
                                     
-                                    Text("Hesabı Sil")
+                                    Text("Delete Account")
                                         .font(.system(size: 16, weight: .medium))
                                         .foregroundColor(Color(hex: "FF3B30"))
                                     
@@ -72,7 +72,7 @@ struct SettingsView: View {
                         
                         // Developer / Debug Section
                         VStack(alignment: .leading, spacing: 8) {
-                            sectionHeader("GELİŞTİRİCİ")
+                            sectionHeader("DEVELOPER")
                             
                             Button(action: { LaunchManager.shared.resetOnboarding() }) {
                                 SettingsRow(icon: "arrow.counterclockwise", title: "Reset Onboarding", color: .orange)
@@ -100,7 +100,7 @@ struct SettingsView: View {
                     .padding(.top, 0) // Removed extra top padding
                 }
             }
-            .navigationTitle("Ayarlar")
+            .navigationTitle("settings")
             .navigationBarTitleDisplayMode(.inline) // Ensure title is visible and compact
         }
     }

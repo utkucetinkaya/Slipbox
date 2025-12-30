@@ -9,7 +9,7 @@ struct MainTabView: View {
                 .tabItem {
                     VStack {
                         Image(systemName: selectedTab == 0 ? "tray.fill" : "tray")
-                        Text("Inbox")
+                        Text("inbox")
                     }
                 }
                 .tag(0)
@@ -18,7 +18,7 @@ struct MainTabView: View {
                 .tabItem {
                     VStack {
                         Image(systemName: selectedTab == 1 ? "chart.bar.fill" : "chart.bar")
-                        Text("Raporlar")
+                        Text("reports")
                     }
                 }
                 .tag(1)
@@ -27,7 +27,7 @@ struct MainTabView: View {
                 .tabItem {
                     VStack {
                         Image(systemName: selectedTab == 2 ? "gearshape.fill" : "gearshape")
-                        Text("Ayarlar")
+                        Text("settings")
                     }
                 }
                 .tag(2)

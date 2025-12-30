@@ -1,0 +1,81 @@
+/* General */
+"ok" = "OK";
+"cancel" = "Cancel";
+"save" = "Save";
+"delete" = "Delete";
+"edit" = "Edit";
+"done" = "Done";
+"continue" = "Continue";
+
+/* Settings */
+"settings" = "Settings";
+"language" = "Language";
+"currency" = "Currency";
+"preferences" = "PREFERENCES";
+"about" = "About";
+"privacy" = "Privacy";
+"terms" = "Terms";
+
+/* Welcome & Auth */
+"welcome_title" = "Welcome to SlipBox";
+"welcome_subtitle" = "Manage your receipts smartly";
+"sign_in_apple" = "Sign in with Apple";
+"sign_in_email" = "Sign in with Email";
+"create_account" = "Create Account";
+
+/* Onboarding */
+"onboarding_scan_title" = "Scan Receipts";
+"onboarding_scan_description" = "Digitize receipts instantly with your camera";
+"onboarding_ai_title" = "AI Analysis";
+"onboarding_ai_description" = "AI automatically categorizes";
+"onboarding_report_title" = "Report and Share";
+"onboarding_report_description" = "Create detailed reports and share easily";
+"get_started" = "Get Started";
+"skip" = "Skip";
+
+/* Main Tabs */
+"inbox" = "Inbox";
+"capture" = "Scan";
+"reports" = "Reports";
+
+/* Paywall */
+"paywall_title" = "Faster reports with";
+"paywall_subtitle" = "SlipBox Pro.";
+"paywall_description" = "Send reports to your accountant with one tap, scan unlimited receipts and take control of your expenses.";
+"paywall_feature_unlimited" = "Unlimited receipt scanning";
+"paywall_feature_export" = "PDF, CSV and Link sharing";
+"paywall_feature_filters" = "Advanced filters";
+"paywall_monthly" = "Monthly";
+"paywall_yearly" = "Yearly";
+"paywall_badge_best" = "Best value";
+"paywall_cta" = "Go Pro";
+"paywall_easy_cancel" = "Easy to cancel";
+"paywall_restore" = "Restore purchases";
+
+/* Reports */
+"reports_title" = "Reports";
+"total_expense" = "Total Expenses";
+"receipt_count" = "Receipt Count";
+"top_category" = "Top";
+"category_detail" = "Category Details";
+"view_all" = "View All";
+"export" = "Export";
+"export_pdf" = "Download PDF";
+"export_csv" = "Download CSV";
+"export_link" = "Share Accountant Link";
+
+/* Categories */
+"category_market" = "Groceries";
+"category_transport" = "Transport";
+"category_entertainment" = "Entertainment";
+"category_food" = "Food";
+"category_other" = "Other";
+
+/* Camera */
+"camera_instruction" = "Align receipt in frame";
+"select_from_gallery" = "Select from Gallery";
+
+/* Inbox */
+"inbox_empty" = "No receipts yet";
+"inbox_subtitle" = "Get started by scanning";
+"processing" = "Processing...";

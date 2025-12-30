@@ -16,6 +16,7 @@ struct FisKutusuAIApp: App {
             RootView()
                 .environmentObject(authManager)
                 .environmentObject(userPreferences)
+                .environment(\.locale, userPreferences.locale)
         }
     }
 }

@@ -1,5 +1,6 @@
 import SwiftUI
 import Combine
+import FirebaseFirestore
 
 class ReportsViewModel: ObservableObject {
     @Published var currentDate = Date()

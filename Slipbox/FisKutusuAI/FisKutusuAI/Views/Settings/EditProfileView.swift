@@ -1,5 +1,6 @@
 import SwiftUI
 import PhotosUI
+import FirebaseAuth
 
 struct EditProfileView: View {
     @Environment(\.dismiss) var dismiss

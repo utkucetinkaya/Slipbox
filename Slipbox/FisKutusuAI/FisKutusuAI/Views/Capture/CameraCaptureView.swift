@@ -134,13 +134,18 @@ struct CameraCaptureView: View {
              #if targetEnvironment(simulator)
              PhotoPickerView(selectedImage: .init(get: { nil }, set: { img in
                  if let img = img {
-                     onImageCaptured(img)
+                     // Add a tiny delay to ensure sheet dismissal doesn't conflict with parent state transitions
+                     DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                         onImageCaptured(img)
+                     }
                  }
              }))
              #else
              PhotoPickerView(selectedImage: .init(get: { nil }, set: { img in
                  if let img = img {
-                     onImageCaptured(img)
+                     DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                         onImageCaptured(img)
+                     }
                  }
              }))
              #endif

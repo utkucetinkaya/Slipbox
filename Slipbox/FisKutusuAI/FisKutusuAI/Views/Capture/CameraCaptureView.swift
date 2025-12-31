@@ -356,18 +356,18 @@ struct PhotoPickerView: UIViewControllerRepresentable {
         }
         
         func picker(_ picker: PHPickerViewController, didFinishPicking results: [PHPickerResult]) {
-            // 1. Dismiss picker first
-            picker.dismiss(animated: true)
-            
-            // 2. Load image if available
-            guard let provider = results.first?.itemProvider else { return }
-            
-            if provider.canLoadObject(ofClass: UIImage.self) {
-                provider.loadObject(ofClass: UIImage.self) { image, error in
-                    DispatchQueue.main.async {
-                        if let image = image as? UIImage {
-                            // 3. Pass image to parent binding
-                            self.parent.selectedImage = image
+            // 1. Dismiss picker first, and handle selection AFTER animation completes
+            picker.dismiss(animated: true) { [weak self] in
+                // 2. Load image if available
+                guard let provider = results.first?.itemProvider else { return }
+                
+                if provider.canLoadObject(ofClass: UIImage.self) {
+                    provider.loadObject(ofClass: UIImage.self) { image, error in
+                        DispatchQueue.main.async {
+                            if let image = image as? UIImage {
+                                // 3. Pass image to parent binding
+                                self?.parent.selectedImage = image
+                            }
                         }
                     }
                 }

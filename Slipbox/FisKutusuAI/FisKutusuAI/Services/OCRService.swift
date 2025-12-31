@@ -55,14 +55,53 @@ class OCRService {
         let lines = text.components(separatedBy: "\n")
         var result = OCRResult(rawText: text, confidence: 0.5)
         
-        // 1. Merchant Name Heuristic: Usually the first line with enough characters that isn't just date/time
-        for line in lines.prefix(3) {
-            let clean = line.trimmingCharacters(in: .whitespacesAndNewlines)
-            if clean.count > 3 && !clean.contains(":") && !clean.contains(".") {
-                result.merchantName = clean
-                break
+        // 1. Merchant Name Heuristic
+        let genericBlocklist = [
+            "E-ARŞİV", "E-ARSIV", "FATURA", "MÜŞTERİ", "MUSTERI", "NÜSHASI", "NUSHASI",
+            "SATIŞ", "SATIS", "İŞYERİ", "ISYERI", "TERMINAL", "FİS", "FISI", "BELGE",
+            "Mersis", "Tarih:", "Saat:", "ETTN", "TCKN", "VKN", "TUTAR", "TOPLAM", "KDV"
+        ]
+        
+        let knownBrands = ["A101", "BİM", "BIM", "ŞOK", "SOK", "MİGROS", "MIGROS", "CARREFOUR", "KÖFTECİ YUSUF"]
+        
+        // Search first 10 lines for known brands first
+        for line in lines.prefix(10) {
+            let clean = line.trimmingCharacters(in: .whitespacesAndNewlines).uppercased()
+            for brand in knownBrands {
+                if clean.contains(brand) {
+                    result.merchantName = clean
+                    break
+                }
+            }
+            if result.merchantName != nil { break }
+        }
+        
+        // Fallback heuristic if no known brand found
+        if result.merchantName == nil {
+            for line in lines.prefix(6) {
+                let clean = line.trimmingCharacters(in: .whitespacesAndNewlines)
+                let upperClean = clean.uppercased()
+                
+                // Skip if contains generic blocklist terms
+                let isGeneric = genericBlocklist.contains { term in upperClean.contains(term.uppercased()) }
+                if isGeneric { continue }
+                
+                // Valid merchant names usually don't have many symbols or start with numbers
+                if clean.count > 3 && !clean.contains(":") {
+                    // Prefer names with A.Ş. or LTD.
+                    if upperClean.contains("A.Ş") || upperClean.contains("LTD") || upperClean.contains("A.S") {
+                        result.merchantName = clean
+                        break
+                    }
+                    
+                    // Otherwise take the first plausible line
+                    if result.merchantName == nil {
+                        result.merchantName = clean
+                    }
+                }
             }
         }
+        
         if result.merchantName == nil {
              result.merchantName = lines.first?.trimmingCharacters(in: .whitespacesAndNewlines)
         }

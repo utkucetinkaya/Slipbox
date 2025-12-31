@@ -21,7 +21,7 @@ struct ProcessingView: View {
             VStack {
                 // Header
                 HStack {
-                    Text("Processing")
+                    Text("processing_title".localized)
                         .font(.system(size: 16, weight: .bold))
                         .foregroundColor(.white)
                     
@@ -70,12 +70,12 @@ struct ProcessingView: View {
                 .padding(.bottom, 40)
                 
                 // Status Text
-                Text(isCompleted ? "İşlem Tamamlandı" : "Fiş işleniyor...")
+                Text(isCompleted ? "processing_completed".localized : "processing_in_progress".localized)
                     .font(.system(size: 24, weight: .bold))
                     .foregroundColor(.white)
                     .padding(.bottom, 8)
                 
-                Text("We are extracting details from your scan. You can leave this screen.")
+                Text("processing_description".localized)
                     .font(.system(size: 14))
                     .foregroundColor(.white.opacity(0.6))
                     .multilineTextAlignment(.center)
@@ -84,9 +84,9 @@ struct ProcessingView: View {
                 
                 // Extraction Placeholders
                 VStack(spacing: 12) {
-                    ExtractionRow(icon: "storefront.fill", label: "Merchant", value: extractedMerchant)
-                    ExtractionRow(icon: "calendar", label: "Date", value: extractedDate)
-                    ExtractionRow(icon: "doc.text.fill", label: "Total", value: extractedTotal)
+                    ExtractionRow(icon: "storefront.fill", label: "merchant".localized, value: extractedMerchant)
+                    ExtractionRow(icon: "calendar", label: "date".localized, value: extractedDate)
+                    ExtractionRow(icon: "doc.text.fill", label: "amount".localized, value: extractedTotal)
                 }
                 .padding(.horizontal, 24)
                 
@@ -94,7 +94,7 @@ struct ProcessingView: View {
                 
                 // Action Button
                 Button(action: onReturnToInbox) {
-                    Text("Inbox'a dön")
+                    Text("return_to_inbox".localized)
                         .font(.system(size: 16, weight: .bold))
                         .foregroundColor(.white)
                         .frame(maxWidth: .infinity)

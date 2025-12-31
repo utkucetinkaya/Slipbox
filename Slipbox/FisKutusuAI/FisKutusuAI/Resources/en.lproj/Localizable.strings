@@ -91,6 +91,11 @@
 "inbox_empty" = "No receipts yet";
 "inbox_subtitle" = "Get started by scanning";
 "processing" = "Processing...";
+"processing_title" = "Processing";
+"processing_completed" = "Processing Completed";
+"processing_in_progress" = "Processing receipt...";
+"processing_description" = "We are extracting details from your scan. You can leave this screen.";
+"return_to_inbox" = "Return to Inbox";
 
 /* Receipt Details */
 "date" = "Date";

@@ -91,6 +91,11 @@
 "inbox_empty" = "Henüz fiş yok";
 "inbox_subtitle" = "Fişlerini tarayarak başla";
 "processing" = "İşleniyor...";
+"processing_title" = "İşleniyor";
+"processing_completed" = "İşlem Tamamlandı";
+"processing_in_progress" = "Fiş işleniyor...";
+"processing_description" = "Fişinizden detayları çıkartıyoruz. Bu ekrandan ayrılabilirsiniz.";
+"return_to_inbox" = "Gelen Kutusu'na dön";
 
 /* Receipt Details */
 "date" = "Tarih";

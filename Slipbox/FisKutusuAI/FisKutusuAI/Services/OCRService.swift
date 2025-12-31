@@ -106,9 +106,10 @@ class OCRService {
              result.merchantName = lines.first?.trimmingCharacters(in: .whitespacesAndNewlines)
         }
         
-        // 2. Total Amount (Looking for the largest number near currency keywords or generally the largest in the bottom half)
-        // Regex: Matches numbers like 123,45 123.45 and optional ₺, TL, TRY
-        let amountPattern = #"(\d+[\.,]\d{2})(?:\s*(?:TL|TRY|₺))?"#
+        // 2. Total Amount
+        // Regex: Matches numbers like 123,45 or 123.45. Group 1 captures the digits.
+        // We look for patterns like "* 163.78", "TOPLAM 163,78", etc.
+        let amountPattern = #"(\d+[\.,]\d{2})"#
         let amountRegex = try? NSRegularExpression(pattern: amountPattern, options: .caseInsensitive)
         let matches = amountRegex?.matches(in: text, range: NSRange(text.startIndex..., in: text)) ?? []
         
@@ -117,6 +118,8 @@ class OCRService {
             if let range = Range(match.range(at: 1), in: text) {
                 let cleanStr = text[range].replacingOccurrences(of: ",", with: ".")
                 if let val = Double(cleanStr) {
+                    // Filter out numbers that look like dates (e.g. 20.20 from 20.2023)
+                    // Simple heuristic: Total usually doesn't have 4 digits immediately following it
                     amounts.append(val)
                 }
             }

@@ -53,11 +53,18 @@ class ReportsViewModel: ObservableObject {
     private func calculateStats(receipts: [Receipt], for date: Date) {
         let calendar = Calendar.current
         let monthStart = calendar.date(from: calendar.dateComponents([.year, .month], from: date))!
-        let monthEnd = calendar.date(byAdding: DateComponents(month: 1, day: -1), to: monthStart)!
+        // Calculate the first day of next month, then subtract 1 second to get the very end of the last day of current month
+        let nextMonth = calendar.date(byAdding: .month, value: 1, to: monthStart)!
+        let monthEnd = calendar.date(byAdding: .second, value: -1, to: nextMonth)!
         
         let monthReceipts = receipts.filter { receipt in
             let receiptDate = receipt.displayDate
-            return receiptDate >= monthStart && receiptDate <= monthEnd && receipt.status == .approved
+            let addedDate = receipt.createdAt?.dateValue() ?? receiptDate
+            
+            let dateInMonth = receiptDate >= monthStart && receiptDate <= monthEnd
+            let addedInMonth = addedDate >= monthStart && addedDate <= monthEnd
+            
+            return (dateInMonth || addedInMonth) && receipt.status == .approved
         }
         
         self.receiptCount = monthReceipts.count

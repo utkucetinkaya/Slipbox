@@ -59,7 +59,7 @@ class FirestoreReceiptRepository: ObservableObject {
         var updated = receipt
         updated.updatedAt = Timestamp(date: Date())
         
-        try db.collection("users").document(uid).collection("receipts").document(id)
+        try await db.collection("users").document(uid).collection("receipts").document(id)
             .setData(from: updated, merge: true)
     }
     

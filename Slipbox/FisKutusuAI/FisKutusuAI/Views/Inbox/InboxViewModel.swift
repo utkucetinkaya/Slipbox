@@ -17,11 +17,15 @@ class InboxViewModel: ObservableObject {
         // Status filter
         if let status = selectedFilter {
             if status == .new {
-                // For 'New', only show receipts from the last 15 minutes
+                // 'Yeni' tab: Only show .new receipts from the last 15 minutes
                 let fifteenMinsAgo = Date().addingTimeInterval(-15 * 60)
                 filtered = filtered.filter { receipt in
                     receipt.status == .new && (receipt.createdAt?.dateValue() ?? Date()) > fifteenMinsAgo
                 }
+            } else if status == .pendingReview {
+                // 'Onay Bekleyen' tab: Show BOTH .new and .pendingReview
+                // This acts as a catch-all for items requiring approval
+                filtered = filtered.filter { $0.status == .new || $0.status == .pendingReview }
             } else {
                 filtered = filtered.filter { $0.status == status }
             }

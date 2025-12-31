@@ -132,8 +132,8 @@ struct ProcessingView: View {
                 let catResult = CategorizationService.shared.categorize(merchantName: ocrResult.merchantName, rawText: ocrResult.rawText)
                 
                 // 4. Determine Status
-                // All receipts now land in 'pending_review' to ensure user verification
-                let initialStatus: ReceiptStatus = .pendingReview
+                // All receipts now land in 'new' initially for easy access in the 'Recent' tab
+                let initialStatus: ReceiptStatus = .new
                 
                 // Fetch category name if found
                 var categoryName: String? = nil

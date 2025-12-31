@@ -1,6 +1,7 @@
 import Foundation
 import SwiftUI
 import Combine
+import FirebaseFirestore
 
 class InboxViewModel: ObservableObject {
     @Published var receipts: [Receipt] = []

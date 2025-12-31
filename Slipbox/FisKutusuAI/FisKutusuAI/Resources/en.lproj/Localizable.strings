@@ -171,6 +171,8 @@
 "status_approved" = "Approved";
 "status_rejected" = "Rejected";
 "status_error" = "Error";
+"ara" = "Search...";
+"vazgec" = "Cancel";
 
 /* App Name */
 "slipbox_app_name" = "SlipBox";

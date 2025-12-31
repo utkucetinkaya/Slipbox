@@ -5,17 +5,29 @@ import Combine
 class InboxViewModel: ObservableObject {
     @Published var receipts: [Receipt] = []
     @Published var selectedFilter: ReceiptStatus? = .new
+    @Published var searchText: String = ""
     
     private var cancellables = Set<AnyCancellable>()
     private let repository = FirestoreReceiptRepository.shared
     
     var filteredReceipts: [Receipt] {
-        let filtered: [Receipt]
+        var filtered: [Receipt] = receipts
+        
+        // Status filter
         if let status = selectedFilter {
-            filtered = receipts.filter { $0.status == status }
-        } else {
-            filtered = receipts
+            filtered = filtered.filter { $0.status == status }
         }
+        
+        // Search filter
+        if !searchText.isEmpty {
+            let query = searchText.lowercased()
+            filtered = filtered.filter { receipt in
+                let merchantMatch = receipt.merchantName?.lowercased().contains(query) ?? false
+                let noteMatch = receipt.note?.lowercased().contains(query) ?? false
+                return merchantMatch || noteMatch
+            }
+        }
+        
         return filtered.sorted(by: { $0.displayDate > $1.displayDate })
     }
     

@@ -4,6 +4,8 @@ struct InboxView: View {
     @StateObject private var viewModel = InboxViewModel()
     @EnvironmentObject var localizationManager: LocalizationManager
     @State private var showingScanner = false
+    @State private var isSearching = false
+    @FocusState private var isSearchFieldFocused: Bool
     
     var body: some View {
         NavigationStack {
@@ -13,10 +15,18 @@ struct InboxView: View {
                     .ignoresSafeArea()
                 
                 VStack(spacing: 0) {
-                    // Header
-                    header
-                        .padding(.horizontal, 20)
-                        .padding(.top, 8)
+                    // Header or Search Bar
+                    if isSearching {
+                        searchBar
+                            .padding(.horizontal, 20)
+                            .padding(.top, 8)
+                            .transition(.move(edge: .top).combined(with: .opacity))
+                    } else {
+                        header
+                            .padding(.horizontal, 20)
+                            .padding(.top, 8)
+                            .transition(.move(edge: .top).combined(with: .opacity))
+                    }
                     
                     // Divider
                     Rectangle()
@@ -60,15 +70,53 @@ struct InboxView: View {
                     .font(.system(size: 24))
                     .foregroundColor(.white)
             }
-            .padding(.trailing, 8)
+            .padding(.trailing, 16)
             
             Button(action: {
-                // Search action
+                withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
+                    isSearching = true
+                    isSearchFieldFocused = true
+                }
             }) {
                 Image(systemName: "magnifyingglass")
                     .font(.system(size: 20))
                     .foregroundColor(.white.opacity(0.6))
             }
+        }
+    }
+    
+    // MARK: - Search Bar
+    private var searchBar: some View {
+        HStack(spacing: 12) {
+            HStack {
+                Image(systemName: "magnifyingglass")
+                    .foregroundColor(.white.opacity(0.4))
+                
+                TextField("ara".localized, text: $viewModel.searchText)
+                    .foregroundColor(.white)
+                    .focused($isSearchFieldFocused)
+                    .submitLabel(.search)
+                
+                if !viewModel.searchText.isEmpty {
+                    Button(action: { viewModel.searchText = "" }) {
+                        Image(systemName: "xmark.circle.fill")
+                            .foregroundColor(.white.opacity(0.4))
+                    }
+                }
+            }
+            .padding(12)
+            .background(Color.white.opacity(0.05))
+            .cornerRadius(12)
+            
+            Button("vazgec".localized) {
+                withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
+                    isSearching = false
+                    viewModel.searchText = ""
+                    isSearchFieldFocused = false
+                }
+            }
+            .foregroundColor(Color(hex: "4F46E5"))
+            .font(.system(size: 16, weight: .medium))
         }
     }
     

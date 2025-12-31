@@ -171,6 +171,8 @@
 "status_approved" = "Tamam";
 "status_rejected" = "Reddedildi";
 "status_error" = "Hata";
+"ara" = "Arama...";
+"vazgec" = "Vazgeç";
 
 /* App Name */
 "slipbox_app_name" = "SlipBox";

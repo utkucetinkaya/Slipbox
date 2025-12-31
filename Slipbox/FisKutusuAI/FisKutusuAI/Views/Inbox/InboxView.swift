@@ -3,7 +3,6 @@ import SwiftUI
 struct InboxView: View {
     @StateObject private var viewModel = InboxViewModel()
     @EnvironmentObject var localizationManager: LocalizationManager
-    @State private var showingAddReceipt = false
     @State private var showingScanner = false
     
     var body: some View {
@@ -37,27 +36,6 @@ struct InboxView: View {
                         receiptsList
                     }
                 }
-                
-                // Floating Action Button
-                VStack {
-                    Spacer()
-                    HStack {
-                        Spacer()
-                        Button(action: {
-                            showingScanner = true
-                        }) {
-                            Image(systemName: "plus")
-                                .font(.system(size: 24, weight: .semibold))
-                                .foregroundColor(.white)
-                                .frame(width: 64, height: 64)
-                                .background(Color(hex: "4F46E5"))
-                                .clipShape(Circle())
-                                .shadow(color: Color(hex: "4F46E5").opacity(0.4), radius: 20, x: 0, y: 10)
-                        }
-                        .padding(.trailing, 24)
-                        .padding(.bottom, 24)
-                    }
-                }
             }
             .fullScreenCover(isPresented: $showingScanner) {
                 ScannerCoordinator()
@@ -74,6 +52,15 @@ struct InboxView: View {
                 .foregroundColor(.white)
             
             Spacer()
+            
+            Button(action: {
+                showingScanner = true
+            }) {
+                Image(systemName: "plus")
+                    .font(.system(size: 24))
+                    .foregroundColor(.white)
+            }
+            .padding(.trailing, 8)
             
             Button(action: {
                 // Search action

@@ -16,29 +16,32 @@ struct ScannerCoordinator: View {
         ZStack {
             Color(hex: "0A0A14").ignoresSafeArea()
             
-            switch currentStep {
-            case .camera:
-                CameraCaptureView(onImageCaptured: { image in
-                    currentStep = .crop(image)
-                }, onDismiss: {
-                    dismiss()
-                })
-                .transition(.opacity)
-                
-            case .crop(let image):
-                ImageCropView(image: image, onRetake: {
-                    currentStep = .camera
-                }, onContinue: { croppedImage in
-                    currentStep = .processing(croppedImage)
-                })
-                .transition(.opacity)
-                
-            case .processing(let image):
-                ProcessingView(image: image, onReturnToInbox: {
-                    dismiss()
-                })
-                .transition(.opacity)
+            Group {
+                switch currentStep {
+                case .camera:
+                    CameraCaptureView(onImageCaptured: { image in
+                        currentStep = .crop(image)
+                    }, onDismiss: {
+                        dismiss()
+                    })
+                    .id("camera")
+                    
+                case .crop(let image):
+                    ImageCropView(image: image, onRetake: {
+                        currentStep = .camera
+                    }, onContinue: { croppedImage in
+                        currentStep = .processing(croppedImage)
+                    })
+                    .id("crop")
+                    
+                case .processing(let image):
+                    ProcessingView(image: image, onReturnToInbox: {
+                        dismiss()
+                    })
+                    .id("processing")
+                }
             }
+            .transition(.opacity)
         }
         .animation(.easeInOut(duration: 0.4), value: currentStep)
         .environmentObject(viewModel)

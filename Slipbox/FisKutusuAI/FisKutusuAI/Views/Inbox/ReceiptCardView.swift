@@ -44,7 +44,7 @@ struct ReceiptCardView: View {
     
     @ViewBuilder
     private var badgeIcon: some View {
-        if receipt.status == .processing {
+        if receipt.status == .processing || receipt.status == .new {
             ProgressView()
                 .progressViewStyle(CircularProgressViewStyle(tint: .white))
                 .scaleEffect(0.7)

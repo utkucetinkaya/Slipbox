@@ -16,7 +16,7 @@ struct ProcessingView: View {
     
     var body: some View {
         ZStack {
-            Color(hex: "0A0A14").ignoresSafeArea()
+            // Background is managed by ScannerCoordinator for seamless transitions
             
             VStack {
                 // Header

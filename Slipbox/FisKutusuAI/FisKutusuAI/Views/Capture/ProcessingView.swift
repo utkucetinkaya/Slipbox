@@ -164,21 +164,18 @@ struct ProcessingView: View {
                 // Animate fields one by one to create "scanning" effect
                 try? await Task.sleep(nanoseconds: 300_000_000) // 0.3s base delay
                 
-                // Let's actually rebuild the receipt incrementally on the main thread
-                var buildingReceipt = finalReceipt
-                buildingReceipt.merchantName = nil
-                buildingReceipt.date = nil
-                buildingReceipt.total = nil
-                
+                // Clear fields initially (they were set in step 2, but we want to re-reveal them)
                 await MainActor.run {
-                    self.receipt = buildingReceipt
+                    extractedMerchant = nil
+                    extractedDate = nil
+                    extractedTotal = nil
                 }
                 
                 // Merchant
                 try? await Task.sleep(nanoseconds: 200_000_000)
                 await MainActor.run {
                     withAnimation {
-                        self.receipt?.merchantName = finalReceipt.merchantName
+                        extractedMerchant = finalReceipt.merchantName
                     }
                 }
                 
@@ -186,7 +183,7 @@ struct ProcessingView: View {
                 try? await Task.sleep(nanoseconds: 400_000_000)
                 await MainActor.run {
                     withAnimation {
-                        self.receipt?.date = finalReceipt.date
+                        extractedDate = finalReceipt.date?.formatted(date: .abbreviated, time: .omitted)
                     }
                 }
                 
@@ -194,7 +191,7 @@ struct ProcessingView: View {
                 try? await Task.sleep(nanoseconds: 400_000_000)
                 await MainActor.run {
                     withAnimation {
-                        self.receipt?.total = finalReceipt.total
+                        extractedTotal = finalReceipt.total != nil ? "\(finalReceipt.total!)" : nil
                     }
                 }
                 

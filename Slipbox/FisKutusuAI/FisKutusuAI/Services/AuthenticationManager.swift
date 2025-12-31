@@ -221,7 +221,7 @@ final class AuthenticationManager: ObservableObject {
                 "email": email ?? "",
                 "displayName": "",
                 "phoneNumber": "",
-                "profileImageUrl": nil,
+                "profileImageUrl": NSNull(),
                 "currencyDefault": "TRY",
                 "locale": "tr-TR",
                 "onboardingCompleted": false,

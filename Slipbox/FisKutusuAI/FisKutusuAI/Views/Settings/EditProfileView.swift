@@ -103,6 +103,12 @@ struct EditProfileView: View {
         }
     }
     
+    private func saveProfile() {
+        Task {
+            isLoading = true
+            errorMessage = nil
+            do {
+                var imageUrl: String? = nil
                 if let image = selectedImage {
                     imageUrl = try await authManager.processProfileImage(image)
                 }

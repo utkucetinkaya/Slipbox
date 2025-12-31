@@ -15,7 +15,15 @@ class InboxViewModel: ObservableObject {
         
         // Status filter
         if let status = selectedFilter {
-            filtered = filtered.filter { $0.status == status }
+            if status == .new {
+                // For 'New', only show receipts from the last 15 minutes
+                let fifteenMinsAgo = Date().addingTimeInterval(-15 * 60)
+                filtered = filtered.filter { receipt in
+                    receipt.status == .new && (receipt.createdAt?.dateValue() ?? Date()) > fifteenMinsAgo
+                }
+            } else {
+                filtered = filtered.filter { $0.status == status }
+            }
         }
         
         // Search filter

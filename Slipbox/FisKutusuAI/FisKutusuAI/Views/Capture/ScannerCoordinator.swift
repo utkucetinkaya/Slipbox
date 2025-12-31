@@ -14,7 +14,7 @@ struct ScannerCoordinator: View {
     
     var body: some View {
         ZStack {
-            Color.black.ignoresSafeArea()
+            Color(hex: "0A0A14").ignoresSafeArea()
             
             switch currentStep {
             case .camera:

@@ -15,7 +15,7 @@ struct ImageCropView: View {
     
     var body: some View {
         ZStack {
-            Color.black.ignoresSafeArea()
+            Color(hex: "0A0A14").ignoresSafeArea()
             
             VStack {
                 // Header

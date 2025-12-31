@@ -56,7 +56,7 @@ class ReportsViewModel: ObservableObject {
         let monthEnd = calendar.date(byAdding: DateComponents(month: 1, day: -1), to: monthStart)!
         
         let monthReceipts = receipts.filter { receipt in
-            guard let receiptDate = receipt.date else { return false }
+            let receiptDate = receipt.displayDate
             return receiptDate >= monthStart && receiptDate <= monthEnd && receipt.status == .approved
         }
         

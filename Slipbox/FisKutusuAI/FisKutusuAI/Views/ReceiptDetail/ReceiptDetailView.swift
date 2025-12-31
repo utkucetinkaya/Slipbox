@@ -85,6 +85,9 @@ struct ReceiptDetailView: View {
                     updated.status = .approved
                     updated.confidence = 1.0
                     
+                    // IMPORTANT: Update local state to avoid onDisappear overwriting
+                    self.receipt = updated
+                    
                     Task {
                         try? await FirestoreReceiptRepository.shared.updateReceipt(updated)
                         dismiss()

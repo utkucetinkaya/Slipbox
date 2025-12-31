@@ -131,24 +131,12 @@ struct CameraCaptureView: View {
             }
         }
         .sheet(isPresented: $showingPhotoPicker) {
-             #if targetEnvironment(simulator)
              PhotoPickerView(selectedImage: .init(get: { nil }, set: { img in
                  if let img = img {
-                     // Add a tiny delay to ensure sheet dismissal doesn't conflict with parent state transitions
-                     DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                         onImageCaptured(img)
-                     }
+                     // Directly trigger capture without delay
+                     onImageCaptured(img)
                  }
              }))
-             #else
-             PhotoPickerView(selectedImage: .init(get: { nil }, set: { img in
-                 if let img = img {
-                     DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                         onImageCaptured(img)
-                     }
-                 }
-             }))
-             #endif
         }
     }
 }
@@ -368,14 +356,19 @@ struct PhotoPickerView: UIViewControllerRepresentable {
         }
         
         func picker(_ picker: PHPickerViewController, didFinishPicking results: [PHPickerResult]) {
+            // 1. Dismiss picker first
             picker.dismiss(animated: true)
             
+            // 2. Load image if available
             guard let provider = results.first?.itemProvider else { return }
             
             if provider.canLoadObject(ofClass: UIImage.self) {
                 provider.loadObject(ofClass: UIImage.self) { image, error in
                     DispatchQueue.main.async {
-                        self.parent.selectedImage = image as? UIImage
+                        if let image = image as? UIImage {
+                            // 3. Pass image to parent binding
+                            self.parent.selectedImage = image
+                        }
                     }
                 }
             }

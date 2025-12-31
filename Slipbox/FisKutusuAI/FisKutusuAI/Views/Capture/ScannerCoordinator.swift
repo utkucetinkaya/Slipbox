@@ -31,7 +31,7 @@ struct ScannerCoordinator: View {
                 }, onContinue: { croppedImage in
                     currentStep = .processing(croppedImage)
                 })
-                .transition(.asymmetric(insertion: .move(edge: .trailing), removal: .move(edge: .leading)))
+                .transition(.opacity)
                 
             case .processing(let image):
                 ProcessingView(image: image, onReturnToInbox: {
@@ -40,7 +40,7 @@ struct ScannerCoordinator: View {
                 .transition(.opacity)
             }
         }
-        .animation(.easeInOut, value: currentStep)
+        .animation(.easeInOut(duration: 0.4), value: currentStep)
         .environmentObject(viewModel)
     }
 }

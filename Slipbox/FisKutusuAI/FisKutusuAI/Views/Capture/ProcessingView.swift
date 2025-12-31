@@ -142,7 +142,7 @@ struct ProcessingView: View {
                         ?? Category.additional.first(where: { $0.id == catResult.categoryId })?.name
                 }
                 
-                let receipt = Receipt(
+                let finalReceipt = Receipt(
                     id: nil,
                     status: initialStatus,
                     imageLocalPath: localPath,
@@ -156,14 +156,53 @@ struct ProcessingView: View {
                     confidence: catResult.confidence,
                     note: nil,
                     source: .camera,
-                    createdAt: nil,
-                    updatedAt: nil,
+                    createdAt: Timestamp(date: Date()),
+                    updatedAt: Timestamp(date: Date()),
                     error: nil
                 )
+
+                // Animate fields one by one to create "scanning" effect
+                try? await Task.sleep(nanoseconds: 300_000_000) // 0.3s base delay
+                
+                // Let's actually rebuild the receipt incrementally on the main thread
+                var buildingReceipt = finalReceipt
+                buildingReceipt.merchantName = nil
+                buildingReceipt.date = nil
+                buildingReceipt.total = nil
+                
+                await MainActor.run {
+                    self.receipt = buildingReceipt
+                }
+                
+                // Merchant
+                try? await Task.sleep(nanoseconds: 200_000_000)
+                await MainActor.run {
+                    withAnimation {
+                        self.receipt?.merchantName = finalReceipt.merchantName
+                    }
+                }
+                
+                // Date
+                try? await Task.sleep(nanoseconds: 400_000_000)
+                await MainActor.run {
+                    withAnimation {
+                        self.receipt?.date = finalReceipt.date
+                    }
+                }
+                
+                // Total
+                try? await Task.sleep(nanoseconds: 400_000_000)
+                await MainActor.run {
+                    withAnimation {
+                        self.receipt?.total = finalReceipt.total
+                    }
+                }
                 
                 // 4. Save to Firestore
-                try await FirestoreReceiptRepository.shared.addReceipt(receipt)
+                try await FirestoreReceiptRepository.shared.addReceipt(finalReceipt)
                 
+                // 7. Complete
+                try? await Task.sleep(nanoseconds: 500_000_000)
                 await MainActor.run {
                     withAnimation {
                         isCompleted = true

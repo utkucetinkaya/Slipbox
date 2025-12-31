@@ -132,10 +132,8 @@ struct ProcessingView: View {
                 let catResult = CategorizationService.shared.categorize(merchantName: ocrResult.merchantName, rawText: ocrResult.rawText)
                 
                 // 4. Determine Status
-                // If OCR confidence is high AND categorization found a specific category (high confidence), set to 'new'
-                // Otherwise, 'pending_review'
-                let isConfident = ocrResult.confidence > 0.8 && catResult.confidence > 0.5
-                let initialStatus: ReceiptStatus = isConfident ? .new : .pendingReview
+                // All receipts now land in 'pending_review' to ensure user verification
+                let initialStatus: ReceiptStatus = .pendingReview
                 
                 // Fetch category name if found
                 var categoryName: String? = nil

@@ -4,7 +4,7 @@ import Combine
 
 class InboxViewModel: ObservableObject {
     @Published var receipts: [Receipt] = []
-    @Published var selectedFilter: ReceiptStatus? = .new
+    @Published var selectedFilter: ReceiptStatus? = .pendingReview
     @Published var searchText: String = ""
     
     private var cancellables = Set<AnyCancellable>()

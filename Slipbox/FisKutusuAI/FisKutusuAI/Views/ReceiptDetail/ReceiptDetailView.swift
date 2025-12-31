@@ -18,9 +18,8 @@ struct ReceiptDetailView: View {
     }
     
     var isEditable: Bool {
-        // Editable if Pending Review OR Approved (user can still fix data after approval)
-        // Processing is strictly read-only
-        receipt.status == .pendingReview || receipt.status == .approved
+        // Editable if New, Pending Review OR Approved (user can still fix data after approval)
+        receipt.status == .new || receipt.status == .pendingReview || receipt.status == .approved
     }
     
     var body: some View {
@@ -56,8 +55,8 @@ struct ReceiptDetailView: View {
             }
             .scrollContentBackground(.hidden)
             
-            // Bottom Buttons - ONLY for Pending Review (Approve/Reject)
-            if receipt.status == .pendingReview {
+            // Bottom Buttons - New or Pending Review (Approve/Reject)
+            if receipt.status == .new || receipt.status == .pendingReview {
                 VStack {
                     Spacer()
                     bottomButtons
@@ -315,8 +314,8 @@ struct ReceiptDetailView: View {
             if receipt.status == .processing {
                 EmptyView()
             }
-            // Pending Review: Reject and Approve
-            else if receipt.status == .pendingReview {
+            // New or Pending Review: Reject and Approve
+            else if receipt.status == .new || receipt.status == .pendingReview {
                 Button(action: {
                     Task {
                         try? await FirestoreReceiptRepository.shared.deleteReceipt(receipt)

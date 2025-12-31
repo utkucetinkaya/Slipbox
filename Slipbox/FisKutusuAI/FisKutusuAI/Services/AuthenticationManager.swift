@@ -2,6 +2,7 @@ import Foundation
 import FirebaseAuth
 import FirebaseFirestore
 import FirebaseAppCheck
+import FirebaseStorage
 import AuthenticationServices
 import Combine
 import CryptoKit
@@ -20,6 +21,7 @@ final class AuthenticationManager: ObservableObject {
 
     private var authStateHandler: AuthStateDidChangeListenerHandle?
     private let db = Firestore.firestore()
+    private let storage = Storage.storage().reference()
 
     // Sign in with Apple nonce
     private var currentNonce: String?
@@ -78,27 +80,52 @@ final class AuthenticationManager: ObservableObject {
     }
     
     // MARK: - Update Profile
-    func updateProfile(displayName: String, phoneNumber: String) async throws {
+    func updateProfile(displayName: String, phoneNumber: String, profileImageUrl: String? = nil) async throws {
         guard let uid = user?.uid else { return }
         
         isLoading = true
         errorMessage = nil
         
+        var updateData: [String: Any] = [
+            "displayName": displayName,
+            "phoneNumber": phoneNumber,
+            "updatedAt": FieldValue.serverTimestamp()
+        ]
+        
+        if let imageUrl = profileImageUrl {
+            updateData["profileImageUrl"] = imageUrl
+        }
+        
         do {
-            try await db.collection("users").document(uid).updateData([
-                "displayName": displayName,
-                "phoneNumber": phoneNumber,
-                "updatedAt": FieldValue.serverTimestamp()
-            ])
+            try await db.collection("users").document(uid).updateData(updateData)
             
             self.profile?.displayName = displayName
             self.profile?.phoneNumber = phoneNumber
+            if let imageUrl = profileImageUrl {
+                self.profile?.profileImageUrl = imageUrl
+            }
             isLoading = false
         } catch {
             isLoading = false
             errorMessage = error.localizedDescription
             throw error
         }
+    }
+    
+    // MARK: - Profile Image Upload
+    func uploadProfileImage(_ image: UIImage) async throws -> String {
+        guard let uid = user?.uid else { throw AuthError.notAuthenticated }
+        guard let imageData = image.jpegData(compressionQuality: 0.5) else {
+            throw NSError(domain: "Auth", code: -1, userInfo: [NSLocalizedDescriptionKey: "Görsel verisi oluşturulamadı"])
+        }
+        
+        let fileRef = storage.child("profiles/\(uid).jpg")
+        let metadata = StorageMetadata()
+        metadata.contentType = "image/jpeg"
+        
+        _ = try await fileRef.putDataAsync(imageData, metadata: metadata)
+        let downloadURL = try await fileRef.downloadURL()
+        return downloadURL.absoluteString
     }
     
     // MARK: - Reset Onboarding (Debug)
@@ -201,6 +228,7 @@ final class AuthenticationManager: ObservableObject {
                 "email": email ?? "",
                 "displayName": "",
                 "phoneNumber": "",
+                "profileImageUrl": nil,
                 "currencyDefault": "TRY",
                 "locale": "tr-TR",
                 "onboardingCompleted": false,

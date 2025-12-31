@@ -175,6 +175,7 @@ struct UserProfile: Codable {
     var email: String?
     var displayName: String?
     var phoneNumber: String?
+    var profileImageUrl: String?
     var locale: String
     var currencyDefault: String
     var onboardingCompleted: Bool

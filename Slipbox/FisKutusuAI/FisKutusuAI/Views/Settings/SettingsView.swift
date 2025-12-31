@@ -121,13 +121,25 @@ struct SettingsView: View {
     private var profileCard: some View {
         HStack(spacing: 16) {
             ZStack {
-                Circle()
-                    .fill(Color(hex: "2C2C2E"))
+                if let urlString = authManager.profile?.profileImageUrl, let url = URL(string: urlString) {
+                    AsyncImage(url: url) { image in
+                        image
+                            .resizable()
+                            .aspectRatio(contentMode: .fill)
+                    } placeholder: {
+                        ProgressView()
+                    }
                     .frame(width: 64, height: 64)
-                
-                Image(systemName: "person.fill")
-                    .font(.system(size: 32))
-                    .foregroundColor(.white.opacity(0.5))
+                    .clipShape(Circle())
+                } else {
+                    Circle()
+                        .fill(Color(hex: "2C2C2E"))
+                        .frame(width: 64, height: 64)
+                    
+                    Image(systemName: "person.fill")
+                        .font(.system(size: 32))
+                        .foregroundColor(.white.opacity(0.5))
+                }
                 
                 Circle()
                     .fill(Color(hex: "34C759"))

@@ -3,35 +3,13 @@ import SwiftUI
 
 struct AllCategoriesView: View {
     @EnvironmentObject var userPreferences: AppUserPreferences
-    @State private var currentDate = Date()
-    
-    // Mock Data based on design
-    struct CategoryData: Identifiable {
-        let id = UUID()
-        let name: String
-        let icon: String
-        let color: Color
-        let count: Int
-        let amount: Double
-        let percentage: Double
-    }
-    
-    let categories: [CategoryData] = [
-        CategoryData(name: "Market", icon: "cart.fill", color: Color(hex: "4F46E5"), count: 32, amount: 8200.00, percentage: 0.334),
-        CategoryData(name: "Ulaşım", icon: "car.fill", color: Color(hex: "FF9500"), count: 18, amount: 4500.00, percentage: 0.183),
-        CategoryData(name: "Restoran & Kafe", icon: "fork.knife", color: Color(hex: "FF2D55"), count: 12, amount: 3200.00, percentage: 0.13),
-        CategoryData(name: "Faturalar", icon: "doc.text.fill", color: Color(hex: "FFCC00"), count: 4, amount: 2100.00, percentage: 0.085),
-        CategoryData(name: "Giyim", icon: "tshirt.fill", color: Color(hex: "AF52DE"), count: 2, amount: 1800.00, percentage: 0.073),
-        CategoryData(name: "Sağlık", icon: "heart.fill", color: Color(hex: "34C759"), count: 3, amount: 950.00, percentage: 0.038),
-        CategoryData(name: "Eğlence", icon: "film.fill", color: Color(hex: "FF3B30"), count: 5, amount: 600.00, percentage: 0.024),
-        CategoryData(name: "Diğer", icon: "ellipsis", color: .gray, count: 8, amount: 3150.00, percentage: 0.128)
-    ]
+    @StateObject private var viewModel = ReportsViewModel()
     
     private var formattedMonth: String {
         let formatter = DateFormatter()
         formatter.dateFormat = "MMMM yyyy"
         formatter.locale = userPreferences.locale
-        return formatter.string(from: currentDate)
+        return formatter.string(from: viewModel.currentDate)
     }
     
     var body: some View {
@@ -47,7 +25,7 @@ struct AllCategoriesView: View {
                         ForEach(0..<12, id: \.self) { i in
                             let date = Calendar.current.date(byAdding: .month, value: -i, to: Date()) ?? Date()
                             Button(action: {
-                                currentDate = date
+                                viewModel.currentDate = date
                             }) {
                                 Text(formatMonth(date))
                             }
@@ -70,11 +48,11 @@ struct AllCategoriesView: View {
                 
                 // Total Expense
                 VStack(spacing: 4) {
-                    Text("TOPLAM HARCAMA")
+                    Text("total_spending_label".localized)
                         .font(.system(size: 12, weight: .semibold))
                         .foregroundColor(.white.opacity(0.6))
                     
-                    Text(formatCurrency(24500.00))
+                    Text(formatCurrency(viewModel.totalExpense))
                         .font(.system(size: 32, weight: .bold))
                         .foregroundColor(.white)
                 }
@@ -83,8 +61,15 @@ struct AllCategoriesView: View {
                 // Category List
                 ScrollView {
                     VStack(spacing: 16) {
-                        ForEach(categories) { category in
-                            AllCategoryRow(data: category)
+                        if viewModel.categoryBreakdown.isEmpty {
+                            Text("reports_no_data".localized)
+                                .font(.system(size: 14))
+                                .foregroundColor(.white.opacity(0.4))
+                                .padding(.top, 40)
+                        } else {
+                            ForEach(viewModel.categoryBreakdown) { summary in
+                                AllCategoryRow(summary: summary)
+                            }
                         }
                     }
                     .padding(.horizontal, 20)
@@ -93,7 +78,7 @@ struct AllCategoriesView: View {
             }
         }
         .navigationBarTitleDisplayMode(.inline)
-        .navigationTitle("Tüm Kategoriler")
+        .navigationTitle("view_all".localized)
         .toolbar {
             ToolbarItem(placement: .navigationBarTrailing) {
                 Button(action: {}) {
@@ -123,7 +108,7 @@ struct AllCategoriesView: View {
 }
 
 struct AllCategoryRow: View {
-    let data: AllCategoriesView.CategoryData
+    let summary: ReportsViewModel.CategorySummary
     @EnvironmentObject var userPreferences: AppUserPreferences
     
     var body: some View {
@@ -131,21 +116,22 @@ struct AllCategoryRow: View {
             HStack {
                 // Icon
                 Circle()
-                    .fill(data.color.opacity(0.2))
+                    .fill(summary.color.opacity(0.2))
                     .frame(width: 48, height: 48)
                     .overlay(
-                        Image(systemName: data.icon)
-                            .foregroundColor(data.color)
+                        Image(systemName: "cart.fill") // We can map this later if needed
+                            .foregroundColor(summary.color)
                             .font(.system(size: 20))
                     )
                 
                 // Name & Count
                 VStack(alignment: .leading, spacing: 4) {
-                    Text(data.name)
+                    Text(summary.name.localized)
                         .font(.system(size: 16, weight: .semibold))
                         .foregroundColor(.white)
                     
-                    Text("\(data.count) İşlem")
+                    let suffix = summary.count == 1 ? "transaction_suffix_singular".localized : "transaction_suffix_plural".localized
+                    Text("\(summary.count) \(suffix)")
                         .font(.system(size: 14))
                         .foregroundColor(.white.opacity(0.6))
                 }
@@ -154,13 +140,13 @@ struct AllCategoryRow: View {
                 
                 // Amount & Percentage
                 VStack(alignment: .trailing, spacing: 4) {
-                    Text(formatCurrency(data.amount))
+                    Text(formatCurrency(summary.amount))
                         .font(.system(size: 16, weight: .bold))
                         .foregroundColor(.white)
                     
-                    Text("%\(String(format: "%.1f", data.percentage * 100))")
+                    Text("%\(Int(summary.percent * 100))")
                         .font(.system(size: 14))
-                        .foregroundColor(data.color)
+                        .foregroundColor(summary.color)
                 }
             }
             
@@ -172,8 +158,8 @@ struct AllCategoryRow: View {
                         .frame(height: 6)
                     
                     Capsule()
-                        .fill(data.color)
-                        .frame(width: geometry.size.width * CGFloat(data.percentage), height: 6)
+                        .fill(summary.color)
+                        .frame(width: geometry.size.width * CGFloat(summary.percent), height: 6)
                 }
             }
             .frame(height: 6)

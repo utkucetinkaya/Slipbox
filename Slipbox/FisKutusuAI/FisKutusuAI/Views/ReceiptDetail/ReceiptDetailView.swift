@@ -3,6 +3,9 @@ import SwiftUI
 struct ReceiptDetailView: View {
     @Environment(\.dismiss) var dismiss
     @ObservedObject var viewModel: InboxViewModel
+    @EnvironmentObject var userPreferences: AppUserPreferences
+    @EnvironmentObject var localizationManager: LocalizationManager
+    @EnvironmentObject var uiState: AppUIState
     
     @State private var receipt: Receipt
     @State private var showingApproveSheet = false
@@ -15,9 +18,9 @@ struct ReceiptDetailView: View {
     }
     
     var isEditable: Bool {
-        // Editable if Needs Review OR Approved (user can still fix data after approval)
+        // Editable if Pending Review OR Approved (user can still fix data after approval)
         // Processing is strictly read-only
-        receipt.status == .needsReview || receipt.status == .approved
+        receipt.status == .pendingReview || receipt.status == .approved
     }
     
     var body: some View {
@@ -31,7 +34,7 @@ struct ReceiptDetailView: View {
                     imagePreview
                     
                     if receipt.status == .processing {
-                        statusBanner(text: "Fiş işleniyor, lütfen bekleyin...", icon: "clock.fill", color: .blue)
+                        statusBanner(text: "processing_banner".localized, icon: "clock.fill", color: .blue)
                     } else if receipt.status == .approved {
                         // Optional: Don't show banner if we want a clean look, or keep it to indicate checking status.
                         // User request: "Eğer status = approved ise 'Kaydet' (edit) olabilir ama onay butonları olmaz."
@@ -46,10 +49,6 @@ struct ReceiptDetailView: View {
                         .disabled(!isEditable)
                         .opacity(isEditable ? 1 : 0.8)
                     
-                    autoCategorizeToggle
-                        .disabled(!isEditable)
-                        .opacity(isEditable ? 1 : 0.8)
-                    
                     Spacer(minLength: 120)
                 }
                 .padding(.horizontal, 20)
@@ -57,8 +56,8 @@ struct ReceiptDetailView: View {
             }
             .scrollContentBackground(.hidden)
             
-            // Bottom Buttons - ONLY for Needs Review (Approve/Reject)
-            if receipt.status == .needsReview {
+            // Bottom Buttons - ONLY for Pending Review (Approve/Reject)
+            if receipt.status == .pendingReview {
                 VStack {
                     Spacer()
                     bottomButtons
@@ -66,12 +65,12 @@ struct ReceiptDetailView: View {
             }
         }
         .navigationBarTitleDisplayMode(.inline)
-        .navigationTitle("Fiş İnceleme")
+        .navigationTitle("receipt_review".localized)
         .toolbar {
             ToolbarItem(placement: .navigationBarTrailing) {
                 if isEditable {
                     Button(action: saveAndDismiss) {
-                        Text("Kaydet")
+                        Text("save".localized)
                             .foregroundColor(Color(hex: "4F46E5"))
                     }
                 }
@@ -82,15 +81,15 @@ struct ReceiptDetailView: View {
             ApproveReceiptSheetView(
                 receipt: receipt,
                 onApprove: {
-                    // Update local state first to ensure consistency
-                    receipt.status = .approved
-                    receipt.confidence = 1.0
+                    // Approval logic
+                    var updated = receipt
+                    updated.status = .approved
+                    updated.confidence = 1.0
                     
-                    // Update ViewModel
-                    viewModel.updateReceipt(receipt)
-                    
-                    // Dismiss view
-                    dismiss()
+                    Task {
+                        try? await FirestoreReceiptRepository.shared.updateReceipt(updated)
+                        dismiss()
+                    }
                 }
             )
         }
@@ -98,12 +97,19 @@ struct ReceiptDetailView: View {
             CategoryPickerView(selectedCategoryId: $receipt.categoryId)
         }
         .fullScreenCover(isPresented: $showingImagePreview) {
-            ImagePreviewView(dismiss: $showingImagePreview)
+            ImagePreviewView(dismiss: $showingImagePreview, imagePath: receipt.imageLocalPath)
+        }
+        .onAppear {
+            uiState.isTabBarHidden = true
         }
         .onDisappear {
+            uiState.isTabBarHidden = false
+            
             // Auto-save changes when leaving the screen
             if isEditable {
-                viewModel.updateReceipt(receipt)
+                Task {
+                    try? await FirestoreReceiptRepository.shared.updateReceipt(receipt)
+                }
             }
         }
     }
@@ -134,18 +140,35 @@ struct ReceiptDetailView: View {
                     .fill(Color(hex: "1C1C1E"))
                     .frame(height: 200)
                 
-                VStack(spacing: 12) {
-                    Image(systemName: "doc.text.image")
-                        .font(.system(size: 48))
-                        .foregroundColor(.white.opacity(0.6))
-                    
-                    HStack(spacing: 6) {
-                        Image(systemName: "magnifyingglass")
-                            .font(.system(size: 12))
-                        Text("YAKINLAŞTIRMAK İÇİN DOKUN")
-                            .font(.system(size: 12, weight: .medium))
+                if let uiImage = ImageStorageService.shared.loadImage(from: receipt.imageLocalPath) {
+                    Image(uiImage: uiImage)
+                        .resizable()
+                        .aspectRatio(contentMode: .fill)
+                        .frame(height: 200)
+                        .cornerRadius(16)
+                        .clipped()
+                } else {
+                    VStack(spacing: 12) {
+                        Image(systemName: "doc.text.image")
+                            .font(.system(size: 48))
+                            .foregroundColor(.white.opacity(0.6))
+                        
+                        Text("image_not_found".localized)
+                            .font(.system(size: 14))
+                            .foregroundColor(.white.opacity(0.4))
                     }
-                    .foregroundColor(.white.opacity(0.8))
+                }
+                
+                // Zoom overlay
+                VStack {
+                    Spacer()
+                    HStack {
+                        Spacer()
+                        Image(systemName: "magnifyingglass.circle.fill")
+                            .font(.system(size: 24))
+                            .foregroundColor(.white.opacity(0.8))
+                            .padding(12)
+                    }
                 }
             }
         }
@@ -156,17 +179,17 @@ struct ReceiptDetailView: View {
         VStack(spacing: 16) {
             // Merchant
             FormField(
-                label: "İşletme",
+                label: "merchant".localized,
                 icon: "storefront",
-                value: $receipt.merchant,
-                placeholder: "İşletme adı"
+                value: $receipt.merchantName,
+                placeholder: "merchant_placeholder".localized
             )
             
             // Date & Amount Row
             HStack(spacing: 12) {
                 // Date
                 VStack(alignment: .leading, spacing: 8) {
-                    Text("Tarih")
+                    Text("date".localized)
                         .font(.system(size: 14))
                         .foregroundColor(.white.opacity(0.6))
                     
@@ -181,12 +204,12 @@ struct ReceiptDetailView: View {
                 
                 // Amount
                 VStack(alignment: .leading, spacing: 8) {
-                    Text("Tutar")
+                    Text("amount".localized)
                         .font(.system(size: 14))
                         .foregroundColor(.white.opacity(0.6))
                     
                     HStack {
-                        Text("₺")
+                        Text(userPreferences.currencySymbol)
                             .foregroundColor(.white)
                         TextField("0,00", value: $receipt.total, format: .number)
                             .keyboardType(.decimalPad)
@@ -212,14 +235,14 @@ struct ReceiptDetailView: View {
         }) {
             VStack(alignment: .leading, spacing: 8) {
                 HStack {
-                    Text("Kategori")
+                    Text("category".localized)
                         .font(.system(size: 14))
                         .foregroundColor(.white.opacity(0.6))
                     
-                    if receipt.status == .needsReview {
+                    if receipt.status == .pendingReview {
                         HStack(spacing: 4) {
                             Image(systemName: "exclamationmark.triangle.fill")
-                            Text("Kontrol Et")
+                            Text("check".localized)
                         }
                         .font(.system(size: 12, weight: .medium))
                         .foregroundColor(Color(hex: "FFCC00"))
@@ -232,7 +255,7 @@ struct ReceiptDetailView: View {
                         .foregroundColor(receipt.displayCategoryColor)
                     
                     // Use the new displayCategoryName property for translated name
-                    Text(receipt.displayCategoryName ?? "Market & Alışveriş")
+                    Text(receipt.displayCategoryName?.localized ?? "category_food".localized)
                         .font(.system(size: 16))
                         .foregroundColor(.white)
                     
@@ -255,13 +278,13 @@ struct ReceiptDetailView: View {
     // MARK: - Note Section
     private var noteSection: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("Not (Opsiyonel)")
+            Text("note_optional".localized)
                 .font(.system(size: 14))
                 .foregroundColor(.white.opacity(0.6))
             
             ZStack(alignment: .topLeading) {
-                if receipt.notes?.isEmpty ?? true {
-                    Text("Fiş hakkında not ekle...")
+                if receipt.note?.isEmpty ?? true {
+                    Text("note_placeholder".localized)
                         .font(.system(size: 16))
                         .foregroundColor(.white.opacity(0.4))
                         .padding(.horizontal, 4)
@@ -269,8 +292,8 @@ struct ReceiptDetailView: View {
                 }
                 
                 TextEditor(text: Binding(
-                    get: { receipt.notes ?? "" },
-                    set: { receipt.notes = $0 }
+                    get: { receipt.note ?? "" },
+                    set: { receipt.note = $0 }
                 ))
                 .font(.system(size: 16))
                 .foregroundColor(.white)
@@ -284,30 +307,6 @@ struct ReceiptDetailView: View {
         }
     }
     
-    // MARK: - Auto Categorize Toggle
-    private var autoCategorizeToggle: some View {
-        HStack(alignment: .top, spacing: 16) {
-            VStack(alignment: .leading, spacing: 4) {
-                Text("Otomatik Kategori")
-                    .font(.system(size: 16, weight: .medium))
-                    .foregroundColor(.white)
-                
-                Text("Bu işletmeyi her zaman \(receipt.displayCategoryName ?? "Market & Alışveriş") kategorisine ata")
-                    .font(.system(size: 14))
-                    .foregroundColor(.white.opacity(0.6))
-                    .fixedSize(horizontal: false, vertical: true)
-            }
-            
-            Toggle("", isOn: Binding(
-                get: { receipt.autoCategorizeMerchant ?? false },
-                set: { receipt.autoCategorizeMerchant = $0 }
-            ))
-                .labelsHidden()
-        }
-        .padding(16)
-        .background(Color(hex: "1C1C1E"))
-        .cornerRadius(16)
-    }
     
     // MARK: - Bottom Buttons
     private var bottomButtons: some View {
@@ -316,15 +315,17 @@ struct ReceiptDetailView: View {
             if receipt.status == .processing {
                 EmptyView()
             }
-            // Needs Review: Reject and Approve
-            else if receipt.status == .needsReview {
+            // Pending Review: Reject and Approve
+            else if receipt.status == .pendingReview {
                 Button(action: {
-                    viewModel.rejectReceipt(id: receipt.id ?? "")
-                    dismiss()
+                    Task {
+                        try? await FirestoreReceiptRepository.shared.deleteReceipt(receipt)
+                        dismiss()
+                    }
                 }) {
                     HStack {
                         Image(systemName: "xmark")
-                        Text("Reddet")
+                        Text("reject".localized)
                     }
                     .font(.system(size: 16, weight: .semibold))
                     .foregroundColor(.white)
@@ -341,7 +342,7 @@ struct ReceiptDetailView: View {
                 Button(action: { showingApproveSheet = true }) {
                     HStack {
                         Image(systemName: "checkmark")
-                        Text("Onayla")
+                        Text("approve".localized)
                     }
                     .font(.system(size: 16, weight: .semibold))
                     .foregroundColor(.white)
@@ -374,14 +375,20 @@ struct ReceiptDetailView: View {
     
     // MARK: - Helpers
     private func saveAndDismiss() {
-        viewModel.updateReceipt(receipt)
-        dismiss()
+        Task {
+            do {
+                try await FirestoreReceiptRepository.shared.updateReceipt(receipt)
+                dismiss()
+            } catch {
+                print("❌ Update failed: \(error.localizedDescription)")
+            }
+        }
     }
     
     private func formatDate(_ date: Date) -> String {
         let formatter = DateFormatter()
         formatter.dateFormat = "d MMM yyyy"
-        formatter.locale = Locale(identifier: "tr-TR")
+        formatter.locale = userPreferences.locale
         return formatter.string(from: date)
     }
 }
@@ -421,6 +428,7 @@ struct FormField: View {
 // MARK: - Image Preview
 struct ImagePreviewView: View {
     @Binding var dismiss: Bool
+    let imagePath: String
     
     var body: some View {
         ZStack {
@@ -439,13 +447,22 @@ struct ImagePreviewView: View {
                 
                 Spacer()
                 
-                Image(systemName: "doc.text.image")
-                    .font(.system(size: 120))
-                    .foregroundColor(.white.opacity(0.8))
-                
-                Text("Önizleme")
-                    .font(.system(size: 20))
-                    .foregroundColor(.white.opacity(0.6))
+                if let uiImage = ImageStorageService.shared.loadImage(from: imagePath) {
+                    Image(uiImage: uiImage)
+                        .resizable()
+                        .aspectRatio(contentMode: .fit)
+                        .padding()
+                } else {
+                    VStack(spacing: 12) {
+                        Image(systemName: "doc.text.image")
+                            .font(.system(size: 120))
+                            .foregroundColor(.white.opacity(0.8))
+                        
+                        Text("image_not_found".localized)
+                            .font(.system(size: 20))
+                            .foregroundColor(.white.opacity(0.6))
+                    }
+                }
                 
                 Spacer()
             }
@@ -456,8 +473,20 @@ struct ImagePreviewView: View {
 #Preview {
     NavigationStack {
         ReceiptDetailView(
-            receipt: MockData.inboxReceipts[0],
+            receipt: Receipt(
+                id: "preview_detail",
+                status: .new,
+                imageLocalPath: "",
+                merchantName: "Detail Store",
+                date: Date(),
+                total: 89.50,
+                currency: "USD",
+                categoryName: "category_food",
+                source: .camera
+            ),
             viewModel: InboxViewModel()
         )
     }
+    .environmentObject(AppUserPreferences.shared)
+    .environmentObject(LocalizationManager.shared)
 }

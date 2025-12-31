@@ -51,9 +51,11 @@
 "paywall_cta" = "Go Pro";
 "paywall_easy_cancel" = "Easy to cancel";
 "paywall_restore" = "Restore purchases";
+"upgrade_now" = "Upgrade Now";
 
 /* Reports */
 "reports_title" = "Reports";
+"reports_no_data" = "No data for this month";
 "total_expense" = "Total Expenses";
 "receipt_count" = "Receipt Count";
 "top_category" = "Top";
@@ -67,9 +69,19 @@
 /* Categories */
 "category_market" = "Groceries";
 "category_transport" = "Transport";
+"category_equipment" = "Equipment";
+"category_service" = "Service";
 "category_entertainment" = "Entertainment";
 "category_food" = "Food";
 "category_other" = "Other";
+"category_bills" = "Bills";
+"category_clothing" = "Clothing";
+"category_health" = "Health";
+"category_education" = "Education";
+"category_shopping" = "Shopping";
+"category_tax" = "Tax";
+"category_travel" = "Travel";
+"category_rent" = "Rent";
 
 /* Camera */
 "camera_instruction" = "Align receipt in frame";
@@ -79,3 +91,86 @@
 "inbox_empty" = "No receipts yet";
 "inbox_subtitle" = "Get started by scanning";
 "processing" = "Processing...";
+
+/* Receipt Details */
+"date" = "Date";
+"amount" = "Amount";
+"category" = "Category";
+"note_optional" = "Note (Optional)";
+"note_placeholder" = "Add a note about the receipt...";
+"check" = "Check";
+"tap_to_zoom" = "TAP TO ZOOM";
+"preview" = "Preview";
+"auto_category" = "Auto Category";
+"auto_category_description" = "Always assign this merchant to %@ category";
+"reject" = "Reject";
+"approve" = "Approve";
+
+/* Approval Sheet */
+"approve_receipt_title" = "Approve Receipt";
+"approve_receipt_message" = "You are about to add this receipt to accounting records. This action cannot be undone, do you confirm?";
+"yes_approve" = "Yes, Approve";
+
+/* Category Picker */
+"recent" = "RECENT";
+"all_categories_title" = "ALL CATEGORIES";
+"create" = "Create";
+"create_custom_category" = "Create Custom Category";
+"search_categories" = "Search categories...";
+"select_category" = "Select Category";
+
+/* Reports Details */
+"total_spending_label" = "TOTAL SPENDING";
+"receipt_suffix" = "Receipt";
+"transaction_suffix" = "Transaction";
+"transaction_suffix_singular" = "Transaction";
+"transaction_suffix_plural" = "Transactions";
+"create_category_title" = "Create Category";
+"category_name_label" = "Category Name";
+"category_name_placeholder" = "Enter category name...";
+"select_icon" = "Select Icon";
+"select_color" = "Select Color";
+"create_success" = "Category created successfully";
+
+/* Settings - Support */
+"support_legal" = "SUPPORT & LEGAL";
+"send_feedback" = "Send Feedback";
+"delete_account" = "Delete Account";
+"danger_zone" = "DANGER ZONE";
+
+/* Settings - Developer */
+"developer" = "DEVELOPER";
+"reset_onboarding" = "Reset Onboarding";
+"reset_permissions" = "Reset Permissions";
+"factory_reset" = "Factory Reset Flow";
+"sign_out" = "Sign Out";
+"pro_plan" = "PRO PLAN";
+
+/* Permissions */
+"unlock_camera" = "Unlock the Camera";
+"camera_permission_description" = "To automatically categorize your expenses, SlipBox needs to see your receipts.";
+"gallery_permission_description" = "Select existing photos of receipts to categorize them from your library.";
+"enable_permissions" = "Enable Permissions";
+"maybe_later" = "Maybe Later";
+"atla" = "Skip";
+"baslayalim" = "Get Started";
+"devam_et" = "Continue";
+"needs_review" = "Needs Review";
+"approved" = "Approved";
+"scan_receipt" = "Scan Receipt";
+"fis_ekleme" = "Add Receipt";
+"kapat" = "Close";
+"merchant" = "Merchant";
+"merchant_placeholder" = "Merchant name";
+"receipt_review" = "Receipt Review";
+"processing_banner" = "Receipt is processing, please wait...";
+"unknown_merchant" = "Unknown";
+"status_processing" = "Processing...";
+"status_new" = "New";
+"status_needs_review" = "Needs Review";
+"status_approved" = "Approved";
+"status_rejected" = "Rejected";
+"status_error" = "Error";
+
+/* App Name */
+"slipbox_app_name" = "SlipBox";

@@ -7,18 +7,18 @@ struct OnboardingView: View {
     
     let pages = [
         OnboardingPage(
-            title: "Fişi Çek",
-            description: "Fişlerinizi saniyeler içinde tarayın. Akıllı kameramız detayları otomatik yakalar.",
+            title: "onboarding_scan_title".localized,
+            description: "onboarding_scan_description".localized,
             imageName: "onboarding1"
         ),
         OnboardingPage(
-            title: "Otomatik Kategorile",
-            description: "Fişlerinizi tarayın, yapay zeka onları saniyeler içinde harcama türüne göre ayırsın.",
+            title: "onboarding_ai_title".localized,
+            description: "onboarding_ai_description".localized,
             imageName: "onboarding_ai"
         ),
         OnboardingPage(
-            title: "Raporla",
-            description: "Harcamalarınızı grafiklerle analiz edin ve bütçenizi kontrol altında tutun.",
+            title: "onboarding_report_title".localized,
+            description: "onboarding_report_description".localized,
             imageName: "onboarding_report"
         )
     ]
@@ -66,7 +66,7 @@ struct OnboardingView: View {
                         }
                     }
                 }) {
-                    Text(currentPage == pages.count - 1 ? "Başlayalım" : "Devam Et")
+                    Text(currentPage == pages.count - 1 ? "baslayalim".localized : "devam_et".localized)
                         .font(.system(size: 17, weight: .semibold))
                         .frame(maxWidth: .infinity)
                         .frame(height: 56)
@@ -79,7 +79,7 @@ struct OnboardingView: View {
                 
                 // Skip Button
                 if currentPage < pages.count - 1 {
-                    Button("Atla") {
+                    Button("atla".localized) {
                         withAnimation {
                             showPermissions = true
                         }

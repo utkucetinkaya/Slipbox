@@ -15,6 +15,8 @@ final class AuthenticationManager: ObservableObject {
     @Published var isLoading = true
     @Published var errorMessage: String?
     @Published var isOnboardingCompleted = false
+    @Published var isProfileLoaded = false
+    @Published var profile: UserProfile?
 
     private var authStateHandler: AuthStateDidChangeListenerHandle?
     private let db = Firestore.firestore()
@@ -37,6 +39,7 @@ final class AuthenticationManager: ObservableObject {
                     await self.fetchUserStatus(uid: user.uid)
                 } else {
                     self.isOnboardingCompleted = false
+                    self.isProfileLoaded = false
                     self.isLoading = false
                 }
             }
@@ -47,14 +50,18 @@ final class AuthenticationManager: ObservableObject {
     func fetchUserStatus(uid: String) async {
         do {
             let snapshot = try await db.collection("users").document(uid).getDocument()
-            if let data = snapshot.data(), let completed = data["onboardingCompleted"] as? Bool {
-                self.isOnboardingCompleted = completed
+            if let profile = try? snapshot.data(as: UserProfile.self) {
+                self.profile = profile
+                self.isOnboardingCompleted = profile.onboardingCompleted
+                self.isProfileLoaded = true
+                print("✅ User Profile Loaded: \(uid)")
             } else {
-                // If field missing, assume false
-                self.isOnboardingCompleted = false
+                self.isProfileLoaded = false
+                print("⚠️ User Profile Missing in Firestore: \(uid)")
             }
         } catch {
-            print("Error fetching user status: \(error)")
+            print("❌ Error fetching user status: \(error.localizedDescription)")
+            self.isProfileLoaded = false 
         }
         self.isLoading = false
     }
@@ -63,9 +70,35 @@ final class AuthenticationManager: ObservableObject {
     func completeOnboarding() async throws {
         guard let uid = user?.uid else { return }
         try await db.collection("users").document(uid).updateData([
-            "onboardingCompleted": true
+            "onboardingCompleted": true,
+            "updatedAt": FieldValue.serverTimestamp()
         ])
         self.isOnboardingCompleted = true
+        self.profile?.onboardingCompleted = true
+    }
+    
+    // MARK: - Update Profile
+    func updateProfile(displayName: String, phoneNumber: String) async throws {
+        guard let uid = user?.uid else { return }
+        
+        isLoading = true
+        errorMessage = nil
+        
+        do {
+            try await db.collection("users").document(uid).updateData([
+                "displayName": displayName,
+                "phoneNumber": phoneNumber,
+                "updatedAt": FieldValue.serverTimestamp()
+            ])
+            
+            self.profile?.displayName = displayName
+            self.profile?.phoneNumber = phoneNumber
+            isLoading = false
+        } catch {
+            isLoading = false
+            errorMessage = error.localizedDescription
+            throw error
+        }
     }
     
     // MARK: - Reset Onboarding (Debug)
@@ -106,13 +139,19 @@ final class AuthenticationManager: ObservableObject {
         )
 
         do {
+            isLoading = true
+            errorMessage = nil
+            
             let result = try await Auth.auth().signIn(with: firebaseCredential)
-
+            
             if result.additionalUserInfo?.isNewUser == true {
                 try await initializeNewUser(uid: result.user.uid, email: result.user.email)
             }
+            isLoading = false
             // Status will be fetched by the auth listener
         } catch {
+            isLoading = false
+            errorMessage = error.localizedDescription
             throw AuthError.signInFailed(error.localizedDescription)
         }
     }
@@ -120,8 +159,13 @@ final class AuthenticationManager: ObservableObject {
     // MARK: - Email Sign In
     func signInWithEmail(email: String, password: String) async throws {
         do {
+            isLoading = true
+            errorMessage = nil
             _ = try await Auth.auth().signIn(withEmail: email, password: password)
+            isLoading = false
         } catch {
+            isLoading = false
+            errorMessage = error.localizedDescription
             throw AuthError.signInFailed(error.localizedDescription)
         }
     }
@@ -129,9 +173,22 @@ final class AuthenticationManager: ObservableObject {
     // MARK: - Email Sign Up
     func signUpWithEmail(email: String, password: String) async throws {
         do {
+            isLoading = true
+            errorMessage = nil
+            
+            print("🚀 Starting Sign-Up for: \(email)")
             let result = try await Auth.auth().createUser(withEmail: email, password: password)
+            print("✅ Auth User Created: \(result.user.uid)")
+            
             try await initializeNewUser(uid: result.user.uid, email: email)
+            print("✅ User Profile Initialized")
+            
+            self.isProfileLoaded = true
+            isLoading = false
         } catch {
+            print("❌ Sign-Up Error: \(error.localizedDescription)")
+            isLoading = false
+            errorMessage = error.localizedDescription
             throw AuthError.signUpFailed(error.localizedDescription)
         }
     }
@@ -142,6 +199,8 @@ final class AuthenticationManager: ObservableObject {
             let userData: [String: Any] = [
                 "uid": uid,
                 "email": email ?? "",
+                "displayName": "",
+                "phoneNumber": "",
                 "currencyDefault": "TRY",
                 "locale": "tr-TR",
                 "onboardingCompleted": false,
@@ -150,6 +209,10 @@ final class AuthenticationManager: ObservableObject {
             ]
 
             try await db.collection("users").document(uid).setData(userData, merge: true)
+            print("📦 User doc set in Firestore")
+            
+            // Populate local profile
+            self.profile = try? await db.collection("users").document(uid).getDocument().data(as: UserProfile.self)
 
             // Seed default categories
             let defaultCategories = Category.defaults
@@ -163,11 +226,13 @@ final class AuthenticationManager: ObservableObject {
                     .collection("categories")
                     .document(categoryId)
 
-                try batch.setData(from: category, forDocument: ref, merge: true)
+                try batch.setData(from: category, forDocument: ref)
             }
 
             try await batch.commit()
+            print("📦 Default categories batch committed")
         } catch {
+            print("❌ Firestore Initialization Failed: \(error.localizedDescription)")
             throw AuthError.initializationFailed(error.localizedDescription)
         }
     }
@@ -179,6 +244,55 @@ final class AuthenticationManager: ObservableObject {
             self.isOnboardingCompleted = false
         } catch {
             throw AuthError.signOutFailed(error.localizedDescription)
+        }
+    }
+    
+    // MARK: - Delete Account
+    func deleteAccount() async throws {
+        guard let uid = user?.uid else { return }
+        
+        do {
+            // 1. Delete Receipts
+            let receipts = try await db.collection("users").document(uid).collection("receipts").getDocuments()
+            let batch = db.batch()
+            for doc in receipts.documents {
+                batch.deleteDocument(doc.reference)
+            }
+            
+            // 2. Delete Categories
+            let categories = try await db.collection("users").document(uid).collection("categories").getDocuments()
+            for doc in categories.documents {
+                batch.deleteDocument(doc.reference)
+            }
+            
+            // 3. Delete Profiles
+            batch.deleteDocument(db.collection("users").document(uid))
+            batch.deleteDocument(db.collection("entitlements").document(uid))
+            
+            try await batch.commit()
+            
+            // 5. Delete Firebase Auth User
+            guard let authUser = Auth.auth().currentUser else {
+                throw AuthError.notAuthenticated
+            }
+            
+            do {
+                try await authUser.delete()
+            } catch let error as NSError {
+                if error.code == AuthErrorCode.requiresRecentLogin.rawValue {
+                    throw AuthError.requiresRecentLogin
+                }
+                throw AuthError.deleteFailed
+            }
+            
+            self.user = nil
+            self.isOnboardingCompleted = false
+            self.isProfileLoaded = false
+        } catch let error as AuthError {
+            throw error
+        } catch {
+            print("❌ Delete account error: \(error)")
+            throw AuthError.deleteFailed
         }
     }
 
@@ -220,12 +334,15 @@ private extension AuthenticationManager {
 }
 
 // MARK: - Auth Errors
-enum AuthError: LocalizedError {
+enum AuthError: Error, LocalizedError, Equatable {
     case invalidCredentials
     case signInFailed(String)
     case signUpFailed(String)
     case signOutFailed(String)
     case initializationFailed(String)
+    case notAuthenticated
+    case deleteFailed
+    case requiresRecentLogin
 
     var errorDescription: String? {
         switch self {
@@ -239,6 +356,29 @@ enum AuthError: LocalizedError {
             return "Çıkış başarısız: \(message)"
         case .initializationFailed(let message):
             return "Kullanıcı başlatma başarısız: \(message)"
+        case .notAuthenticated:
+            return "Kullanıcı oturumu bulunamadı"
+        case .deleteFailed:
+            return "Hesap silme işlemi sırasında bir hata oluştu"
+        case .requiresRecentLogin:
+            return "Güvenlik gereği, bu işlem için yakın zamanda giriş yapmış olmanız gerekiyor. Lütfen çıkış yapıp tekrar girin."
+        }
+    }
+    
+    static func == (lhs: AuthError, rhs: AuthError) -> Bool {
+        switch (lhs, rhs) {
+        case (.invalidCredentials, .invalidCredentials),
+             (.notAuthenticated, .notAuthenticated),
+             (.deleteFailed, .deleteFailed),
+             (.requiresRecentLogin, .requiresRecentLogin):
+            return true
+        case (.signInFailed(let l), .signInFailed(let r)),
+             (.signUpFailed(let l), .signUpFailed(let r)),
+             (.signOutFailed(let l), .signOutFailed(let r)),
+             (.initializationFailed(let l), .initializationFailed(let r)):
+            return l == r
+        default:
+            return false
         }
     }
 }

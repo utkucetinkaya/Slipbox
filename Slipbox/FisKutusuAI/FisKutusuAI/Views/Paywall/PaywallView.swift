@@ -1,8 +1,12 @@
 import SwiftUI
+import StoreKit
 
 struct PaywallView: View {
     @Environment(\.dismiss) var dismiss
+    @EnvironmentObject var storeKitManager: StoreKitManager
+    @EnvironmentObject var entitlementManager: EntitlementManager
     @State private var selectedPlan: Plan = .yearly
+    @State private var isPurchasing = false
     
     enum Plan {
         case monthly
@@ -23,9 +27,11 @@ struct PaywallView: View {
             .ignoresSafeArea()
             
             ZStack(alignment: .top) {
-                ScrollView {
-                    VStack(spacing: 32) {
-                        // Header
+                ScrollView(showsIndicators: false) {
+                    VStack(spacing: 20) {
+                        Spacer(minLength: 20) // Moved significantly higher
+                        
+                        // --- TOP SECTION ---
                         VStack(spacing: 24) {
                             ZStack {
                                 Circle()
@@ -67,71 +73,82 @@ struct PaywallView: View {
                         }
                         .padding(.horizontal, 32)
                         
-                        // Plans
-                        HStack(spacing: 16) {
-                            PlanCard(
-                                title: "paywall_monthly".localized,
-                                price: "₺29.99",
-                                period: "/mo",
-                                isSelected: selectedPlan == .monthly,
-                                action: { selectedPlan = .monthly }
-                            )
+                        Spacer(minLength: 80) // Pushes the following plans and button lower
+                        
+                        // --- BOTTOM SECTION ---
+                        VStack(spacing: 32) {
+                            // Plans
+                            HStack(spacing: 12) {
+                                let monthlyProduct = storeKitManager.products.first(where: { $0.id == "slipbox_pro_monthly" })
+                                let yearlyProduct = storeKitManager.products.first(where: { $0.id == "slipbox_pro_yearly" })
+                                
+                                PlanCard(
+                                    title: "paywall_monthly".localized,
+                                    price: monthlyProduct?.displayPrice ?? "₺29.99",
+                                    period: "/mo",
+                                    isSelected: selectedPlan == .monthly,
+                                    action: { selectedPlan = .monthly }
+                                )
+                                
+                                PlanCard(
+                                    title: "paywall_yearly".localized,
+                                    price: yearlyProduct?.displayPrice ?? "₺299.99",
+                                    period: "/yr",
+                                    badge: "paywall_badge_best".localized,
+                                    isSelected: selectedPlan == .yearly,
+                                    action: { selectedPlan = .yearly }
+                                )
+                            }
+                            .padding(.horizontal, 20)
                             
-                            PlanCard(
-                                title: "paywall_yearly".localized,
-                                price: "₺299.99",
-                                period: "/yr",
-                                badge: "paywall_badge_best".localized,
-                                isSelected: selectedPlan == .yearly,
-                                action: { selectedPlan = .yearly }
-                            )
-                        }
-                        .padding(.horizontal, 20)
-                        
-                        // Bottom Section (Moved inside ScrollView or kept at bottom? Kept at bottom of scroll usually for long content, but here fits.)
-                        // BUT common pattern is sticky bottom button OR scrollable.
-                        // Let's keep it scrollable for safety on small screens.
-                        
-                        VStack(spacing: 16) {
-                            Button(action: {
-                                print("🛒 Purchase initiated for \(selectedPlan)")
-                                // Mock purchase success
-                                dismiss()
-                            }) {
-                                Text("paywall_cta".localized)
-                                    .font(.system(size: 18, weight: .bold))
-                                    .foregroundColor(.white)
+                            VStack(spacing: 16) {
+                                Button(action: {
+                                    purchase()
+                                }) {
+                                    ZStack {
+                                        if isPurchasing {
+                                            ProgressView()
+                                                .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                                        } else {
+                                            Text("paywall_cta".localized)
+                                                .font(.system(size: 18, weight: .bold))
+                                                .foregroundColor(.white)
+                                        }
+                                    }
                                     .frame(maxWidth: .infinity)
                                     .frame(height: 56)
-                                    .background(Color(hex: "4F46E5"))
+                                    .background(Color(hex: "4F46E5").opacity(isPurchasing ? 0.6 : 1.0))
                                     .cornerRadius(28)
                                     .shadow(color: Color(hex: "4F46E5").opacity(0.4), radius: 10, x: 0, y: 5)
+                                }
+                                .disabled(isPurchasing)
+                                
+                                Spacer(minLength: 16) // Brings the button and the text closer together
+                                
+                                HStack(spacing: 6) {
+                                    Image(systemName: "shield.fill")
+                                        .font(.system(size: 12))
+                                    Text("paywall_easy_cancel".localized)
+                                        .font(.system(size: 12))
+                                }
+                                .foregroundColor(.white.opacity(0.7))
+                                
+                                HStack(spacing: 16) {
+                                    Button("paywall_restore".localized) {
+                                        restore()
+                                    }
+                                    Text("•")
+                                    Link("terms".localized, destination: URL(string: "https://slipbox.app/terms")!)
+                                    Text("•")
+                                    Link("privacy".localized, destination: URL(string: "https://slipbox.app/privacy")!)
+                                }
+                                .font(.system(size: 11))
+                                .foregroundColor(.white.opacity(0.4))
                             }
-                            
-                            HStack(spacing: 6) {
-                                Image(systemName: "shield.fill")
-                                    .font(.system(size: 12))
-                                Text("paywall_easy_cancel".localized)
-                                    .font(.system(size: 12))
-                            }
-                            .foregroundColor(.white.opacity(0.7)) // More neutral and clean
-                            
-                            HStack(spacing: 16) {
-                                Button("paywall_restore".localized) {}
-                                Text("•")
-                                Button("terms".localized) {}
-                                Text("•")
-                                Button("privacy".localized) {}
-                            }
-                            .font(.system(size: 11))
-                            .foregroundColor(.white.opacity(0.4))
+                            .padding(.horizontal, 24)
+                            .padding(.bottom, 10) // Reduced bottom padding to allow spacer to push content closer to edge
                         }
-                        .padding(20)
-                        // Removed discordant background to blend with page
-                        
-                        Spacer(minLength: 40)
                     }
-                    .padding(.top, 60) // Space for the close button
                 }
                 
                 // Close Button
@@ -146,6 +163,37 @@ struct PaywallView: View {
                 }
                 .padding(.top, 10) // Small status bar buffer if needed
                 .padding(.trailing, 10)
+            }
+        }
+        .onChange(of: entitlementManager.isPro) { isPro in
+            if isPro {
+                dismiss()
+            }
+        }
+    }
+    
+    private func purchase() {
+        let productID = selectedPlan == .yearly ? "slipbox_pro_yearly" : "slipbox_pro_monthly"
+        guard let product = storeKitManager.products.first(where: { $0.id == productID }) else { return }
+        
+        isPurchasing = true
+        Task {
+            do {
+                try await storeKitManager.purchase(product)
+                // View will dismiss via onChange of isPro
+            } catch {
+                print("Purchase failed: \(error)")
+                isPurchasing = false
+            }
+        }
+    }
+    
+    private func restore() {
+        Task {
+            do {
+                try await storeKitManager.restorePurchases()
+            } catch {
+                print("Restore failed: \(error)")
             }
         }
     }

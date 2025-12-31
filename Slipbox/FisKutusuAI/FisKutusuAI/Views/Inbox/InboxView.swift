@@ -2,6 +2,7 @@ import SwiftUI
 
 struct InboxView: View {
     @StateObject private var viewModel = InboxViewModel()
+    @EnvironmentObject var localizationManager: LocalizationManager
     @State private var showingAddReceipt = false
     @State private var showingScanner = false
     
@@ -9,16 +10,9 @@ struct InboxView: View {
         NavigationStack {
             ZStack {
                 // Dark gradient background
-                LinearGradient(
-                    gradient: Gradient(colors: [
-                        Color(hex: "0A0A14"),
-                        Color(hex: "050511")
-                    ]),
-                    startPoint: .top,
-                    endPoint: .bottom
-                )
-                .ignoresSafeArea()
-            
+                Color(hex: "0A0A14")
+                    .ignoresSafeArea()
+                
                 VStack(spacing: 0) {
                     // Header
                     header
@@ -93,10 +87,10 @@ struct InboxView: View {
     
     // MARK: - Segmented Control
     private var segmentedControl: some View {
-        HStack(spacing: 12) {
-            segmentButton(label: "processing".localized, status: .processing)
-            segmentButton(label: "Needs Review", status: .needsReview)
-            segmentButton(label: "Approved", status: .approved)
+        HStack(spacing: 8) {
+            segmentButton(label: "status_new".localized, status: .new)
+            segmentButton(label: "status_needs_review".localized, status: .pendingReview)
+            segmentButton(label: "status_approved".localized, status: .approved)
         }
         .padding(4)
         .background(Color.white.opacity(0.05))
@@ -144,19 +138,16 @@ struct InboxView: View {
                 .listRowInsets(EdgeInsets(top: 6, leading: 20, bottom: 6, trailing: 20))
                 .swipeActions(edge: .trailing, allowsFullSwipe: false) {
                     Button(role: .destructive) {
-                        print("👉 Swipe Delete triggered for \(receipt.merchant ?? "")")
-                        withAnimation {
-                            viewModel.deleteReceipt(receipt)
-                        }
+                        viewModel.deleteReceipt(receipt)
                     } label: {
                         Image(systemName: "trash")
-                            .font(.system(size: 24))
+                            .font(.system(size: 22))
                     }
                     .tint(.red)
                     
                     NavigationLink(destination: ReceiptDetailView(receipt: receipt, viewModel: viewModel)) {
                         Image(systemName: "pencil")
-                            .font(.system(size: 24))
+                            .font(.system(size: 22))
                     }
                     .tint(Color(hex: "4F46E5"))
                 }
@@ -164,6 +155,7 @@ struct InboxView: View {
         }
         .listStyle(.plain)
         .scrollContentBackground(.hidden)
+        .background(Color(hex: "0A0A14").ignoresSafeArea()) // Fix overscroll
         .padding(.bottom, 100)
     }
     
@@ -204,7 +196,7 @@ struct InboxView: View {
             }) {
                 HStack {
                     Image(systemName: "qrcode.viewfinder")
-                    Text("Scan Receipt")
+                    Text("scan_receipt".localized)
                 }
                 .font(.system(size: 16, weight: .semibold))
                 .foregroundColor(.white)
@@ -235,7 +227,7 @@ struct AddReceiptPlaceholderView: View {
                     .font(.system(size: 64))
                     .foregroundColor(Color(hex: "4F46E5"))
                 
-                Text("Fiş Ekleme")
+                Text("fis_ekleme".localized)
                     .font(.system(size: 24, weight: .bold))
                     .foregroundColor(.white)
                 
@@ -247,7 +239,7 @@ struct AddReceiptPlaceholderView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("Kapat") {
+                    Button("kapat".localized) {
                         dismiss()
                     }
                     .foregroundColor(Color(hex: "4F46E5"))

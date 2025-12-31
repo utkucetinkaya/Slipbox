@@ -60,7 +60,7 @@ class ExportService {
                 
                 xPosition = 50.0
                 let dateStr = receipt.date != nil ? dateFormatter.string(from: receipt.date!) : "-"
-                let merchantStr = receipt.merchant ?? "Bilinmiyor"
+                let merchantStr = receipt.merchantName ?? "Bilinmiyor"
                 let categoryStr = receipt.categoryId ?? "-"
                 let totalStr = currencyFormatter.string(from: NSNumber(value: receipt.total ?? 0.0)) ?? "-"
                 
@@ -103,11 +103,11 @@ class ExportService {
         
         for receipt in receipts {
             let dateStr = receipt.date != nil ? dateFormatter.string(from: receipt.date!) : ""
-            let merchant = (receipt.merchant ?? "").replacingOccurrences(of: ",", with: " ")
+            let merchant = (receipt.merchantName ?? "").replacingOccurrences(of: ",", with: " ")
             let category = (receipt.categoryId ?? "").replacingOccurrences(of: ",", with: " ")
             let total = String(format: "%.2f", receipt.total ?? 0.0)
             let currency = receipt.currency ?? "TRY"
-            let notes = (receipt.notes ?? "").replacingOccurrences(of: ",", with: " ")
+            let notes = (receipt.note ?? "").replacingOccurrences(of: ",", with: " ")
             
             let line = "\(dateStr),\(merchant),\(category),\(total),\(currency),\(notes)\n"
             csvString.append(line)

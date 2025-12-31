@@ -2,9 +2,11 @@ import SwiftUI
 
 struct CategoryPickerView: View {
     @Environment(\.dismiss) var dismiss
+    @EnvironmentObject var localizationManager: LocalizationManager
     @Binding var selectedCategoryId: String?
     
     @State private var searchText = ""
+    @State private var showingCreateCategory = false
     
     // Grid layout column definition
     private let columns = [
@@ -37,7 +39,7 @@ struct CategoryPickerView: View {
                     HStack {
                         Image(systemName: "magnifyingglass")
                             .foregroundColor(.white.opacity(0.4))
-                        TextField("Search categories...", text: $searchText)
+                        TextField("search_categories".localized, text: $searchText)
                             .foregroundColor(.white)
                     }
                     .padding()
@@ -52,7 +54,7 @@ struct CategoryPickerView: View {
                             // Recent Section
                             if searchText.isEmpty {
                                 VStack(alignment: .leading, spacing: 16) {
-                                    Text("RECENT")
+                                    Text("recent".localized)
                                         .font(.system(size: 14, weight: .bold))
                                         .foregroundColor(.white.opacity(0.6))
                                         .padding(.horizontal, 20)
@@ -76,7 +78,7 @@ struct CategoryPickerView: View {
                             
                             // All Categories Section
                             VStack(alignment: .leading, spacing: 16) {
-                                Text("ALL CATEGORIES")
+                                Text("all_categories_title".localized)
                                     .font(.system(size: 14, weight: .bold))
                                     .foregroundColor(.white.opacity(0.6))
                                     .padding(.horizontal, 20)
@@ -105,12 +107,12 @@ struct CategoryPickerView: View {
                                                 .foregroundColor(.white)
                                         }
                                         
-                                        Text("Create")
+                                        Text("create".localized)
                                             .font(.system(size: 13))
                                             .foregroundColor(.white.opacity(0.6))
                                     }
                                     .onTapGesture {
-                                        // Stub action
+                                        showingCreateCategory = true
                                     }
                                 }
                                 .padding(.horizontal, 20)
@@ -124,11 +126,11 @@ struct CategoryPickerView: View {
                 VStack {
                     Spacer()
                     Button(action: {
-                        // Stub action
+                        showingCreateCategory = true
                     }) {
                         HStack {
                             Image(systemName: "plus")
-                            Text("Create Custom Category")
+                            Text("create_custom_category".localized)
                         }
                         .font(.system(size: 16, weight: .semibold))
                         .foregroundColor(.white)
@@ -142,15 +144,18 @@ struct CategoryPickerView: View {
                     .padding(.bottom, 20)
                 }
             }
-            .navigationTitle("Select Category")
+            .navigationTitle("select_category".localized)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
-                    Button("Cancel") {
+                    Button("cancel".localized) {
                         dismiss()
                     }
                     .foregroundColor(Color(hex: "4F46E5"))
                 }
+            }
+            .sheet(isPresented: $showingCreateCategory) {
+                CreateCategoryView()
             }
         }
     }
@@ -190,7 +195,7 @@ struct CategoryCircleItem: View {
                     }
                 }
                 
-                Text(category.name)
+                Text(category.name.localized)
                     .font(.system(size: 13))
                     .foregroundColor(isSelected ? Color(hex: "4F46E5") : .white.opacity(0.8))
             }
@@ -220,7 +225,7 @@ struct CategoryGridItem: View {
                         .foregroundColor(isSelected ? .white : .white.opacity(0.8))
                 }
                 
-                Text(category.name)
+                Text(category.name.localized)
                     .font(.system(size: 13))
                     .foregroundColor(isSelected ? .white : .white.opacity(0.6))
                     .lineLimit(1)

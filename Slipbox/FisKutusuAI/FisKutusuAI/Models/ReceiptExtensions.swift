@@ -4,7 +4,7 @@ import FirebaseFirestore
 // MARK: - Receipt Display Helpers
 extension Receipt {
     var displayMerchant: String {
-        merchant ?? "Bilinmeyen"
+        merchantName ?? "unknown_merchant".localized
     }
     
     var displayDate: Date {
@@ -16,6 +16,7 @@ extension Receipt {
     }
     
     var displayCategoryName: String? {
+        if let name = categoryName { return name }
         if let id = categoryId {
             return Category.defaults.first(where: { $0.id == id })?.name ?? id.uppercased()
         }
@@ -41,11 +42,11 @@ extension Receipt {
     var formattedAmount: String {
         let formatter = NumberFormatter()
         formatter.numberStyle = .currency
-        formatter.currencyCode = "TRY"
-        formatter.locale = Locale(identifier: "tr_TR")
+        formatter.currencyCode = AppUserPreferences.shared.currencyCode
+        formatter.locale = AppUserPreferences.shared.locale
         formatter.minimumFractionDigits = 2
         formatter.maximumFractionDigits = 2
-        return formatter.string(from: displayAmount as NSDecimalNumber) ?? "₺0,00"
+        return formatter.string(from: displayAmount as NSDecimalNumber) ?? "0,00"
     }
 }
 
@@ -54,13 +55,17 @@ extension ReceiptStatus {
     var displayText: String {
         switch self {
         case .processing:
-            return "İşleme alınıyor..."
-        case .needsReview:
-            return "İnceleme Gerekli"
+            return "status_processing".localized
+        case .new:
+            return "status_new".localized
+        case .pendingReview:
+            return "status_needs_review".localized
         case .approved:
-            return "Onaylandı"
+            return "status_approved".localized
+        case .rejected:
+            return "status_rejected".localized
         case .error:
-            return "Hata"
+            return "status_error".localized
         }
     }
     
@@ -68,10 +73,14 @@ extension ReceiptStatus {
         switch self {
         case .processing:
             return "clock.fill"
-        case .needsReview:
+        case .new:
+            return "sparkles"
+        case .pendingReview:
             return "exclamationmark.circle.fill"
         case .approved:
             return "checkmark.circle.fill"
+        case .rejected:
+            return "xmark.circle.fill"
         case .error:
             return "xmark.circle.fill"
         }
@@ -81,10 +90,14 @@ extension ReceiptStatus {
         switch self {
         case .processing:
             return Color(hex: "4F46E5")
-        case .needsReview:
+        case .new:
+            return Color(hex: "06B6D4")
+        case .pendingReview:
             return Color(hex: "FFCC00")
         case .approved:
             return Color(hex: "34C759")
+        case .rejected:
+            return Color(hex: "FF3B30")
         case .error:
             return Color(hex: "FF3B30")
         }

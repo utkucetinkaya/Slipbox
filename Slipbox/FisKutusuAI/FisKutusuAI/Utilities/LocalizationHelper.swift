@@ -14,7 +14,14 @@ class LocalizationManager: ObservableObject {
     private var bundle: Bundle?
     
     init() {
-        self.currentLanguage = UserDefaults.standard.string(forKey: "selectedLanguageCode") ?? "tr"
+        // Auto-detect device language on first launch
+        if let savedLanguage = UserDefaults.standard.string(forKey: "selectedLanguageCode") {
+            self.currentLanguage = savedLanguage
+        } else {
+            // First launch - detect device language
+            let deviceLanguage = Locale.preferredLanguages.first ?? "tr"
+            self.currentLanguage = deviceLanguage.hasPrefix("en") ? "en" : "tr"
+        }
         self.bundle = LocalizationManager.getBundle(for: currentLanguage)
     }
     

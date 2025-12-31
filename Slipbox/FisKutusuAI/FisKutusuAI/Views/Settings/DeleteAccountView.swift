@@ -2,8 +2,11 @@ import SwiftUI
 
 struct DeleteAccountView: View {
     @Environment(\.dismiss) var dismiss
+    @EnvironmentObject var uiState: AppUIState
     @State private var deleteConfirmationText = ""
     @State private var showingFinalAlert = false
+    @State private var isLoading = false
+    @State private var errorMessage: String?
     
     var isDeleteEnabled: Bool {
         deleteConfirmationText == "DELETE"
@@ -106,8 +109,8 @@ struct DeleteAccountView: View {
                         .background(isDeleteEnabled ? Color(hex: "FF3B30") : Color(hex: "2C2C2E"))
                         .cornerRadius(28)
                     }
-                    .disabled(!isDeleteEnabled)
-                    .opacity(isDeleteEnabled ? 1 : 0.5)
+                    .disabled(!isDeleteEnabled || isLoading)
+                    .opacity(isDeleteEnabled && !isLoading ? 1 : 0.5)
                     
                     Button("İptal") {
                         dismiss()
@@ -117,17 +120,67 @@ struct DeleteAccountView: View {
                 }
                 .padding(20)
             }
+            
+            if isLoading {
+                Color.black.opacity(0.4)
+                    .ignoresSafeArea()
+                ProgressView()
+                    .tint(.white)
+                    .scaleEffect(1.5)
+            }
         }
         .navigationBarTitleDisplayMode(.inline)
         .navigationTitle("Hesabı Sil")
         .alert("Hesabını silmek istediğine emin misin?", isPresented: $showingFinalAlert) {
             Button("İptal", role: .cancel) { }
             Button("Sil", role: .destructive) {
-                print("🔥 Account deleted!")
-                // Logic to navigate to onboarding would go here
+                performDeletion()
             }
         } message: {
             Text("Son kez soruyoruz. Bu işlem geri alınamaz.")
+        }
+        .overlay(alignment: .top) {
+            if let error = errorMessage {
+                Text(error)
+                    .font(.system(size: 14))
+                    .foregroundColor(.white)
+                    .padding()
+                    .background(Color.red)
+                    .cornerRadius(8)
+                    .padding(.top, 50)
+                    .onAppear {
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
+                            errorMessage = nil
+                        }
+                    }
+            }
+        }
+        .onAppear {
+            uiState.isTabBarHidden = true
+        }
+        .onDisappear {
+            uiState.isTabBarHidden = false
+        }
+    }
+    
+    private func performDeletion() {
+        isLoading = true
+        errorMessage = nil
+        
+        Task {
+            do {
+                try await AuthenticationManager.shared.deleteAccount()
+            } catch let error as AuthError where error == .requiresRecentLogin {
+                isLoading = false
+                errorMessage = error.localizedDescription
+                // Optionally: Wait 3 seconds then sign out automatically to force re-auth
+                DispatchQueue.main.asyncAfter(deadline: .now() + 4) {
+                    try? AuthenticationManager.shared.signOut()
+                }
+            } catch {
+                isLoading = false
+                errorMessage = error.localizedDescription
+            }
         }
     }
 }

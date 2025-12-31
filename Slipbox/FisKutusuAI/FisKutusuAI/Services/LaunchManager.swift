@@ -1,11 +1,13 @@
 import SwiftUI
 import Combine
+import FirebaseAuth
 
 enum LaunchState {
     case splash
     case auth
     case onboarding
     case permissions
+    case entitlementsLoading
     case main
 }
 
@@ -16,6 +18,7 @@ class LaunchManager: ObservableObject {
     
     // Dependencies
     private let authManager = AuthenticationManager.shared
+    private let entitlementManager = EntitlementManager.shared
     private var cancellables = Set<AnyCancellable>()
     
     // Limits
@@ -24,6 +27,14 @@ class LaunchManager: ObservableObject {
     private init() {
         // Observe Auth changes to trigger checks
         authManager.$user
+            .combineLatest(authManager.$isProfileLoaded)
+            .receive(on: RunLoop.main)
+            .sink { [weak self] _ in
+                self?.checkState()
+            }
+            .store(in: &cancellables)
+        
+        entitlementManager.$isLoading
             .receive(on: RunLoop.main)
             .sink { [weak self] _ in
                 self?.checkState()
@@ -43,11 +54,23 @@ class LaunchManager: ObservableObject {
     }
     
     private func determineNextState() {
-        // 1. Auth Check
-        guard authManager.user != nil else {
+        guard let user = authManager.user else {
             withAnimation { state = .auth }
             return
         }
+        
+        // 1.1 Profile Loaded Check
+        guard authManager.isProfileLoaded else {
+            // Wait for profile to load (Splash or LoadingView will be shown)
+            // If already in .auth and we just signed in, we stay there until it loads.
+            return
+        }
+        
+        // 1.1 Entitlements Listener Start (if not already)
+        entitlementManager.startListening(uid: user.uid)
+        
+        // 1.2 Start Receipt Repository Listener
+        FirestoreReceiptRepository.shared.startListening()
         
         // 2. Onboarding Check
         if !UserDefaults.standard.bool(forKey: "hasSeenOnboarding") {
@@ -61,7 +84,13 @@ class LaunchManager: ObservableObject {
             return
         }
         
-        // 4. Main App
+        // 4. Entitlements Check (Wait for first load)
+        if entitlementManager.isLoading {
+            withAnimation { state = .entitlementsLoading }
+            return
+        }
+        
+        // 5. Main App
         withAnimation { state = .main }
     }
     

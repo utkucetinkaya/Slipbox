@@ -4,12 +4,10 @@ import Combine
 
 class InboxViewModel: ObservableObject {
     @Published var receipts: [Receipt] = []
-    @Published var selectedFilter: ReceiptStatus? = .processing {
-        didSet {
-            print("🔍 Filter changed to: \(selectedFilter?.displayText ?? "All")")
-            debugPrintCounts()
-        }
-    }
+    @Published var selectedFilter: ReceiptStatus? = .new
+    
+    private var cancellables = Set<AnyCancellable>()
+    private let repository = FirestoreReceiptRepository.shared
     
     var filteredReceipts: [Receipt] {
         let filtered: [Receipt]
@@ -22,92 +20,50 @@ class InboxViewModel: ObservableObject {
     }
     
     init() {
-        self.receipts = MockData.inboxReceipts
-        print("🚀 InboxViewModel initialized with \(receipts.count) receipts")
-        debugPrintCounts()
-        simulateProcessing()
+        setupSubscription()
     }
     
-    func simulateProcessing() {
-        let processingReceipts = receipts.filter { $0.status == .processing }
-        
-        for receipt in processingReceipts {
-            DispatchQueue.main.asyncAfter(deadline: .now() + .seconds(Int.random(in: 3...5))) { [weak self] in
-                guard let self = self else { return }
-                
-                // Find current index (in case it changed)
-                if let index = self.receipts.firstIndex(where: { $0.id == receipt.id }) {
-                    var updated = self.receipts[index]
-                    
-                    // Randomly decide outcome: 60% needs review, 40% approved
-                    let isApproved = Double.random(in: 0...1) > 0.6
-                    
-                    if isApproved {
-                        updated.status = .approved
-                        updated.confidence = 0.95
-                        print("✨ Receipt auto-processed -> APPROVED: \(updated.merchant ?? "")")
-                    } else {
-                        updated.status = .needsReview
-                        updated.confidence = 0.65
-                        print("⚠️ Receipt auto-processed -> NEEDS REVIEW: \(updated.merchant ?? "")")
-                    }
-                    
-                    self.receipts[index] = updated
-                    self.objectWillChange.send()
-                    self.debugPrintCounts()
-                }
+    private func setupSubscription() {
+        repository.$receipts
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] receipts in
+                self?.receipts = receipts
+            }
+            .store(in: &cancellables)
+    }
+    
+    func deleteReceipt(_ receipt: Receipt) {
+        Task {
+            do {
+                try await repository.deleteReceipt(receipt)
+                print("✅ Receipt deleted: \(receipt.id ?? "")")
+            } catch {
+                print("❌ Delete failed: \(error.localizedDescription)")
             }
         }
     }
     
-    func deleteReceipt(_ receipt: Receipt) {
-        print("🗑️ Deleting receipt: \(receipt.id ?? "unknown")")
-        receipts.removeAll { $0.id == receipt.id }
-        print("✅ Receipt deleted. Remaining count: \(receipts.count)")
-        objectWillChange.send() 
-    }
-    
-    func updateReceipt(_ updatedReceipt: Receipt) {
-        if let index = receipts.firstIndex(where: { $0.id == updatedReceipt.id }) {
-            print("✏️ Updating receipt: \(updatedReceipt.merchant ?? "unknown")")
-            receipts[index] = updatedReceipt
-            objectWillChange.send()
-        }
-    }
-    
     func approveReceipt(id: String) {
-        print("👍 Approving receipt: \(id)")
-        if let index = receipts.firstIndex(where: { $0.id == id }) {
-            var updated = receipts[index]
-            updated.status = .approved
-            updated.confidence = 1.0
-            receipts[index] = updated
-            
-            print("✅ Receipt approved. New status: \(updated.status.rawValue)")
-            objectWillChange.send()
-            
-            // Force UI refresh if needed by slight delay or direct check
-            debugPrintCounts()
-        } else {
-            print("❌ Receipt not found for approval: \(id)")
+        guard let receipt = receipts.first(where: { $0.id == id }) else { return }
+        var updated = receipt
+        updated.status = .approved
+        
+        Task {
+            do {
+                try await repository.updateReceipt(updated)
+                print("✅ Receipt approved: \(id)")
+            } catch {
+                print("❌ Approval failed: \(error.localizedDescription)")
+            }
         }
     }
     
     func rejectReceipt(id: String) {
-        print("👎 Rejecting receipt: \(id)")
-        receipts.removeAll { $0.id == id }
-        print("✅ Receipt rejected/removed. Remaining count: \(receipts.count)")
-        objectWillChange.send()
+        guard let receipt = receipts.first(where: { $0.id == id }) else { return }
+        deleteReceipt(receipt)
     }
     
     func setFilter(_ status: ReceiptStatus?) {
         selectedFilter = status
-    }
-    
-    private func debugPrintCounts() {
-        let processing = receipts.filter { $0.status == .processing }.count
-        let needsReview = receipts.filter { $0.status == .needsReview }.count
-        let approved = receipts.filter { $0.status == .approved }.count
-        print("📊 Stats - Yeni: \(processing), Bekleyen: \(needsReview), Tamam: \(approved)")
     }
 }

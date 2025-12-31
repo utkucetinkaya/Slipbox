@@ -1,15 +1,20 @@
 import SwiftUI
+import FirebaseAuth
 
 struct EditProfileView: View {
     @Environment(\.dismiss) var dismiss
+    @EnvironmentObject var uiState: AppUIState
+    @EnvironmentObject var authManager: AuthenticationManager
     
-    @State private var fullName = "Kerem Yılmaz"
-    @State private var email = "kerem.yilmaz@slipbox.app"
-    @State private var phone = "+90 555 123 45 67"
+    @State private var fullName = ""
+    @State private var email = ""
+    @State private var phone = ""
+    @State private var isLoading = false
+    @State private var errorMessage: String?
     
     var body: some View {
         ZStack {
-            Color(hex: "050511")
+            DesignSystem.Colors.background
                 .ignoresSafeArea()
             
             VStack(spacing: 32) {
@@ -17,16 +22,16 @@ struct EditProfileView: View {
                 VStack(spacing: 16) {
                     ZStack(alignment: .bottomTrailing) {
                         Circle()
-                            .fill(Color(hex: "FFCC00").opacity(0.2)) // Placeholder avatar color
+                            .fill(DesignSystem.Colors.primary.opacity(0.1))
                             .frame(width: 120, height: 120)
                             .overlay(
-                                Image(systemName: "person.fill") // Placeholder image
+                                Image(systemName: "person.fill")
                                     .font(.system(size: 60))
-                                    .foregroundColor(Color(hex: "FFCC00"))
+                                    .foregroundColor(DesignSystem.Colors.primary)
                             )
                         
                         Circle()
-                            .fill(Color(hex: "4F46E5"))
+                            .fill(DesignSystem.Colors.primary)
                             .frame(width: 40, height: 40)
                             .overlay(
                                 Image(systemName: "pencil")
@@ -35,15 +40,15 @@ struct EditProfileView: View {
                             )
                             .overlay(
                                 Circle()
-                                    .stroke(Color(hex: "050511"), lineWidth: 4)
+                                    .stroke(DesignSystem.Colors.background, lineWidth: 4)
                             )
                     }
                     
                     Button("Fotoğrafı Değiştir") {
-                        // Stub for photo picker
+                        // Photo selection stub
                     }
                     .font(.system(size: 16, weight: .medium))
-                    .foregroundColor(Color(hex: "4F46E5"))
+                    .foregroundColor(DesignSystem.Colors.primary)
                 }
                 .padding(.top, 20)
                 
@@ -57,27 +62,65 @@ struct EditProfileView: View {
                 }
                 .padding(.horizontal, 20)
                 
+                if let error = errorMessage {
+                    Text(error)
+                        .font(.caption)
+                        .foregroundColor(DesignSystem.Colors.error)
+                        .padding(.horizontal, 20)
+                }
+                
                 Spacer()
                 
                 // Save Button
-                Button(action: {
-                    print("💾 Profile saved: \(fullName), \(phone)")
-                    dismiss()
-                }) {
-                    Text("Kaydet")
-                        .font(.system(size: 18, weight: .bold))
-                        .foregroundColor(.white)
-                        .frame(maxWidth: .infinity)
-                        .frame(height: 56)
-                        .background(Color(hex: "4F46E5"))
-                        .cornerRadius(28)
-                        .shadow(color: Color(hex: "4F46E5").opacity(0.4), radius: 10, x: 0, y: 5)
+                Button(action: saveProfile) {
+                    Group {
+                        if isLoading {
+                            ProgressView()
+                                .tint(.white)
+                        } else {
+                            Text("Kaydet")
+                                .font(.system(size: 18, weight: .bold))
+                        }
+                    }
+                    .foregroundColor(.white)
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 56)
+                    .background(DesignSystem.Colors.primary)
+                    .cornerRadius(28)
+                    .shadow(color: DesignSystem.Colors.primary.opacity(0.4), radius: 10, x: 0, y: 5)
                 }
                 .padding(20)
+                .disabled(isLoading)
             }
         }
         .navigationBarTitleDisplayMode(.inline)
         .navigationTitle("Profili Düzenle")
+        .onAppear {
+            uiState.isTabBarHidden = true
+            // Load current profile data
+            if let profile = authManager.profile {
+                fullName = profile.displayName ?? ""
+                email = authManager.user?.email ?? ""
+                phone = profile.phoneNumber ?? ""
+            }
+        }
+        .onDisappear {
+            uiState.isTabBarHidden = false
+        }
+    }
+    
+    private func saveProfile() {
+        Task {
+            isLoading = true
+            errorMessage = nil
+            do {
+                try await authManager.updateProfile(displayName: fullName, phoneNumber: phone)
+                dismiss()
+            } catch {
+                errorMessage = error.localizedDescription
+                isLoading = false
+            }
+        }
     }
 }
 
@@ -90,24 +133,24 @@ struct ProfileField: View {
         VStack(alignment: .leading, spacing: 8) {
             Text(label)
                 .font(.system(size: 14))
-                .foregroundColor(.white.opacity(0.6))
+                .foregroundColor(DesignSystem.Colors.textSecondary)
             
             HStack {
                 TextField("", text: $text)
-                    .foregroundColor(isLocked ? .white.opacity(0.5) : .white)
+                    .foregroundColor(isLocked ? DesignSystem.Colors.textSecondary : DesignSystem.Colors.textPrimary)
                     .disabled(isLocked)
                 
                 if isLocked {
                     Image(systemName: "lock.fill")
-                        .foregroundColor(.white.opacity(0.3))
+                        .foregroundColor(DesignSystem.Colors.textSecondary.opacity(0.5))
                 }
             }
             .padding()
-            .background(Color(hex: "1C1C1E"))
+            .background(DesignSystem.Colors.inputBackground)
             .cornerRadius(16)
             .overlay(
                 RoundedRectangle(cornerRadius: 16)
-                    .stroke(Color.white.opacity(0.1), lineWidth: 1)
+                    .stroke(DesignSystem.Colors.border, lineWidth: 1)
             )
         }
     }

@@ -2,6 +2,8 @@ import SwiftUI
 
 struct LanguageSelectionView: View {
     @EnvironmentObject var userPreferences: AppUserPreferences
+    @EnvironmentObject var localizationManager: LocalizationManager
+    @EnvironmentObject var uiState: AppUIState
     @Environment(\.dismiss) var dismiss
     
     var body: some View {
@@ -13,7 +15,8 @@ struct LanguageSelectionView: View {
                     ForEach(userPreferences.languages, id: \.0) { language in
                         Button(action: {
                             userPreferences.languageCode = language.0
-                            // In a real app, this might trigger a localized string reload or app restart mechanism
+                            // Update LocalizationManager to trigger UI refresh
+                            localizationManager.setLanguage(language.0)
                             dismiss()
                         }) {
                             HStack {
@@ -38,5 +41,11 @@ struct LanguageSelectionView: View {
             }
         }
         .navigationTitle("language")
+        .onAppear {
+            uiState.isTabBarHidden = true
+        }
+        .onDisappear {
+            uiState.isTabBarHidden = false
+        }
     }
 }

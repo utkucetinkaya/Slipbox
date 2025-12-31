@@ -1,7 +1,11 @@
 import SwiftUI
+import FirebaseAuth
 
 struct SettingsView: View {
     @EnvironmentObject var userPreferences: AppUserPreferences
+    @EnvironmentObject var authManager: AuthenticationManager
+    @EnvironmentObject var entitlementManager: EntitlementManager
+    @State private var showingPaywall = false
     
     var body: some View {
         NavigationStack {
@@ -30,15 +34,16 @@ struct SettingsView: View {
                         
                         // Support & Legal
                         VStack(alignment: .leading, spacing: 8) {
-                            sectionHeader("SUPPORT & LEGAL")
-                            SettingsRow(icon: "bubble.left.fill", title: "Send Feedback", color: Color(hex: "06B6D4"))
+                            sectionHeader("support_legal".localized)
+                            SettingsRow(icon: "bubble.left.fill", title: "send_feedback".localized, color: Color(hex: "06B6D4"))
                             SettingsRow(icon: "lock.fill", title: "privacy".localized, color: Color(hex: "A855F7"))
                             SettingsRow(icon: "doc.text.fill", title: "terms".localized, color: Color(hex: "FFCC00"))
                         }
                         
                         // Danger Zone
                         VStack(alignment: .leading, spacing: 8) {
-                            sectionHeader("DANGER ZONE")
+                            sectionHeader("DANGER ZONE".localized) // I'll add this key if needed, or use a general one. Let's use it as is for now or add it. I'll add "danger_zone" to strings.
+
                             NavigationLink(destination: DeleteAccountView()) {
                                 HStack {
                                     Circle()
@@ -50,7 +55,7 @@ struct SettingsView: View {
                                                 .font(.system(size: 14))
                                         )
                                     
-                                    Text("Delete Account")
+                                    Text("delete_account".localized)
                                         .font(.system(size: 16, weight: .medium))
                                         .foregroundColor(Color(hex: "FF3B30"))
                                     
@@ -72,22 +77,22 @@ struct SettingsView: View {
                         
                         // Developer / Debug Section
                         VStack(alignment: .leading, spacing: 8) {
-                            sectionHeader("DEVELOPER")
+                            sectionHeader("developer".localized)
                             
                             Button(action: { LaunchManager.shared.resetOnboarding() }) {
-                                SettingsRow(icon: "arrow.counterclockwise", title: "Reset Onboarding", color: .orange)
+                                SettingsRow(icon: "arrow.counterclockwise", title: "reset_onboarding".localized, color: .orange)
                             }
                             
                             Button(action: { LaunchManager.shared.resetPermissions() }) {
-                                SettingsRow(icon: "shield.slash.fill", title: "Reset Permissions", color: .orange)
+                                SettingsRow(icon: "shield.slash.fill", title: "reset_permissions".localized, color: .orange)
                             }
                             
                              Button(action: { LaunchManager.shared.resetAll() }) {
-                                SettingsRow(icon: "exclamationmark.triangle.fill", title: "Factory Reset Flow", color: .red)
+                                SettingsRow(icon: "exclamationmark.triangle.fill", title: "factory_reset".localized, color: .red)
                             }
                             
                             Button(action: { try? AuthenticationManager.shared.signOut() }) {
-                                SettingsRow(icon: "rectangle.portrait.and.arrow.right", title: "Sign Out", color: .red)
+                                SettingsRow(icon: "rectangle.portrait.and.arrow.right", title: "sign_out".localized, color: .red)
                             }
                         }
                         
@@ -95,6 +100,9 @@ struct SettingsView: View {
                             .font(.system(size: 12))
                             .foregroundColor(.white.opacity(0.3))
                             .padding(.top, 20)
+                        
+                        // Bottom spacing for custom TabBar
+                        Spacer(minLength: 120)
                     }
                     .padding(.horizontal, 20)
                     .padding(.top, 0) // Removed extra top padding
@@ -102,6 +110,9 @@ struct SettingsView: View {
             }
             .navigationTitle("settings".localized)
             .navigationBarTitleDisplayMode(.inline) // Ensure title is visible and compact
+            .fullScreenCover(isPresented: $showingPaywall) {
+                PaywallView()
+            }
         }
     }
     
@@ -126,17 +137,36 @@ struct SettingsView: View {
             }
             
             VStack(alignment: .leading, spacing: 4) {
-                Text("user@example.com")
+                Text(authManager.profile?.displayName?.isEmpty == false ? authManager.profile!.displayName! : (authManager.user?.email ?? "User"))
                     .font(.system(size: 16, weight: .semibold))
                     .foregroundColor(.white)
                 
-                Text("PRO PLAN")
-                    .font(.system(size: 10, weight: .bold))
-                    .foregroundColor(.white)
-                    .padding(.horizontal, 8)
-                    .padding(.vertical, 4)
-                    .background(Color(hex: "4F46E5"))
-                    .cornerRadius(8)
+                if entitlementManager.isPro {
+                    Text(entitlementManager.plan.displayName.uppercased())
+                        .font(.system(size: 10, weight: .bold))
+                        .foregroundColor(.white)
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 4)
+                        .background(Color(hex: "4F46E5"))
+                        .cornerRadius(8)
+                } else {
+                    Button(action: { showingPaywall = true }) {
+                        Text("upgrade_now".localized)
+                            .font(.system(size: 11, weight: .bold))
+                            .foregroundColor(.white)
+                            .padding(.horizontal, 10)
+                            .padding(.vertical, 6)
+                            .background(
+                                LinearGradient(
+                                    gradient: Gradient(colors: [Color(hex: "4F46E5"), Color(hex: "7C3AED")]),
+                                    startPoint: .leading,
+                                    endPoint: .trailing
+                                )
+                            )
+                            .cornerRadius(12)
+                            .shadow(color: Color(hex: "4F46E5").opacity(0.4), radius: 6, x: 0, y: 3)
+                    }
+                }
             }
             
             Spacer()

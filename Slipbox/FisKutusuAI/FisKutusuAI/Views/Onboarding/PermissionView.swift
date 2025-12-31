@@ -61,11 +61,11 @@ struct PermissionView: View {
                 
                 // Title & Description
                 VStack(spacing: 16) {
-                    Text("Unlock the Camera")
+                    Text("unlock_camera".localized)
                         .font(.system(size: 32, weight: .bold))
                         .foregroundColor(.white)
                     
-                    Text("To automatically categorize your expenses, SlipBox needs to see your receipts.")
+                    Text("camera_permission_description".localized)
                         .font(.system(size: 16))
                         .foregroundColor(DesignSystem.Colors.textSecondary)
                         .multilineTextAlignment(.center)
@@ -78,8 +78,8 @@ struct PermissionView: View {
                     // Camera
                     PermissionCard(
                         icon: "camera.fill",
-                        title: "Scan Receipts",
-                        description: "Use your camera to instantly digitize and process paper receipts.",
+                        title: "onboarding_scan_title".localized,
+                        description: "onboarding_scan_description".localized,
                         isAuthorized: cameraStatus == .authorized,
                         color: Color(hex: "4F46E5")
                     )
@@ -87,8 +87,8 @@ struct PermissionView: View {
                     // Gallery
                     PermissionCard(
                         icon: "photo.on.rectangle",
-                        title: "Import Gallery",
-                        description: "Select existing photos of receipts to categorize them from your library.",
+                        title: "select_from_gallery".localized,
+                        description: "gallery_permission_description".localized,
                         isAuthorized: photoStatus == .authorized || photoStatus == .limited,
                         color: Color(hex: "4F46E5")
                     )
@@ -100,7 +100,7 @@ struct PermissionView: View {
                 // Buttons
                 VStack(spacing: 16) {
                     Button(action: requestAllPermissions) {
-                        Text("Enable Permissions")
+                        Text("enable_permissions".localized)
                             .font(.system(size: 17, weight: .semibold))
                             .frame(maxWidth: .infinity)
                             .frame(height: 56)
@@ -111,7 +111,7 @@ struct PermissionView: View {
                     }
                     
                     Button(action: skipOnboarding) {
-                        Text("Maybe Later")
+                        Text("maybe_later".localized)
                             .font(.system(size: 15, weight: .regular))
                             .foregroundColor(DesignSystem.Colors.textSecondary)
                     }

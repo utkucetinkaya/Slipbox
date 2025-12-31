@@ -40,11 +40,11 @@ struct ApproveReceiptSheetView: View {
                 }
                 
                 VStack(spacing: 12) {
-                    Text("Fişi Onayla")
+                    Text("approve_receipt_title".localized)
                         .font(.system(size: 24, weight: .bold))
                         .foregroundColor(.white)
                     
-                    Text("Bu fişi muhasebe kaydına almak üzeresiniz. Bu işlem geri alınamaz, onaylıyor musunuz?")
+                    Text("approve_receipt_message".localized)
                         .font(.system(size: 16))
                         .foregroundColor(.white.opacity(0.6))
                         .multilineTextAlignment(.center)
@@ -59,9 +59,19 @@ struct ApproveReceiptSheetView: View {
                             .fill(Color(hex: "2C2C2E"))
                             .frame(width: 48, height: 48)
                             .overlay(
-                                Image(systemName: "doc.text.fill")
-                                    .font(.system(size: 20))
-                                    .foregroundColor(.white.opacity(0.6))
+                                Group {
+                                    if let uiImage = ImageStorageService.shared.loadImage(from: receipt.imageLocalPath) {
+                                        Image(uiImage: uiImage)
+                                            .resizable()
+                                            .aspectRatio(contentMode: .fill)
+                                            .frame(width: 48, height: 48)
+                                            .clipShape(Circle())
+                                    } else {
+                                        Image(systemName: "doc.text.fill")
+                                            .font(.system(size: 20))
+                                            .foregroundColor(.white.opacity(0.6))
+                                    }
+                                }
                             )
                         
                         Circle()
@@ -102,7 +112,7 @@ struct ApproveReceiptSheetView: View {
                 VStack(spacing: 12) {
                     Button(action: onApprove) {
                         HStack {
-                            Text("Evet, Onayla")
+                            Text("yes_approve".localized)
                             Image(systemName: "arrow.right")
                         }
                         .font(.system(size: 16, weight: .semibold))
@@ -115,7 +125,7 @@ struct ApproveReceiptSheetView: View {
                     }
                     
                     Button(action: { dismiss() }) {
-                        Text("Vazgeç")
+                        Text("cancel".localized)
                             .font(.system(size: 16))
                             .foregroundColor(.white.opacity(0.6))
                     }
@@ -132,22 +142,32 @@ struct ApproveReceiptSheetView: View {
     private func formatAmount(_ amount: Decimal) -> String {
         let formatter = NumberFormatter()
         formatter.numberStyle = .currency
-        formatter.currencyCode = "TRY"
-        formatter.locale = Locale(identifier: "tr-TR")
-        return formatter.string(from: amount as NSDecimalNumber) ?? "₺0,00"
+        formatter.currencyCode = AppUserPreferences.shared.currencyCode
+        formatter.locale = AppUserPreferences.shared.locale
+        return formatter.string(from: amount as NSDecimalNumber) ?? "0,00"
     }
     
     private func formatDate(_ date: Date) -> String {
         let formatter = DateFormatter()
         formatter.dateFormat = "d MMM, HH:mm"
-        formatter.locale = Locale(identifier: "tr-TR")
+        formatter.locale = AppUserPreferences.shared.locale
         return formatter.string(from: date)
     }
 }
 
 #Preview {
     ApproveReceiptSheetView(
-        receipt: MockData.inboxReceipts[0],
+        receipt: Receipt(
+            id: "preview_approve",
+            status: .pendingReview,
+            imageLocalPath: "",
+            merchantName: "Global Market",
+            date: Date(),
+            total: 250.00,
+            currency: "USD",
+            categoryName: "category_food",
+            source: .camera
+        ),
         onApprove: {}
     )
 }

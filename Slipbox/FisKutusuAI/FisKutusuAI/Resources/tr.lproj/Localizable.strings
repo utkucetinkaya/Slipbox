@@ -51,9 +51,11 @@
 "paywall_cta" = "Pro'ya Geç";
 "paywall_easy_cancel" = "İptal etmesi kolay";
 "paywall_restore" = "Satın alımı geri yükle";
+"upgrade_now" = "Şimdi Yükselt";
 
 /* Reports */
 "reports_title" = "Raporlar";
+"reports_no_data" = "Bu ay için veri yok";
 "total_expense" = "Toplam Gider";
 "receipt_count" = "Fiş Sayısı";
 "top_category" = "En Çok";
@@ -67,9 +69,19 @@
 /* Categories */
 "category_market" = "Market";
 "category_transport" = "Ulaşım";
+"category_equipment" = "Ekipman";
+"category_service" = "Hizmet";
 "category_entertainment" = "Eğlence";
 "category_food" = "Gıda";
 "category_other" = "Diğer";
+"category_bills" = "Faturalar";
+"category_clothing" = "Giyim";
+"category_health" = "Sağlık";
+"category_education" = "Eğitim";
+"category_shopping" = "Alışveriş";
+"category_tax" = "Vergi";
+"category_travel" = "Seyahat";
+"category_rent" = "Kira";
 
 /* Camera */
 "camera_instruction" = "Fişi kadraja hizala";
@@ -79,3 +91,86 @@
 "inbox_empty" = "Henüz fiş yok";
 "inbox_subtitle" = "Fişlerini tarayarak başla";
 "processing" = "İşleniyor...";
+
+/* Receipt Details */
+"date" = "Tarih";
+"amount" = "Tutar";
+"category" = "Kategori";
+"note_optional" = "Not (Opsiyonel)";
+"note_placeholder" = "Fiş hakkında not ekle...";
+"check" = "Kontrol Et";
+"tap_to_zoom" = "YAKINLAŞTIRMAK İÇİN DOKUN";
+"preview" = "Önizleme";
+"auto_category" = "Otomatik Kategori";
+"auto_category_description" = "Bu işletmeyi her zaman %@ kategorisine ata";
+"reject" = "Reddet";
+"approve" = "Onayla";
+
+/* Approval Sheet */
+"approve_receipt_title" = "Fişi Onayla";
+"approve_receipt_message" = "Bu fişi muhasebe kaydına almak üzeresiniz. Bu işlem geri alınamaz, onaylıyor musunuz?";
+"yes_approve" = "Evet, Onayla";
+
+/* Category Picker */
+"recent" = "SON KULLANILANLAR";
+"all_categories_title" = "TÜM KATEGORİLER";
+"create" = "Oluştur";
+"create_custom_category" = "Özel Kategori Oluştur";
+"search_categories" = "Kategori ara...";
+"select_category" = "Kategori Seç";
+
+/* Reports Details */
+"total_spending_label" = "TOPLAM HARCAMA";
+"receipt_suffix" = "Fiş";
+"transaction_suffix" = "İşlem";
+"transaction_suffix_singular" = "İşlem";
+"transaction_suffix_plural" = "İşlem";
+"create_category_title" = "Kategori Oluştur";
+"category_name_label" = "Kategori Adı";
+"category_name_placeholder" = "Kategori adı yazın...";
+"select_icon" = "Simge Seç";
+"select_color" = "Renk Seç";
+"create_success" = "Kategori başarıyla oluşturuldu";
+
+/* Settings - Support */
+"support_legal" = "DESTEK & HUKUK";
+"send_feedback" = "Geri Bildirim Gönder";
+"delete_account" = "Hesabı Sil";
+"danger_zone" = "TEHLİKELİ BÖLGE";
+
+/* Settings - Developer */
+"developer" = "GELİŞTİRİCİ";
+"reset_onboarding" = "Onboarding'i Sıfırla";
+"reset_permissions" = "İzinleri Sıfırla";
+"factory_reset" = "Fabrika Ayarlarına Sıfırla";
+"sign_out" = "Çıkış Yap";
+"pro_plan" = "PRO PLAN";
+
+/* Permissions */
+"unlock_camera" = "Kameranın Kilidini Aç";
+"camera_permission_description" = "Giderlerinizi otomatik olarak kategorize etmek için SlipBox fişlerinizi görmeli.";
+"gallery_permission_description" = "Kütüphanenizden fiş fotoğraflarını seçerek onları kategorize edin.";
+"enable_permissions" = "İzinleri Etkinleştir";
+"maybe_later" = "Belki Sonra";
+"atla" = "Atla";
+"baslayalim" = "Başlayalım";
+"devam_et" = "Devam Et";
+"needs_review" = "Kontrol Bekliyor";
+"approved" = "Onaylanmış";
+"scan_receipt" = "Fiş Tara";
+"fis_ekleme" = "Fiş Ekleme";
+"kapat" = "Kapat";
+"merchant" = "İşletme";
+"merchant_placeholder" = "İşletme adı";
+"receipt_review" = "Fiş İnceleme";
+"processing_banner" = "Fiş işleniyor, lütfen bekleyin...";
+"unknown_merchant" = "Bilinmeyen";
+"status_processing" = "İşleme alınıyor...";
+"status_new" = "Yeni";
+"status_needs_review" = "Onay Bekleyen";
+"status_approved" = "Tamam";
+"status_rejected" = "Reddedildi";
+"status_error" = "Hata";
+
+/* App Name */
+"slipbox_app_name" = "SlipBox";

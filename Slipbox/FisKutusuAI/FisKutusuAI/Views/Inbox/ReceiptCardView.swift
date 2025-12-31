@@ -2,6 +2,8 @@ import SwiftUI
 
 struct ReceiptCardView: View {
     let receipt: Receipt
+    @EnvironmentObject var userPreferences: AppUserPreferences
+    @EnvironmentObject var localizationManager: LocalizationManager
     
     var body: some View {
         HStack(spacing: 16) {
@@ -109,7 +111,7 @@ struct ReceiptCardView: View {
                 .fill(receipt.displayCategoryColor)
                 .frame(width: 6, height: 6)
             
-            Text(name)
+            Text(name.localized)
                 .font(.system(size: 12, weight: .medium))
                 .foregroundColor(receipt.displayCategoryColor)
         }
@@ -141,15 +143,15 @@ struct ReceiptCardView: View {
     private func formatAmount(_ amount: Decimal) -> String {
         let formatter = NumberFormatter()
         formatter.numberStyle = .currency
-        formatter.currencyCode = "TRY"
-        formatter.locale = Locale(identifier: "tr-TR")
-        return formatter.string(from: amount as NSDecimalNumber) ?? "₺0,00"
+        formatter.currencyCode = userPreferences.currencyCode
+        formatter.locale = userPreferences.locale
+        return formatter.string(from: amount as NSDecimalNumber) ?? "0,00"
     }
     
     private func formatDate(_ date: Date) -> String {
         let formatter = DateFormatter()
         formatter.dateFormat = "d MMM yyyy"
-        formatter.locale = Locale(identifier: "tr-TR")
+        formatter.locale = userPreferences.locale
         return formatter.string(from: date)
     }
 }
@@ -160,10 +162,32 @@ struct ReceiptCardView: View {
             .ignoresSafeArea()
         
         VStack(spacing: 16) {
-            ReceiptCardView(receipt: MockData.inboxReceipts[0])
-            ReceiptCardView(receipt: MockData.inboxReceipts[1])
-            ReceiptCardView(receipt: MockData.inboxReceipts[2])
+            ReceiptCardView(receipt: Receipt(
+                id: "preview_1",
+                status: .new,
+                imageLocalPath: "",
+                merchantName: "Preview Store",
+                date: Date(),
+                total: 45.99,
+                currency: "USD",
+                categoryName: "category_food",
+                source: .camera
+            ))
+            
+            ReceiptCardView(receipt: Receipt(
+                id: "preview_2",
+                status: .pendingReview,
+                imageLocalPath: "",
+                merchantName: "Review Needed",
+                date: Date(),
+                total: 120.00,
+                currency: "USD",
+                categoryName: "category_other",
+                source: .gallery
+            ))
         }
         .padding()
     }
+    .environmentObject(AppUserPreferences.shared)
+    .environmentObject(LocalizationManager.shared)
 }

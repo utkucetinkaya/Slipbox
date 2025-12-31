@@ -106,58 +106,75 @@ struct ProcessingView: View {
             }
         }
         .onAppear {
-            startMockProcessing()
+            startProcessing()
         }
     }
     
-    private func startMockProcessing() {
-        // Step 1: Merchant found
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
-            withAnimation { extractedMerchant = "Starbucks" }
-        }
-        
-        // Step 2: Date found
-        DispatchQueue.main.asyncAfter(deadline: .now() + 2.5) {
-            withAnimation { extractedDate = "14 Ekim 2023" }
-        }
-        
-        // Step 3: Total found & Completion
-        DispatchQueue.main.asyncAfter(deadline: .now() + 3.5) {
-            withAnimation {
-                extractedTotal = "₺145.50"
-                isCompleted = true
+    private func startProcessing() {
+        Task {
+            do {
+                // 1. Save Image Locally
+                let fileName = UUID().uuidString
+                let localPath = try ImageStorageService.shared.saveImage(image, fileName: fileName)
+                
+                // 2. Run OCR
+                let ocrResult = try await OCRService.shared.recognizeText(in: image)
+                
+                await MainActor.run {
+                    withAnimation {
+                        extractedMerchant = ocrResult.merchantName
+                        extractedDate = ocrResult.date?.formatted(date: .abbreviated, time: .omitted)
+                        extractedTotal = ocrResult.total != nil ? "\(ocrResult.total!)" : nil
+                    }
+                }
+                
+                // 3. Categorization (Keyword based)
+                let catResult = CategorizationService.shared.categorize(merchantName: ocrResult.merchantName, rawText: ocrResult.rawText)
+                
+                // 4. Determine Status
+                // If OCR confidence is high AND categorization found a specific category (high confidence), set to 'new'
+                // Otherwise, 'pending_review'
+                let isConfident = ocrResult.confidence > 0.8 && catResult.confidence > 0.5
+                let initialStatus: ReceiptStatus = isConfident ? .new : .pendingReview
+                
+                // Fetch category name if found
+                var categoryName: String? = nil
+                if catResult.categoryId != "other" {
+                    categoryName = Category.defaults.first(where: { $0.id == catResult.categoryId })?.name 
+                        ?? Category.additional.first(where: { $0.id == catResult.categoryId })?.name
+                }
+                
+                let receipt = Receipt(
+                    id: nil,
+                    status: initialStatus,
+                    imageLocalPath: localPath,
+                    rawText: ocrResult.rawText,
+                    merchantName: ocrResult.merchantName,
+                    date: ocrResult.date,
+                    total: ocrResult.total,
+                    currency: AppUserPreferences.shared.currencyCode,
+                    categoryId: catResult.categoryId,
+                    categoryName: categoryName,
+                    confidence: catResult.confidence,
+                    note: nil,
+                    source: .camera,
+                    createdAt: nil,
+                    updatedAt: nil,
+                    error: nil
+                )
+                
+                // 4. Save to Firestore
+                try await FirestoreReceiptRepository.shared.addReceipt(receipt)
+                
+                await MainActor.run {
+                    withAnimation {
+                        isCompleted = true
+                    }
+                }
+            } catch {
+                print("❌ Processing failed: \(error.localizedDescription)")
             }
-            saveMockReceipt()
         }
-    }
-    
-    private func saveMockReceipt() {
-        // Create a new receipt and inject into InboxViewModel (mock)
-        // ideally we pass the ID to the scanner or have a robust data layer.
-        // For this UI demo, we rely on the Inbox's existing simulator/mock data logic to "show" it
-        // Or we can post a notification.
-        // Let's create a real Mock object and post it.
-        
-        let newReceipt = Receipt(
-            id: UUID().uuidString,
-            status: .needsReview,
-            imagePath: "", // Mock
-            rawText: "Mock Text",
-            merchant: "Starbucks",
-            date: Date(),
-            total: 145.50,
-            currency: "TRY",
-            categoryId: "food",
-            confidence: 0.85,
-            notes: nil,
-            source: .camera,
-            createdAt: Timestamp(date: Date()),
-            updatedAt: Timestamp(date: Date())
-        )
-        
-        // In a real app we'd save to DB.
-        // Here we can just assume Inbox will fetch it or we simulate it.
-        // InboxViewModel.shared.add(newReceipt) - stub
     }
 }
 

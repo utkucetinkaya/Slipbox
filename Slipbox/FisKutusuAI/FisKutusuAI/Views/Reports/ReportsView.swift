@@ -2,27 +2,21 @@ import SwiftUI
 
 struct ReportsView: View {
     @EnvironmentObject var userPreferences: AppUserPreferences
+    @EnvironmentObject var localizationManager: LocalizationManager
+    @EnvironmentObject var entitlementManager: EntitlementManager
     
-    // Mock Data State
-    @State private var currentDate = Date()
-    @State private var totalExpense: Double = 12450.00
-    @State private var receiptCount = 42
-    @State private var topCategory = "Gıda"
-    
+    @StateObject private var viewModel = ReportsViewModel()
     @State private var showingPaywall = false
     
     private var formattedMonth: String {
         let formatter = DateFormatter()
         formatter.dateFormat = "MMMM yyyy"
         formatter.locale = userPreferences.locale
-        return formatter.string(from: currentDate)
+        return formatter.string(from: viewModel.currentDate)
     }
     
     private func changeMonth(by value: Int) {
-        if let newDate = Calendar.current.date(byAdding: .month, value: value, to: currentDate) {
-            currentDate = newDate
-            // In a real app, strict fetching logic would go here
-        }
+        viewModel.changeMonth(by: value)
     }
     
     private func formatCurrency(_ value: Double) -> String {
@@ -56,14 +50,15 @@ struct ReportsView: View {
                         // Export Section
                         exportSection
                         
-                        Spacer(minLength: 40)
+                        Spacer(minLength: 120)
                     }
                     .padding(.horizontal, 20)
                     .padding(.top, 10)
                 }
-                .scrollContentBackground(.hidden) // Fix for overscroll background
+                .scrollContentBackground(.hidden)
+                .background(Color(hex: "050511").ignoresSafeArea()) // Fix overscroll
             }
-            .navigationTitle("Raporlar")
+            .navigationTitle("reports_title".localized)
             .navigationBarTitleDisplayMode(.inline)
             .sheet(isPresented: $showingPaywall) {
                 PaywallView()
@@ -101,11 +96,11 @@ struct ReportsView: View {
     private var summaryCard: some View {
         VStack(alignment: .leading, spacing: 16) {
             VStack(alignment: .leading, spacing: 4) {
-                Text("Toplam Gider")
+                Text("total_expense".localized)
                     .font(.system(size: 14))
                     .foregroundColor(.white.opacity(0.6))
                 
-                Text(formatCurrency(totalExpense))
+                Text(formatCurrency(viewModel.totalExpense))
                     .font(.system(size: 34, weight: .bold))
                     .foregroundColor(Color(hex: "4F46E5"))
             }
@@ -124,10 +119,10 @@ struct ReportsView: View {
                         )
                     
                     VStack(alignment: .leading, spacing: 2) {
-                        Text("Fiş Sayısı")
+                        Text("receipt_count".localized)
                             .font(.system(size: 12))
                             .foregroundColor(.white.opacity(0.6))
-                        Text("\(receiptCount)")
+                        Text("\(viewModel.receiptCount)")
                             .font(.system(size: 18, weight: .semibold))
                             .foregroundColor(.white)
                     }
@@ -149,10 +144,10 @@ struct ReportsView: View {
                         )
                     
                     VStack(alignment: .leading, spacing: 2) {
-                        Text("En Çok")
+                        Text("top_category".localized)
                             .font(.system(size: 12))
                             .foregroundColor(.white.opacity(0.6))
-                        Text(topCategory)
+                        Text(viewModel.topCategory.localized)
                             .font(.system(size: 18, weight: .semibold))
                             .foregroundColor(.white)
                     }
@@ -172,23 +167,36 @@ struct ReportsView: View {
     private var categoryBreakdown: some View {
         VStack(alignment: .leading, spacing: 16) {
             HStack {
-                Text("Kategori Detayı")
+                Text("category_detail".localized)
                     .font(.system(size: 18, weight: .semibold))
                     .foregroundColor(.white)
                 
                 Spacer()
                 
                 NavigationLink(destination: AllCategoriesView()) {
-                    Text("Tümü")
+                    Text("view_all".localized)
                         .font(.system(size: 14))
                         .foregroundColor(Color(hex: "4F46E5"))
                 }
             }
             
             VStack(spacing: 12) {
-                CategoryRow(name: "Market", amount: 4200.00, count: 14, percent: 0.35, color: Color(hex: "4F46E5"))
-                CategoryRow(name: "Ulaşım", amount: 2100.00, count: 8, percent: 0.17, color: Color(hex: "A855F7"))
-                CategoryRow(name: "Eğlence", amount: 1500.00, count: 5, percent: 0.12, color: Color(hex: "FF3B30"))
+                if viewModel.categoryBreakdown.isEmpty {
+                    Text("reports_no_data".localized)
+                        .font(.system(size: 14))
+                        .foregroundColor(.white.opacity(0.4))
+                        .padding()
+                } else {
+                    ForEach(viewModel.categoryBreakdown.prefix(3)) { summary in
+                        CategoryRow(
+                            name: summary.name.localized,
+                            amount: summary.amount,
+                            count: summary.count,
+                            percent: summary.percent,
+                            color: summary.color
+                        )
+                    }
+                }
             }
         }
     }
@@ -199,24 +207,42 @@ struct ReportsView: View {
             HStack {
                 Image(systemName: "star.fill")
                     .foregroundColor(Color(hex: "FFCC00"))
-                Text("Dışa Aktar")
+                Text("export".localized)
                     .font(.system(size: 18, weight: .semibold))
                     .foregroundColor(.white)
             }
             
             VStack(spacing: 12) {
                 HStack(spacing: 12) {
-                    Button(action: { showingPaywall = true }) {
-                        ExportButtonContent(title: "PDF İndir", icon: "doc.text.fill", color: Color(hex: "FF3B30"))
+                    Button(action: { 
+                        if entitlementManager.isPro {
+                            // Actual PDF Export
+                        } else {
+                            showingPaywall = true 
+                        }
+                    }) {
+                        ExportButtonContent(title: "export_pdf".localized, icon: "doc.text.fill", color: Color(hex: "FF3B30"), isLocked: !entitlementManager.isPro)
                     }
                     
-                    Button(action: { showingPaywall = true }) {
-                        ExportButtonContent(title: "CSV İndir", icon: "tablecells.fill", color: Color(hex: "34C759"))
+                    Button(action: { 
+                        if entitlementManager.isPro {
+                            // Actual CSV Export
+                        } else {
+                            showingPaywall = true 
+                        }
+                    }) {
+                        ExportButtonContent(title: "export_csv".localized, icon: "tablecells.fill", color: Color(hex: "34C759"), isLocked: !entitlementManager.isPro)
                     }
                 }
                 
-                Button(action: { showingPaywall = true }) {
-                    ExportButtonContent(title: "Muhasebeci Linki Paylaş", icon: "link", color: Color(hex: "007AFF"))
+                Button(action: { 
+                    if entitlementManager.isPro {
+                        // Actual Link Share
+                    } else {
+                        showingPaywall = true 
+                    }
+                }) {
+                    ExportButtonContent(title: "export_link".localized, icon: "link", color: Color(hex: "007AFF"), isLocked: !entitlementManager.isPro)
                 }
             }
         }
@@ -231,6 +257,7 @@ struct ExportButtonContent: View {
     let title: String
     let icon: String
     let color: Color
+    let isLocked: Bool
     
     var body: some View {
         HStack {
@@ -249,9 +276,15 @@ struct ExportButtonContent: View {
             
             Spacer()
             
-            Image(systemName: "lock.fill")
-                .font(.system(size: 12))
-                .foregroundColor(Color(hex: "FFCC00"))
+            if isLocked {
+                Image(systemName: "lock.fill")
+                    .font(.system(size: 12))
+                    .foregroundColor(Color(hex: "FFCC00"))
+            } else {
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 12))
+                    .foregroundColor(.white.opacity(0.3))
+            }
         }
         .padding()
         .background(Color(hex: "1C1C1E"))
@@ -259,14 +292,7 @@ struct ExportButtonContent: View {
     }
 }
     
-    private func formatCurrency(_ value: Double) -> String {
-        let formatter = NumberFormatter()
-        formatter.numberStyle = .currency
-        formatter.currencyCode = "TRY"
-        formatter.locale = Locale(identifier: "tr_TR")
-        formatter.minimumFractionDigits = 2
-        return formatter.string(from: NSNumber(value: value)) ?? "₺0,00"
-    }
+
 
 struct CategoryRow: View {
     let name: String
@@ -291,7 +317,7 @@ struct CategoryRow: View {
                     Text(name)
                         .font(.system(size: 16, weight: .medium))
                         .foregroundColor(.white)
-                    Text("\(count) Fiş")
+                    Text("\(count) " + "receipt_suffix".localized)
                         .font(.system(size: 12))
                         .foregroundColor(.white.opacity(0.6))
                 }

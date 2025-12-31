@@ -2,6 +2,7 @@ import SwiftUI
 
 struct CurrencySelectionView: View {
     @EnvironmentObject var userPreferences: AppUserPreferences
+    @EnvironmentObject var uiState: AppUIState
     @Environment(\.dismiss) var dismiss
     
     var body: some View {
@@ -38,5 +39,11 @@ struct CurrencySelectionView: View {
             }
         }
         .navigationTitle("Para Birimi")
+        .onAppear {
+            uiState.isTabBarHidden = true
+        }
+        .onDisappear {
+            uiState.isTabBarHidden = false
+        }
     }
 }

@@ -25,34 +25,7 @@ struct EditProfileView: View {
                 VStack(spacing: 16) {
                     PhotosPicker(selection: $selectedItem, matching: .images) {
                         ZStack(alignment: .bottomTrailing) {
-                            if let image = selectedImage {
-                                Image(uiImage: image)
-                                    .resizable()
-                                    .aspectRatio(contentMode: .fill)
-                                    .frame(width: 120, height: 120)
-                                    .clipShape(Circle())
-                            } else if let urlString = authManager.profile?.profileImageUrl, let url = URL(string: urlString) {
-                                AsyncImage(url: url) { phase in
-                                    switch phase {
-                                    case .empty:
-                                        ProgressView()
-                                            .frame(width: 120, height: 120)
-                                    case .success(let image):
-                                        image
-                                            .resizable()
-                                            .aspectRatio(contentMode: .fill)
-                                            .frame(width: 120, height: 120)
-                                            .clipShape(Circle())
-                                    case .failure:
-                                        defaultAvatar
-                                    @unknown default:
-                                        defaultAvatar
-                                    }
-                                }
-                            } else {
-                                defaultAvatar
-                            }
-                            
+                            profileImage
                             editBadge
                         }
                     }
@@ -130,14 +103,8 @@ struct EditProfileView: View {
         }
     }
     
-    private func saveProfile() {
-        Task {
-            isLoading = true
-            errorMessage = nil
-            do {
-                var imageUrl: String? = nil
                 if let image = selectedImage {
-                    imageUrl = try await authManager.uploadProfileImage(image)
+                    imageUrl = try await authManager.processProfileImage(image)
                 }
                 
                 try await authManager.updateProfile(
@@ -153,10 +120,29 @@ struct EditProfileView: View {
         }
     }
     
+    private var profileImage: some View {
+        Group {
+            if let image = selectedImage {
+                Image(uiImage: image)
+                    .resizable()
+                    .aspectRatio(contentMode: .fill)
+            } else if let base64String = authManager.profile?.profileImageUrl,
+                      let data = Data(base64Encoded: base64String),
+                      let image = UIImage(data: data) {
+                Image(uiImage: image)
+                    .resizable()
+                    .aspectRatio(contentMode: .fill)
+            } else {
+                defaultAvatar
+            }
+        }
+        .frame(width: 120, height: 120)
+        .clipShape(Circle())
+    }
+    
     private var defaultAvatar: some View {
         Circle()
             .fill(DesignSystem.Colors.primary.opacity(0.1))
-            .frame(width: 120, height: 120)
             .overlay(
                 Image(systemName: "person.fill")
                     .font(.system(size: 60))

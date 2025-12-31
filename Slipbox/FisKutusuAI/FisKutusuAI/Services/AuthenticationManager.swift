@@ -2,7 +2,6 @@ import Foundation
 import FirebaseAuth
 import FirebaseFirestore
 import FirebaseAppCheck
-import FirebaseStorage
 import AuthenticationServices
 import Combine
 import CryptoKit
@@ -21,7 +20,6 @@ final class AuthenticationManager: ObservableObject {
 
     private var authStateHandler: AuthStateDidChangeListenerHandle?
     private let db = Firestore.firestore()
-    private let storage = Storage.storage().reference()
 
     // Sign in with Apple nonce
     private var currentNonce: String?
@@ -112,20 +110,15 @@ final class AuthenticationManager: ObservableObject {
         }
     }
     
-    // MARK: - Profile Image Upload
-    func uploadProfileImage(_ image: UIImage) async throws -> String {
-        guard let uid = user?.uid else { throw AuthError.notAuthenticated }
-        guard let imageData = image.jpegData(compressionQuality: 0.5) else {
+    // MARK: - Profile Image Processing
+    func processProfileImage(_ image: UIImage) async throws -> String {
+        // Limit image size for Firestore (Base64 string limit)
+        let resizedImage = image.preparingThumbnail(of: CGSize(width: 200, height: 200)) ?? image
+        guard let imageData = resizedImage.jpegData(compressionQuality: 0.5) else {
             throw NSError(domain: "Auth", code: -1, userInfo: [NSLocalizedDescriptionKey: "Görsel verisi oluşturulamadı"])
         }
         
-        let fileRef = storage.child("profiles/\(uid).jpg")
-        let metadata = StorageMetadata()
-        metadata.contentType = "image/jpeg"
-        
-        _ = try await fileRef.putDataAsync(imageData, metadata: metadata)
-        let downloadURL = try await fileRef.downloadURL()
-        return downloadURL.absoluteString
+        return imageData.base64EncodedString()
     }
     
     // MARK: - Reset Onboarding (Debug)

@@ -1,6 +1,7 @@
 import SwiftUI
 import AVFoundation
 import PhotosUI
+import UIKit
 
 struct CameraCaptureView: View {
     var onImageCaptured: (UIImage) -> Void
@@ -151,8 +152,8 @@ struct CameraCaptureView: View {
         PhotoPickerView(selectedImage: $capturedImage)
             .ignoresSafeArea()
     }
-    .onChange(of: capturedImage) { newItem in
-        if let image = newItem {
+    .onChange(of: capturedImage) { oldValue, newValue in
+        if let image = newValue {
             // CRITICAL: We need a delay to allow the sheet to fully dismiss 
             // before ScannerCoordinator swaps out CameraCaptureView.
             // Without this, SwiftUI unmounts the view while its sheet is still "closing",
@@ -168,7 +169,7 @@ struct CameraCaptureView: View {
 
 // MARK: - Visual Effect View
 struct VisualEffectView: UIViewRepresentable {
-var effect: UIEffect?
+var effect: UIVisualEffect?
 func makeUIView(context: Context) -> UIVisualEffectView { UIVisualEffectView() }
 func updateUIView(_ uiView: UIVisualEffectView, context: Context) { uiView.effect = effect }
 }

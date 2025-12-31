@@ -34,16 +34,23 @@ struct PaywallView: View {
                         // --- TOP SECTION ---
                         VStack(spacing: 24) {
                             ZStack {
+                                // Background Glows
                                 Circle()
-                                    .fill(Color(hex: "1C1C1E"))
-                                    .frame(width: 100, height: 100)
-                                    .shadow(color: DesignSystem.Colors.primary.opacity(0.5), radius: 20, x: 0, y: 0) // Glow effect
+                                    .fill(DesignSystem.Colors.primary.opacity(0.3))
+                                    .frame(width: 120, height: 120)
+                                    .blur(radius: 40)
+                                
+                                Circle()
+                                    .fill(DesignSystem.Colors.primary.opacity(0.15))
+                                    .frame(width: 80, height: 80)
+                                    .blur(radius: 20)
                                 
                                 Image("AppLogo")
                                     .resizable()
                                     .aspectRatio(contentMode: .fit)
-                                    .frame(width: 60, height: 60)
-                                    .cornerRadius(14)
+                                    .frame(width: 72, height: 72)
+                                    .cornerRadius(18)
+                                    .shadow(color: DesignSystem.Colors.primary.opacity(0.3), radius: 15, x: 0, y: 0)
                             }
                             
                             VStack(spacing: 8) {

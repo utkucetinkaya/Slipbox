@@ -3,9 +3,15 @@ import SwiftUI
 struct InboxView: View {
     @StateObject private var viewModel = InboxViewModel()
     @EnvironmentObject var localizationManager: LocalizationManager
+    @EnvironmentObject var entitlementManager: EntitlementManager
+    @EnvironmentObject var authManager: AuthenticationManager
+    
     @State private var showingScanner = false
+    @State private var showingPaywall = false
     @State private var isSearching = false
     @FocusState private var isSearchFieldFocused: Bool
+    
+    private let scanLimit = 15
     
     var body: some View {
         NavigationStack {
@@ -50,7 +56,23 @@ struct InboxView: View {
             .fullScreenCover(isPresented: $showingScanner) {
                 ScannerCoordinator()
             }
+            .fullScreenCover(isPresented: $showingPaywall) {
+                PaywallView()
+            }
             .navigationBarHidden(true)
+        }
+    }
+    
+    private func tryScanning() {
+        if entitlementManager.isPro {
+            showingScanner = true
+        } else {
+            // Check limit
+            if viewModel.receipts.count >= scanLimit {
+                showingPaywall = true
+            } else {
+                showingScanner = true
+            }
         }
     }
     
@@ -64,7 +86,7 @@ struct InboxView: View {
             Spacer()
             
             Button(action: {
-                showingScanner = true
+                tryScanning()
             }) {
                 Image(systemName: "plus")
                     .font(.system(size: 24))
@@ -227,7 +249,7 @@ struct InboxView: View {
                 .padding(.horizontal, 40)
             
             Button(action: {
-                showingScanner = true
+                tryScanning()
             }) {
                 HStack {
                     Image(systemName: "qrcode.viewfinder")

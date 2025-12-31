@@ -74,9 +74,9 @@ extension ReceiptStatus {
         case .processing:
             return "clock.fill"
         case .new:
-            return "exclamationmark.circle.fill"
+            return "clock" // Not really used now since we use ProgressView
         case .pendingReview:
-            return "exclamationmark.circle.fill"
+            return "exclamationmark"
         case .approved:
             return "checkmark.circle.fill"
         case .rejected:
@@ -91,7 +91,7 @@ extension ReceiptStatus {
         case .processing:
             return Color(hex: "4F46E5")
         case .new:
-            return Color(hex: "FFCC00")
+            return Color(hex: "4F46E5")
         case .pendingReview:
             return Color(hex: "FFCC00")
         case .approved:

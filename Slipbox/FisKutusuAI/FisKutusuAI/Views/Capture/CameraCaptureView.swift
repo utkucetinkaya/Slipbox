@@ -158,7 +158,7 @@ struct CameraCaptureView: View {
             // before ScannerCoordinator swaps out CameraCaptureView.
             // Without this, SwiftUI unmounts the view while its sheet is still "closing",
             // leading to the entire flow being dismissed.
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) {
                 onImageCaptured(image)
                 capturedImage = nil
             }

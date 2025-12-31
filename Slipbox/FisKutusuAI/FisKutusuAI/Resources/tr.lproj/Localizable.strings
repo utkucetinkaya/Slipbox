@@ -168,7 +168,7 @@
 "status_processing" = "İşleme alınıyor...";
 "status_new" = "Yeni";
 "status_needs_review" = "Onay Bekleyen";
-"status_approved" = "Tamam";
+"status_approved" = "Onaylanan";
 "status_rejected" = "Reddedildi";
 "status_error" = "Hata";
 "ara" = "Arama...";

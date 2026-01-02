@@ -15,6 +15,10 @@
 "about" = "Hakkında";
 "privacy" = "Gizlilik";
 "terms" = "Şartlar";
+"appearance" = "Görünüm";
+"system_theme" = "Sistem";
+"light_theme" = "Aydınlık";
+"dark_theme" = "Karanlık";
 
 /* Welcome & Auth */
 "welcome_title" = "SlipBox'a Hoş Geldin";

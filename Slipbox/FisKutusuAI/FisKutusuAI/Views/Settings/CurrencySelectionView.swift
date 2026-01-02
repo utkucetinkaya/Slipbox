@@ -7,7 +7,7 @@ struct CurrencySelectionView: View {
     
     var body: some View {
         ZStack {
-            Color(hex: "050511").ignoresSafeArea()
+            DesignSystem.Colors.background.ignoresSafeArea()
             
             ScrollView {
                 VStack(spacing: 12) {
@@ -20,7 +20,7 @@ struct CurrencySelectionView: View {
                             HStack {
                                 Text("\(currency.1) \(currency.0)")
                                     .font(.system(size: 16, weight: .medium))
-                                    .foregroundColor(.white)
+                                    .foregroundColor(DesignSystem.Colors.textPrimary)
                                 
                                 Spacer()
                                 
@@ -30,7 +30,7 @@ struct CurrencySelectionView: View {
                                 }
                             }
                             .padding()
-                            .background(Color(hex: "1C1C1E"))
+                            .background(DesignSystem.Colors.surface)
                             .cornerRadius(12)
                         }
                     }

@@ -152,7 +152,7 @@ struct CameraCaptureView: View {
         PhotoPickerView(selectedImage: $capturedImage)
             .ignoresSafeArea()
     }
-    .onChange(of: capturedImage) { oldValue, newValue in
+    .onChange(of: capturedImage) { newValue in
         if let image = newValue {
             // CRITICAL: We need a delay to allow the sheet to fully dismiss 
             // before ScannerCoordinator swaps out CameraCaptureView.

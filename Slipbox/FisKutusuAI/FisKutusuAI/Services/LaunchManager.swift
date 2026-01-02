@@ -22,7 +22,7 @@ class LaunchManager: ObservableObject {
     private var cancellables = Set<AnyCancellable>()
     
     // Limits
-    private let minSplashDuration: TimeInterval = 1.0
+    private let minSplashDuration: TimeInterval = 3.0
     
     private init() {
         // Observe Auth changes to trigger checks
@@ -54,43 +54,49 @@ class LaunchManager: ObservableObject {
     }
     
     private func determineNextState() {
+        // 1. Onboarding Check (Priority: High - Always first for fresh installs)
+        if !UserDefaults.standard.bool(forKey: "hasSeenOnboarding") {
+             withAnimation { state = .onboarding }
+             return
+        }
+
+        // 2. Auth Check
+        if authManager.isLoading {
+            // Still loading auth state (Firebase init), stay in splash
+            return
+        }
+        
         guard let user = authManager.user else {
             withAnimation { state = .auth }
             return
         }
         
-        // 1.1 Profile Loaded Check
+        // 3. Profile Loaded Check
         guard authManager.isProfileLoaded else {
             // Wait for profile to load (Splash or LoadingView will be shown)
             // If already in .auth and we just signed in, we stay there until it loads.
             return
         }
         
-        // 1.1 Entitlements Listener Start (if not already)
+        // 4. Entitlements Listener Start (if not already)
         entitlementManager.startListening(uid: user.uid)
         
-        // 1.2 Start Receipt Repository Listener
+        // 5. Start Receipt Repository Listener
         FirestoreReceiptRepository.shared.startListening()
         
-        // 2. Onboarding Check
-        if !UserDefaults.standard.bool(forKey: "hasSeenOnboarding") {
-            withAnimation { state = .onboarding }
-            return
-        }
-        
-        // 3. Permissions Check
+        // 6. Permissions Check
         if !UserDefaults.standard.bool(forKey: "hasSeenPermissions") {
             withAnimation { state = .permissions }
             return
         }
         
-        // 4. Entitlements Check (Wait for first load)
+        // 7. Entitlements Check (Wait for first load)
         if entitlementManager.isLoading {
             withAnimation { state = .entitlementsLoading }
             return
         }
         
-        // 5. Main App
+        // 8. Main App
         withAnimation { state = .main }
     }
     

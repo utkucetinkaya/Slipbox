@@ -7,7 +7,7 @@ struct SplashView: View {
     
     var body: some View {
         ZStack {
-            Color(hex: "050511").ignoresSafeArea()
+            DesignSystem.Colors.background.ignoresSafeArea()
             
             VStack {
                 VStack(spacing: 20) {
@@ -20,7 +20,7 @@ struct SplashView: View {
                     
                     Text("SlipBox")
                         .font(.system(size: 32, weight: .bold))
-                        .foregroundColor(.white)
+                        .foregroundColor(DesignSystem.Colors.textPrimary)
                 }
                 .scaleEffect(size)
                 .opacity(opacity)

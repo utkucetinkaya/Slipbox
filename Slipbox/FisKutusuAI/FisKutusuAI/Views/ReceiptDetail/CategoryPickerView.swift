@@ -8,16 +8,19 @@ struct CategoryPickerView: View {
     @State private var searchText = ""
     @State private var showingCreateCategory = false
     
+    @ObservedObject var categoryService = CategoryService.shared
+    
     // Grid layout column definition
     private let columns = [
         GridItem(.adaptive(minimum: 80), spacing: 20)
     ]
     
     private var filteredCategories: [Category] {
+        let all = categoryService.allCategories
         if searchText.isEmpty {
-            return Category.defaults.sorted(by: { $0.order < $1.order })
+            return all.sorted(by: { $0.order < $1.order })
         } else {
-            return Category.defaults.filter { 
+            return all.filter { 
                 $0.name.localizedCaseInsensitiveContains(searchText) 
             }.sorted(by: { $0.order < $1.order })
         }
@@ -25,25 +28,25 @@ struct CategoryPickerView: View {
     
     // Mock recent categories (could be real logic later)
     private var recentCategories: [Category] {
-        Array(Category.defaults.prefix(3))
+        Array(categoryService.allCategories.prefix(3))
     }
     
     var body: some View {
         NavigationStack {
             ZStack {
-                Color(hex: "050511")
+                DesignSystem.Colors.background
                     .ignoresSafeArea()
                 
                 VStack(spacing: 24) {
                     // Search Bar
                     HStack {
                         Image(systemName: "magnifyingglass")
-                            .foregroundColor(.white.opacity(0.4))
+                            .foregroundColor(DesignSystem.Colors.textSecondary)
                         TextField("search_categories".localized, text: $searchText)
-                            .foregroundColor(.white)
+                            .foregroundColor(DesignSystem.Colors.textPrimary)
                     }
                     .padding()
-                    .background(Color(hex: "1C1C1E"))
+                    .background(DesignSystem.Colors.surface)
                     .cornerRadius(12)
                     .padding(.horizontal, 20)
                     .padding(.top, 10)
@@ -56,7 +59,7 @@ struct CategoryPickerView: View {
                                 VStack(alignment: .leading, spacing: 16) {
                                     Text("recent".localized)
                                         .font(.system(size: 14, weight: .bold))
-                                        .foregroundColor(.white.opacity(0.6))
+                                        .foregroundColor(DesignSystem.Colors.textSecondary)
                                         .padding(.horizontal, 20)
                                     
                                     ScrollView(.horizontal, showsIndicators: false) {
@@ -80,7 +83,7 @@ struct CategoryPickerView: View {
                             VStack(alignment: .leading, spacing: 16) {
                                 Text("all_categories_title".localized)
                                     .font(.system(size: 14, weight: .bold))
-                                    .foregroundColor(.white.opacity(0.6))
+                                    .foregroundColor(DesignSystem.Colors.textSecondary)
                                     .padding(.horizontal, 20)
                                 
                                 LazyVGrid(columns: columns, spacing: 24) {
@@ -99,17 +102,17 @@ struct CategoryPickerView: View {
                                         ZStack {
                                             Circle()
                                                 .stroke(style: StrokeStyle(lineWidth: 1, dash: [4]))
-                                                .foregroundColor(.white.opacity(0.3))
+                                                .foregroundColor(DesignSystem.Colors.textSecondary.opacity(0.3))
                                                 .frame(width: 64, height: 64)
                                             
                                             Image(systemName: "plus")
                                                 .font(.system(size: 24))
-                                                .foregroundColor(.white)
+                                                .foregroundColor(DesignSystem.Colors.textPrimary)
                                         }
                                         
                                         Text("create".localized)
                                             .font(.system(size: 13))
-                                            .foregroundColor(.white.opacity(0.6))
+                                            .foregroundColor(DesignSystem.Colors.textSecondary)
                                     }
                                     .onTapGesture {
                                         showingCreateCategory = true
@@ -178,12 +181,12 @@ struct CategoryCircleItem: View {
             VStack(spacing: 8) {
                 ZStack(alignment: .topTrailing) {
                     Circle()
-                        .fill(isSelected ? Color(hex: "4F46E5") : Color(hex: "1C1C1E"))
+                        .fill(isSelected ? Color(hex: "4F46E5") : DesignSystem.Colors.surface)
                         .frame(width: 64, height: 64)
                         .overlay(
                             Image(systemName: category.icon)
                                 .font(.system(size: 24))
-                                .foregroundColor(.white)
+                                .foregroundColor(isSelected ? .white : DesignSystem.Colors.textPrimary)
                         )
                     
                     if isSelected {
@@ -197,7 +200,7 @@ struct CategoryCircleItem: View {
                 
                 Text(category.name.localized)
                     .font(.system(size: 13))
-                    .foregroundColor(isSelected ? Color(hex: "4F46E5") : .white.opacity(0.8))
+                    .foregroundColor(isSelected ? Color(hex: "4F46E5") : DesignSystem.Colors.textPrimary.opacity(0.8))
             }
         }
     }
@@ -213,7 +216,7 @@ struct CategoryGridItem: View {
             VStack(spacing: 8) {
                 ZStack {
                     Circle()
-                        .fill(isSelected ? Color(hex: "4F46E5").opacity(0.2) : Color(hex: "1C1C1E"))
+                        .fill(isSelected ? Color(hex: "4F46E5").opacity(0.2) : DesignSystem.Colors.surface)
                         .frame(width: 64, height: 64)
                         .overlay(
                             Circle()
@@ -222,12 +225,12 @@ struct CategoryGridItem: View {
                     
                     Image(systemName: category.icon)
                         .font(.system(size: 24))
-                        .foregroundColor(isSelected ? .white : .white.opacity(0.8))
+                        .foregroundColor(isSelected ? DesignSystem.Colors.primary : DesignSystem.Colors.textPrimary)
                 }
                 
                 Text(category.name.localized)
                     .font(.system(size: 13))
-                    .foregroundColor(isSelected ? .white : .white.opacity(0.6))
+                    .foregroundColor(isSelected ? DesignSystem.Colors.textPrimary : DesignSystem.Colors.textSecondary)
                     .lineLimit(1)
             }
         }

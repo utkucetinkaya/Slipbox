@@ -14,7 +14,7 @@ struct ReceiptCardView: View {
         .background(cardBackground)
         .overlay(
             RoundedRectangle(cornerRadius: 24)
-                .stroke(Color.white.opacity(0.05), lineWidth: 1)
+                .stroke(DesignSystem.Colors.border, lineWidth: 1)
         )
         .shadow(color: Color.black.opacity(0.2), radius: 10, x: 0, y: 4)
     }
@@ -22,12 +22,12 @@ struct ReceiptCardView: View {
     private var thumbnailView: some View {
         ZStack(alignment: .bottomTrailing) {
             Circle()
-                .fill(Color(hex: "2C2C2E"))
+                .fill(DesignSystem.Colors.inputBackground)
                 .frame(width: 60, height: 60)
                 .overlay(
                     Image(systemName: "doc.text.fill")
                         .font(.system(size: 24))
-                        .foregroundColor(.white.opacity(0.6))
+                        .foregroundColor(DesignSystem.Colors.textSecondary)
                 )
             
             statusBadge
@@ -67,7 +67,7 @@ struct ReceiptCardView: View {
         HStack {
             Text(receipt.displayMerchant)
                 .font(.system(size: 17, weight: .bold))
-                .foregroundColor(.white)
+                .foregroundColor(DesignSystem.Colors.textPrimary)
             
             Spacer()
             
@@ -81,14 +81,14 @@ struct ReceiptCardView: View {
         HStack(spacing: 8) {
             Text(formatDate(receipt.displayDate))
                 .font(.system(size: 14))
-                .foregroundColor(.white.opacity(0.6))
+                .foregroundColor(DesignSystem.Colors.textSecondary)
             
             Text("•")
-                .foregroundColor(.white.opacity(0.4))
+                .foregroundColor(DesignSystem.Colors.textSecondary.opacity(0.5))
             
             Text(receipt.status.displayText)
                 .font(.system(size: 14))
-                .foregroundColor(.white.opacity(0.6))
+                .foregroundColor(DesignSystem.Colors.textSecondary)
         }
     }
     
@@ -133,7 +133,7 @@ struct ReceiptCardView: View {
     
     private var cardBackground: some View {
         RoundedRectangle(cornerRadius: 24)
-            .fill(Color(hex: "1C1C1E").opacity(0.6))
+            .fill(DesignSystem.Colors.surface.opacity(0.6))
             .background(
                 RoundedRectangle(cornerRadius: 24)
                     .fill(.ultraThinMaterial)

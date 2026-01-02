@@ -14,7 +14,7 @@ struct DeleteAccountView: View {
     
     var body: some View {
         ZStack {
-            Color(hex: "050511")
+            DesignSystem.Colors.background
                 .ignoresSafeArea()
             
             VStack(spacing: 24) {
@@ -38,11 +38,11 @@ struct DeleteAccountView: View {
                 VStack(spacing: 12) {
                     Text("Hesabını silmek üzeresin")
                         .font(.system(size: 24, weight: .bold))
-                        .foregroundColor(.white)
+                        .foregroundColor(DesignSystem.Colors.textPrimary)
                     
                     Text("Bu işlem geri alınamaz. Tüm makbuzların ve verilerin kalıcı olarak silinecektir.")
                         .font(.system(size: 16))
-                        .foregroundColor(.white.opacity(0.6))
+                        .foregroundColor(DesignSystem.Colors.textSecondary)
                         .multilineTextAlignment(.center)
                         .padding(.horizontal, 32)
                         // Simple highlighting workaround without AttributedString complexity for now
@@ -62,26 +62,26 @@ struct DeleteAccountView: View {
                 VStack(alignment: .leading, spacing: 8) {
                     Text("Onaylamak için 'DELETE' yazın")
                         .font(.system(size: 14))
-                        .foregroundColor(.white.opacity(0.6))
+                        .foregroundColor(DesignSystem.Colors.textSecondary)
                     
                     HStack {
                         Image(systemName: "trash.fill")
-                            .foregroundColor(.white.opacity(0.3))
+                            .foregroundColor(DesignSystem.Colors.textSecondary.opacity(0.5))
                         
                         TextField("", text: $deleteConfirmationText)
-                            .foregroundColor(.white)
+                            .foregroundColor(DesignSystem.Colors.textPrimary)
                             .textInputAutocapitalization(.characters)
                             .accentColor(Color(hex: "FF3B30"))
                             .overlay(
                                 Text("DELETE")
-                                    .foregroundColor(.white.opacity(0.2))
+                                    .foregroundColor(DesignSystem.Colors.textSecondary.opacity(0.3))
                                     .frame(maxWidth: .infinity, alignment: .leading)
                                     .opacity(deleteConfirmationText.isEmpty ? 1 : 0)
                                 , alignment: .leading
                             )
                     }
                     .padding()
-                    .background(Color(hex: "1C1C1E"))
+                    .background(DesignSystem.Colors.surface)
                     .cornerRadius(12)
                     .overlay(
                         RoundedRectangle(cornerRadius: 12)
@@ -116,7 +116,7 @@ struct DeleteAccountView: View {
                         dismiss()
                     }
                     .font(.system(size: 16))
-                    .foregroundColor(.white.opacity(0.6))
+                    .foregroundColor(DesignSystem.Colors.textSecondary)
                 }
                 .padding(20)
             }

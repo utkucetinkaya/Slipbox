@@ -14,7 +14,7 @@ struct AllCategoriesView: View {
     
     var body: some View {
         ZStack {
-            Color(hex: "050511")
+            DesignSystem.Colors.background
                 .ignoresSafeArea()
             
             VStack(spacing: 0) {
@@ -36,10 +36,10 @@ struct AllCategoriesView: View {
                             Image(systemName: "chevron.down")
                         }
                         .font(.system(size: 14, weight: .medium))
-                        .foregroundColor(.white)
+                        .foregroundColor(DesignSystem.Colors.textPrimary)
                         .padding(.horizontal, 16)
                         .padding(.vertical, 8)
-                        .background(Color(hex: "1C1C1E"))
+                        .background(DesignSystem.Colors.surface)
                         .cornerRadius(20)
                     }
                     Spacer()
@@ -50,11 +50,11 @@ struct AllCategoriesView: View {
                 VStack(spacing: 4) {
                     Text("total_spending_label".localized)
                         .font(.system(size: 12, weight: .semibold))
-                        .foregroundColor(.white.opacity(0.6))
+                        .foregroundColor(DesignSystem.Colors.textSecondary)
                     
                     Text(formatCurrency(viewModel.totalExpense))
                         .font(.system(size: 32, weight: .bold))
-                        .foregroundColor(.white)
+                        .foregroundColor(DesignSystem.Colors.textPrimary)
                 }
                 .padding(.bottom, 24)
                 
@@ -64,7 +64,7 @@ struct AllCategoriesView: View {
                         if viewModel.categoryBreakdown.isEmpty {
                             Text("reports_no_data".localized)
                                 .font(.system(size: 14))
-                                .foregroundColor(.white.opacity(0.4))
+                                .foregroundColor(DesignSystem.Colors.textSecondary.opacity(0.7))
                                 .padding(.top, 40)
                         } else {
                             ForEach(viewModel.categoryBreakdown) { summary in
@@ -83,7 +83,7 @@ struct AllCategoriesView: View {
             ToolbarItem(placement: .navigationBarTrailing) {
                 Button(action: {}) {
                     Image(systemName: "line.3.horizontal.decrease.circle")
-                        .foregroundColor(.white)
+                        .foregroundColor(DesignSystem.Colors.primary)
                 }
             }
         }
@@ -128,12 +128,12 @@ struct AllCategoryRow: View {
                 VStack(alignment: .leading, spacing: 4) {
                     Text(summary.name.localized)
                         .font(.system(size: 16, weight: .semibold))
-                        .foregroundColor(.white)
+                        .foregroundColor(DesignSystem.Colors.textPrimary)
                     
                     let suffix = summary.count == 1 ? "transaction_suffix_singular".localized : "transaction_suffix_plural".localized
                     Text("\(summary.count) \(suffix)")
                         .font(.system(size: 14))
-                        .foregroundColor(.white.opacity(0.6))
+                        .foregroundColor(DesignSystem.Colors.textSecondary)
                 }
                 
                 Spacer()
@@ -142,7 +142,7 @@ struct AllCategoryRow: View {
                 VStack(alignment: .trailing, spacing: 4) {
                     Text(formatCurrency(summary.amount))
                         .font(.system(size: 16, weight: .bold))
-                        .foregroundColor(.white)
+                        .foregroundColor(DesignSystem.Colors.textPrimary)
                     
                     Text("%\(Int(summary.percent * 100))")
                         .font(.system(size: 14))
@@ -154,7 +154,7 @@ struct AllCategoryRow: View {
             GeometryReader { geometry in
                 ZStack(alignment: .leading) {
                     Capsule()
-                        .fill(Color(hex: "2C2C2E"))
+                        .fill(DesignSystem.Colors.inputBackground)
                         .frame(height: 6)
                     
                     Capsule()
@@ -165,7 +165,7 @@ struct AllCategoryRow: View {
             .frame(height: 6)
         }
         .padding(16)
-        .background(Color(hex: "1C1C1E"))
+        .background(DesignSystem.Colors.surface)
         .cornerRadius(20)
     }
     

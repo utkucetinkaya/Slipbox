@@ -11,7 +11,7 @@ struct SettingsView: View {
         NavigationStack {
             ZStack {
                 // Background
-                Color(hex: "050511")
+                DesignSystem.Colors.background
                     .ignoresSafeArea()
                 
                 ScrollView {
@@ -22,6 +22,10 @@ struct SettingsView: View {
                         // Preferences
                         VStack(alignment: .leading, spacing: 8) {
                             sectionHeader("preferences".localized.uppercased())
+                            
+                            NavigationLink(destination: AppearanceSelectionView()) {
+                                SettingsRow(icon: "paintbrush.fill", title: "appearance".localized, value: userPreferences.appTheme.localizedName, color: Color(hex: "4F46E5"))
+                            }
                             
                             NavigationLink(destination: CurrencySelectionView()) {
                                 SettingsRow(icon: "arrow.triangle.2.circlepath", title: "currency".localized, value: "\(userPreferences.currencySymbol) (\(userPreferences.currencyCode))", color: Color(hex: "4F46E5"))
@@ -66,7 +70,7 @@ struct SettingsView: View {
                                         .foregroundColor(Color(hex: "FF3B30").opacity(0.5))
                                 }
                                 .padding()
-                                .background(Color(hex: "1C1C1E"))
+                                .background(DesignSystem.Colors.surface)
                                 .cornerRadius(16)
                                 .overlay(
                                     RoundedRectangle(cornerRadius: 16)
@@ -76,12 +80,9 @@ struct SettingsView: View {
                         }
                         
                         // Developer / Debug Section
+                        // Developer / Debug Section
                         VStack(alignment: .leading, spacing: 8) {
                             sectionHeader("developer".localized)
-                            
-                            Button(action: { LaunchManager.shared.resetOnboarding() }) {
-                                SettingsRow(icon: "arrow.counterclockwise", title: "reset_onboarding".localized, color: .orange)
-                            }
                             
                             Button(action: { LaunchManager.shared.resetPermissions() }) {
                                 SettingsRow(icon: "shield.slash.fill", title: "reset_permissions".localized, color: .orange)
@@ -142,14 +143,14 @@ struct SettingsView: View {
                 Circle()
                     .fill(Color(hex: "34C759"))
                     .frame(width: 16, height: 16)
-                    .overlay(Circle().stroke(Color(hex: "1C1C1E"), lineWidth: 2))
+                    .overlay(Circle().stroke(DesignSystem.Colors.surface, lineWidth: 2))
                     .offset(x: 22, y: 22)
             }
             
             VStack(alignment: .leading, spacing: 4) {
                 Text(authManager.profile?.displayName?.isEmpty == false ? authManager.profile!.displayName! : (authManager.user?.email ?? "User"))
                     .font(.system(size: 16, weight: .semibold))
-                    .foregroundColor(.white)
+                    .foregroundColor(DesignSystem.Colors.textPrimary)
                 
                 if entitlementManager.isPro {
                     Text(entitlementManager.plan.displayName.uppercased())
@@ -183,24 +184,24 @@ struct SettingsView: View {
             
             NavigationLink(destination: EditProfileView()) {
                 Circle()
-                    .fill(Color.white.opacity(0.1))
+                    .fill(DesignSystem.Colors.inputBackground)
                     .frame(width: 36, height: 36)
                     .overlay(
                         Image(systemName: "pencil")
                             .font(.system(size: 14))
-                            .foregroundColor(.white)
+                            .foregroundColor(DesignSystem.Colors.textSecondary)
                     )
             }
         }
         .padding(20)
-        .background(Color(hex: "1C1C1E"))
+        .background(DesignSystem.Colors.surface)
         .cornerRadius(20)
     }
     
     private func sectionHeader(_ text: String) -> some View {
         Text(text)
             .font(.system(size: 12, weight: .bold))
-            .foregroundColor(.white.opacity(0.4))
+            .foregroundColor(DesignSystem.Colors.textSecondary)
             .padding(.leading, 4)
             .padding(.top, 8)
     }
@@ -225,22 +226,22 @@ struct SettingsRow: View {
             
             Text(title)
                 .font(.system(size: 16, weight: .medium))
-                .foregroundColor(.white)
+                .foregroundColor(DesignSystem.Colors.textPrimary)
             
             Spacer()
             
             if let value = value {
                 Text(value)
                     .font(.system(size: 14))
-                    .foregroundColor(.white.opacity(0.5))
+                    .foregroundColor(DesignSystem.Colors.textSecondary)
             }
             
             Image(systemName: "chevron.right")
                 .font(.system(size: 14))
-                .foregroundColor(.white.opacity(0.3))
+                .foregroundColor(DesignSystem.Colors.textSecondary.opacity(0.5))
         }
         .padding()
-        .background(Color(hex: "1C1C1E"))
+        .background(DesignSystem.Colors.surface)
         .cornerRadius(16)
         .contentShape(Rectangle()) // Improves tap area when wrapped
     }

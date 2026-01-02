@@ -7,13 +7,13 @@ struct ApproveReceiptSheetView: View {
     
     var body: some View {
         ZStack {
-            Color(hex: "0A0A14")
+            DesignSystem.Colors.background
                 .ignoresSafeArea()
             
             VStack(spacing: 24) {
                 // Drag Indicator
                 Capsule()
-                    .fill(Color.white.opacity(0.1))
+                    .fill(DesignSystem.Colors.textSecondary.opacity(0.2))
                     .frame(width: 36, height: 4)
                     .padding(.top, 12)
                 
@@ -42,11 +42,11 @@ struct ApproveReceiptSheetView: View {
                 VStack(spacing: 12) {
                     Text("approve_receipt_title".localized)
                         .font(.system(size: 24, weight: .bold))
-                        .foregroundColor(.white)
+                        .foregroundColor(DesignSystem.Colors.textPrimary)
                     
                     Text("approve_receipt_message".localized)
                         .font(.system(size: 16))
-                        .foregroundColor(.white.opacity(0.6))
+                        .foregroundColor(DesignSystem.Colors.textSecondary)
                         .multilineTextAlignment(.center)
                         .padding(.horizontal, 32)
                 }
@@ -83,7 +83,7 @@ struct ApproveReceiptSheetView: View {
                     VStack(alignment: .leading, spacing: 4) {
                         Text(receipt.displayMerchant)
                             .font(.system(size: 16, weight: .bold))
-                            .foregroundColor(.white)
+                            .foregroundColor(DesignSystem.Colors.textPrimary)
                         
                         HStack(spacing: 6) {
                             Image(systemName: "calendar")
@@ -91,17 +91,17 @@ struct ApproveReceiptSheetView: View {
                             Text(formatDate(receipt.displayDate))
                                 .font(.system(size: 12))
                         }
-                        .foregroundColor(.white.opacity(0.6))
+                        .foregroundColor(DesignSystem.Colors.textSecondary)
                     }
                     
                     Spacer()
                     
                     Text(formatAmount(receipt.displayAmount))
                         .font(.system(size: 16, weight: .semibold))
-                        .foregroundColor(.white)
+                        .foregroundColor(DesignSystem.Colors.textPrimary)
                 }
                 .padding(16)
-                .background(Color(hex: "1C1C1E"))
+                .background(DesignSystem.Colors.surface)
                 .cornerRadius(16)
                 .padding(.horizontal, 24)
                 .padding(.top, 8)
@@ -127,7 +127,7 @@ struct ApproveReceiptSheetView: View {
                     Button(action: { dismiss() }) {
                         Text("cancel".localized)
                             .font(.system(size: 16))
-                            .foregroundColor(.white.opacity(0.6))
+                            .foregroundColor(DesignSystem.Colors.textSecondary)
                     }
                     .padding(.bottom, 8)
                 }

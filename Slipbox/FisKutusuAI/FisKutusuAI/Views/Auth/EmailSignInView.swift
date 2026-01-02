@@ -186,8 +186,10 @@ struct EmailSignInView: View {
         Task {
             if isSignUp {
                 _ = try? await authManager.signUpWithEmail(email: email, password: password)
+                LaunchManager.shared.checkState()
             } else {
                 _ = try? await authManager.signInWithEmail(email: email, password: password)
+                LaunchManager.shared.checkState()
             }
         }
     }

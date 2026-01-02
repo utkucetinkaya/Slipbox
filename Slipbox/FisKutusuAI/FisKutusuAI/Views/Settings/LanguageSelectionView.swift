@@ -8,7 +8,7 @@ struct LanguageSelectionView: View {
     
     var body: some View {
         ZStack {
-            Color(hex: "050511").ignoresSafeArea()
+            DesignSystem.Colors.background.ignoresSafeArea()
             
             ScrollView {
                 VStack(spacing: 12) {
@@ -22,7 +22,7 @@ struct LanguageSelectionView: View {
                             HStack {
                                 Text(language.1)
                                     .font(.system(size: 16, weight: .medium))
-                                    .foregroundColor(.white)
+                                    .foregroundColor(DesignSystem.Colors.textPrimary)
                                 
                                 Spacer()
                                 
@@ -32,7 +32,7 @@ struct LanguageSelectionView: View {
                                 }
                             }
                             .padding()
-                            .background(Color(hex: "1C1C1E"))
+                            .background(DesignSystem.Colors.surface)
                             .cornerRadius(12)
                         }
                     }

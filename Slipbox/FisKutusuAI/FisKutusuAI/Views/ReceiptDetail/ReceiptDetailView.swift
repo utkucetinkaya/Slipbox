@@ -25,7 +25,7 @@ struct ReceiptDetailView: View {
     var body: some View {
         ZStack {
             // ... background ...
-            Color(hex: "050511").ignoresSafeArea()
+            DesignSystem.Colors.background.ignoresSafeArea()
             
             ScrollView {
                 VStack(spacing: 24) {
@@ -70,12 +70,12 @@ struct ReceiptDetailView: View {
                 if isEditable {
                     Button(action: saveAndDismiss) {
                         Text("save".localized)
-                            .foregroundColor(Color(hex: "4F46E5"))
+                            .foregroundColor(DesignSystem.Colors.primary)
                     }
                 }
             }
         }
-        .toolbar(.hidden, for: .tabBar) // Hide Tab Bar
+        // .toolbar(.hidden, for: .tabBar) // REMOVED: Redundant and causes layout glitches since we hide globally
         .sheet(isPresented: $showingApproveSheet) {
             ApproveReceiptSheetView(
                 receipt: receipt,
@@ -139,7 +139,7 @@ struct ReceiptDetailView: View {
         Button(action: { showingImagePreview = true }) {
             ZStack {
                 RoundedRectangle(cornerRadius: 16)
-                    .fill(Color(hex: "1C1C1E"))
+                    .fill(DesignSystem.Colors.surface)
                     .frame(height: 200)
                 
                 if let uiImage = ImageStorageService.shared.loadImage(from: receipt.imageLocalPath) {
@@ -153,11 +153,11 @@ struct ReceiptDetailView: View {
                     VStack(spacing: 12) {
                         Image(systemName: "doc.text.image")
                             .font(.system(size: 48))
-                            .foregroundColor(.white.opacity(0.6))
+                            .foregroundColor(DesignSystem.Colors.textSecondary)
                         
                         Text("image_not_found".localized)
                             .font(.system(size: 14))
-                            .foregroundColor(.white.opacity(0.4))
+                            .foregroundColor(DesignSystem.Colors.textSecondary.opacity(0.7))
                     }
                 }
                 
@@ -193,34 +193,42 @@ struct ReceiptDetailView: View {
                 VStack(alignment: .leading, spacing: 8) {
                     Text("date".localized)
                         .font(.system(size: 14))
-                        .foregroundColor(.white.opacity(0.6))
+                        .foregroundColor(DesignSystem.Colors.textSecondary)
                     
                     Text(formatDate(receipt.displayDate))
                         .font(.system(size: 16))
-                        .foregroundColor(.white)
+                        .foregroundColor(DesignSystem.Colors.textPrimary)
                         .padding()
                         .frame(maxWidth: .infinity, alignment: .leading)
-                        .background(Color(hex: "1C1C1E"))
+                        .background(DesignSystem.Colors.surface)
                         .cornerRadius(12)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 12)
+                                .stroke(DesignSystem.Colors.border, lineWidth: 1)
+                        )
                 }
                 
                 // Amount
                 VStack(alignment: .leading, spacing: 8) {
                     Text("amount".localized)
                         .font(.system(size: 14))
-                        .foregroundColor(.white.opacity(0.6))
+                        .foregroundColor(DesignSystem.Colors.textSecondary)
                     
                     HStack {
                         Text(userPreferences.currencySymbol)
-                            .foregroundColor(.white)
+                            .foregroundColor(DesignSystem.Colors.textPrimary)
                         TextField("0,00", value: $receipt.total, format: .number)
                             .keyboardType(.decimalPad)
-                            .foregroundColor(.white)
+                            .foregroundColor(DesignSystem.Colors.textPrimary)
                     }
                     .font(.system(size: 16))
                     .padding()
-                    .background(Color(hex: "1C1C1E"))
+                    .background(DesignSystem.Colors.surface)
                     .cornerRadius(12)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 12)
+                            .stroke(DesignSystem.Colors.border, lineWidth: 1)
+                    )
                 }
             }
             
@@ -239,7 +247,7 @@ struct ReceiptDetailView: View {
                 HStack {
                     Text("category".localized)
                         .font(.system(size: 14))
-                        .foregroundColor(.white.opacity(0.6))
+                        .foregroundColor(DesignSystem.Colors.textSecondary)
                     
                     if receipt.status == .pendingReview {
                         HStack(spacing: 4) {
@@ -247,7 +255,7 @@ struct ReceiptDetailView: View {
                             Text("check".localized)
                         }
                         .font(.system(size: 12, weight: .medium))
-                        .foregroundColor(Color(hex: "FFCC00"))
+                        .foregroundColor(DesignSystem.Colors.warning)
                     }
                 }
                 
@@ -259,19 +267,23 @@ struct ReceiptDetailView: View {
                     // Use the new displayCategoryName property for translated name
                     Text(receipt.displayCategoryName?.localized ?? "category_food".localized)
                         .font(.system(size: 16))
-                        .foregroundColor(.white)
+                        .foregroundColor(DesignSystem.Colors.textPrimary)
                     
                     Spacer()
                     
                     if isEditable {
                         Image(systemName: "chevron.right")
                             .font(.system(size: 14))
-                            .foregroundColor(.white.opacity(0.6))
+                            .foregroundColor(DesignSystem.Colors.textSecondary)
                     }
                 }
                 .padding()
-                .background(Color(hex: "1C1C1E"))
+                .background(DesignSystem.Colors.surface)
                 .cornerRadius(12)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 12)
+                        .stroke(DesignSystem.Colors.border, lineWidth: 1)
+                )
             }
         }
         .disabled(!isEditable)
@@ -282,13 +294,13 @@ struct ReceiptDetailView: View {
         VStack(alignment: .leading, spacing: 8) {
             Text("note_optional".localized)
                 .font(.system(size: 14))
-                .foregroundColor(.white.opacity(0.6))
+                .foregroundColor(DesignSystem.Colors.textSecondary)
             
             ZStack(alignment: .topLeading) {
                 if receipt.note?.isEmpty ?? true {
                     Text("note_placeholder".localized)
                         .font(.system(size: 16))
-                        .foregroundColor(.white.opacity(0.4))
+                        .foregroundColor(DesignSystem.Colors.textSecondary.opacity(0.5))
                         .padding(.horizontal, 4)
                         .padding(.vertical, 8)
                 }
@@ -298,14 +310,18 @@ struct ReceiptDetailView: View {
                     set: { receipt.note = $0 }
                 ))
                 .font(.system(size: 16))
-                .foregroundColor(.white)
+                .foregroundColor(DesignSystem.Colors.textPrimary)
                 .scrollContentBackground(.hidden)
                 .background(Color.clear) // Ensure transparency
                 .frame(minHeight: 100)
             }
             .padding(12)
-            .background(Color(hex: "1C1C1E"))
+            .background(DesignSystem.Colors.surface)
             .cornerRadius(12)
+            .overlay(
+                RoundedRectangle(cornerRadius: 12)
+                    .stroke(DesignSystem.Colors.border, lineWidth: 1)
+            )
         }
     }
     
@@ -321,8 +337,14 @@ struct ReceiptDetailView: View {
             else if receipt.status == .new || receipt.status == .pendingReview {
                 Button(action: {
                     Task {
-                        try? await FirestoreReceiptRepository.shared.deleteReceipt(receipt)
-                        dismiss()
+                        do {
+                            try await FirestoreReceiptRepository.shared.deleteReceipt(receipt)
+                            await MainActor.run {
+                                dismiss()
+                            }
+                        } catch {
+                            print("❌ Deletion failed: \(error.localizedDescription)")
+                        }
                     }
                 }) {
                     HStack {
@@ -363,13 +385,13 @@ struct ReceiptDetailView: View {
             VStack {
                 LinearGradient(
                     gradient: Gradient(stops: [
-                        .init(color: Color(hex: "050511").opacity(0), location: 0),
-                        .init(color: Color(hex: "050511"), location: 0.4)
+                        .init(color: DesignSystem.Colors.background.opacity(0), location: 0),
+                        .init(color: DesignSystem.Colors.background, location: 0.4)
                     ]),
                     startPoint: .top,
                     endPoint: .bottom
                 )
-                Color(hex: "050511")
+                DesignSystem.Colors.background
             }
             .ignoresSafeArea()
         )
@@ -406,7 +428,7 @@ struct FormField: View {
         VStack(alignment: .leading, spacing: 8) {
             Text(label)
                 .font(.system(size: 14))
-                .foregroundColor(.white.opacity(0.6))
+                .foregroundColor(DesignSystem.Colors.textSecondary)
             
             HStack {
                 TextField(placeholder, text: Binding(
@@ -414,15 +436,19 @@ struct FormField: View {
                     set: { value = $0 }
                 ))
                 .font(.system(size: 16))
-                .foregroundColor(.white)
+                .foregroundColor(DesignSystem.Colors.textPrimary)
                 
                 Image(systemName: icon)
                     .font(.system(size: 16))
-                    .foregroundColor(.white.opacity(0.4))
+                    .foregroundColor(DesignSystem.Colors.textSecondary)
             }
             .padding()
-            .background(Color(hex: "1C1C1E"))
+            .background(DesignSystem.Colors.surface)
             .cornerRadius(12)
+            .overlay(
+                RoundedRectangle(cornerRadius: 12)
+                    .stroke(DesignSystem.Colors.border, lineWidth: 1)
+            )
         }
     }
 }

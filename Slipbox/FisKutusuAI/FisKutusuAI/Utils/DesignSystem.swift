@@ -5,17 +5,38 @@ struct DesignSystem {
     // MARK: - Colors
     struct Colors {
         static let primary = Color(hex: "4F46E5")
-        static let background = Color(hex: "050511")
-        static let surface = Color(hex: "1C1C1E")
-        static let textPrimary = Color.white
-        static let textSecondary = Color(hex: "8E8E93")
+        
+        static let background = Color(UIColor { traitCollection in
+            traitCollection.userInterfaceStyle == .dark ? UIColor(Color(hex: "050511")) : UIColor(Color(hex: "F9FAFB"))
+        })
+        
+        static let surface = Color(UIColor { traitCollection in
+            traitCollection.userInterfaceStyle == .dark ? UIColor(Color(hex: "1C1C1E")) : UIColor.white
+        })
+        
+        static let textPrimary = Color(UIColor { traitCollection in
+            traitCollection.userInterfaceStyle == .dark ? .white : .label
+        })
+        
+        static let textSecondary = Color(UIColor { traitCollection in
+            traitCollection.userInterfaceStyle == .dark ? UIColor(Color(hex: "8E8E93")) : UIColor(Color(hex: "6B7280"))
+        })
+        
         static let success = Color(hex: "34C759")
         static let warning = Color(hex: "FFCC00")
         static let error = Color(hex: "FF3B30")
         
-        static let cardBackground = Color.white.opacity(0.05)
-        static let inputBackground = Color.white.opacity(0.05)
-        static let border = Color.white.opacity(0.1)
+        static let cardBackground = Color(UIColor { traitCollection in
+            traitCollection.userInterfaceStyle == .dark ? UIColor.white.withAlphaComponent(0.05) : UIColor.white
+        })
+        
+        static let inputBackground = Color(UIColor { traitCollection in
+            traitCollection.userInterfaceStyle == .dark ? UIColor.white.withAlphaComponent(0.05) : UIColor(Color(hex: "F3F4F6"))
+        })
+        
+        static let border = Color(UIColor { traitCollection in
+            traitCollection.userInterfaceStyle == .dark ? UIColor.white.withAlphaComponent(0.1) : UIColor(Color(hex: "E5E7EB"))
+        })
     }
     
     // MARK: - Typography

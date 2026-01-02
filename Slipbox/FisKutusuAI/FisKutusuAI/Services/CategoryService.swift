@@ -1,9 +1,46 @@
 import Foundation
+import Combine
 
-class CategoryService {
+class CategoryService: ObservableObject {
     static let shared = CategoryService()
     
-    private init() {}
+
+    
+    private let kCustomCategoriesKey = "custom_categories"
+    
+    private init() {
+        self.customCategories = getCustomCategories()
+    }
+    
+    // MARK: - Category Management
+    
+    @Published var customCategories: [Category] = []
+    
+    // MARK: - Category Management
+    
+    var allCategories: [Category] {
+        return Category.defaults + Category.additional + customCategories
+    }
+    
+    func addCustomCategory(_ category: Category) {
+        customCategories.append(category)
+        saveCustomCategories(customCategories)
+    }
+    
+    private func getCustomCategories() -> [Category] {
+        guard let data = UserDefaults.standard.data(forKey: kCustomCategoriesKey),
+              let categories = try? JSONDecoder().decode([Category].self, from: data) else {
+            return []
+        }
+        return categories
+    }
+    
+    private func saveCustomCategories(_ categories: [Category]) {
+        if let data = try? JSONEncoder().encode(categories) {
+            UserDefaults.standard.set(data, forKey: kCustomCategoriesKey)
+        }
+    }
+
     
     /// Suggest a category based on merchant name and OCR text
     func suggestCategory(merchant: String?, rawText: String?) -> String {

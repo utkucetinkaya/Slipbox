@@ -27,7 +27,7 @@ struct WelcomeView: View {
                         
                         Text("SlipBox")
                             .font(.system(size: 22, weight: .bold))
-                            .foregroundColor(.white)
+                            .foregroundColor(DesignSystem.Colors.textPrimary)
                     }
                     .padding(.top, 20)
                     
@@ -49,12 +49,12 @@ struct WelcomeView: View {
                                 .frame(width: 280, height: 320)
                                 .overlay(
                                     RoundedRectangle(cornerRadius: 30)
-                                        .stroke(Color.white.opacity(0.2), lineWidth: 1)
+                                        .stroke(DesignSystem.Colors.border.opacity(0.2), lineWidth: 1)
                                 )
                             
                             Image(systemName: "checkmark.circle.fill")
                                 .font(.system(size: 80))
-                                .foregroundColor(.white)
+                                .foregroundColor(DesignSystem.Colors.textPrimary)
                         }
                         .frame(height: 350)
                     }
@@ -65,7 +65,7 @@ struct WelcomeView: View {
                     VStack(spacing: 12) {
                         DesignSystem.Typography.title1("Fişlerini saniyeler\niçinde düzene sok.")
                             .multilineTextAlignment(.center)
-                            .foregroundColor(.white)
+                            .foregroundColor(DesignSystem.Colors.textPrimary)
                             .lineSpacing(4)
                         
                         DesignSystem.Typography.body("Tarayın. Kategorileyin. Raporlayın.")
@@ -102,7 +102,7 @@ struct WelcomeView: View {
                             .frame(maxWidth: .infinity)
                             .frame(height: 56)
                             .background(DesignSystem.Colors.inputBackground)
-                            .foregroundColor(.white)
+                            .foregroundColor(DesignSystem.Colors.textPrimary)
                             .cornerRadius(16)
                             .overlay(
                                 RoundedRectangle(cornerRadius: 16)

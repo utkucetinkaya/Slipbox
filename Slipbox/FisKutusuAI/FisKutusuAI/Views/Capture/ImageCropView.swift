@@ -73,16 +73,18 @@ struct ImageCropView: View {
                 VStack(spacing: 20) {
                     Text("Köşeleri sürükleyerek alanı belirleyin")
                         .font(.system(size: 14))
-                        .foregroundColor(.white.opacity(0.6))
+                    Text("Köşeleri sürükleyerek alanı belirleyin")
+                        .font(.system(size: 14))
+                        .foregroundColor(DesignSystem.Colors.textSecondary)
                     
                     HStack(spacing: 16) {
                         Button(action: onRetake) {
                             Text("Tekrar Çek")
                                 .font(.system(size: 16, weight: .medium))
-                                .foregroundColor(.white)
+                                .foregroundColor(DesignSystem.Colors.textPrimary)
                                 .frame(maxWidth: .infinity)
                                 .frame(height: 56)
-                                .background(Color(hex: "1C1C1E"))
+                                .background(DesignSystem.Colors.surface)
                                 .cornerRadius(28)
                                 .overlay(
                                     RoundedRectangle(cornerRadius: 28)
@@ -107,16 +109,19 @@ struct ImageCropView: View {
                     }
                 }
                 .padding(24)
-                .background(Color(hex: "050511"))
+                .background(DesignSystem.Colors.background)
                 .cornerRadius(32, corners: [.topLeft, .topRight])
             }
         }
     }
     
     func performCrop() {
+        // 1. Fix orientation first so coordinate systems match
+        let fixedImage = image.fixedOrientation()
+        
         // Map normalized rect to image pixel coordinates
-        let scaleX = image.size.width
-        let scaleY = image.size.height
+        let scaleX = fixedImage.size.width
+        let scaleY = fixedImage.size.height
         
         // Ensure cropRect is valid
         let crop = CGRect(
@@ -126,13 +131,29 @@ struct ImageCropView: View {
             height: min(1, cropRect.height) * scaleY
         )
         
-        guard let cgImg = image.cgImage?.cropping(to: crop) else {
-            onContinue(image)
+        // Crop on the fixed image
+        guard let cgImg = fixedImage.cgImage?.cropping(to: crop) else {
+            onContinue(fixedImage) 
             return
         }
         
-        let croppedImage = UIImage(cgImage: cgImg, scale: image.scale, orientation: image.imageOrientation)
+        // Result is in .up orientation
+        let croppedImage = UIImage(cgImage: cgImg)
         onContinue(croppedImage)
+    }
+}
+
+// MARK: - UIImage Orientation Fix
+extension UIImage {
+    func fixedOrientation() -> UIImage {
+        if imageOrientation == .up { return self }
+        
+        UIGraphicsBeginImageContextWithOptions(size, false, scale)
+        draw(in: CGRect(origin: .zero, size: size))
+        let normalizedImage = UIGraphicsGetImageFromCurrentImageContext()
+        UIGraphicsEndImageContext()
+        
+        return normalizedImage ?? self
     }
 }
 
@@ -230,44 +251,68 @@ struct CropOverlay: View {
     
     // Helper for Resize Logic
     func resizeGesture(corner: CropCorner) -> some Gesture {
-        DragGesture()
+        DragGesture(coordinateSpace: .named("CropContainer"))
             .onChanged { value in
-                if dragStartRect == nil { dragStartRect = cropRect }
-                guard let start = dragStartRect else { return }
+                // Calculate relative position of the touch in the image frame
+                // value.location is now in "CropContainer" space
+                // imageFrame is also in "CropContainer" space
                 
-                let dx = value.translation.width / imageFrame.width
-                let dy = value.translation.height / imageFrame.height
+                // We need the location relative to the imageFrame to get 0..1 coords
+                let locationInImage = CGPoint(
+                    x: value.location.x - imageFrame.minX,
+                    y: value.location.y - imageFrame.minY
+                )
                 
-                var newRect = start
+                let relX = locationInImage.x / imageFrame.width
+                let relY = locationInImage.y / imageFrame.height
+                
+                var newRect = cropRect
                 
                 switch corner {
                 case .topLeft:
-                    newRect.origin.x += dx
-                    newRect.origin.y += dy
-                    newRect.size.width -= dx
-                    newRect.size.height -= dy
+                    // New Left/Top is the current touch position
+                    // Width/Height changes accordingly
+                    let newMaxX = cropRect.maxX
+                    let newMaxY = cropRect.maxY
+                    
+                    let newX = min(newMaxX - 0.1, max(0, relX))
+                    let newY = min(newMaxY - 0.1, max(0, relY))
+                    
+                    newRect = CGRect(x: newX, y: newY, width: newMaxX - newX, height: newMaxY - newY)
+                    
                 case .topRight:
-                    newRect.origin.y += dy
-                    newRect.size.width += dx
-                    newRect.size.height -= dy
+                    let newMinX = cropRect.minX
+                    let newMaxY = cropRect.maxY
+                    
+                    let newWidth = min(1 - newMinX, max(0.1, relX - newMinX))
+                    let newY = min(newMaxY - 0.1, max(0, relY))
+                    
+                    newRect = CGRect(x: newMinX, y: newY, width: newWidth, height: newMaxY - newY)
+                    
                 case .bottomLeft:
-                    newRect.origin.x += dx
-                    newRect.size.width -= dx
-                    newRect.size.height += dy
+                    let newMaxX = cropRect.maxX
+                    let newMinY = cropRect.minY
+                    
+                    let newX = min(newMaxX - 0.1, max(0, relX))
+                    let newHeight = min(1 - newMinY, max(0.1, relY - newMinY))
+                    
+                    newRect = CGRect(x: newX, y: newMinY, width: newMaxX - newX, height: newHeight)
+                    
                 case .bottomRight:
-                    newRect.size.width += dx
-                    newRect.size.height += dy
+                    let newMinX = cropRect.minX
+                    let newMinY = cropRect.minY
+                    
+                    let newWidth = min(1 - newMinX, max(0.1, relX - newMinX))
+                    let newHeight = min(1 - newMinY, max(0.1, relY - newMinY))
+                    
+                    newRect = CGRect(x: newMinX, y: newMinY, width: newWidth, height: newHeight)
                 }
-                
-                // Min Size Constraint (e.g. 10%)
-                if newRect.width < 0.1 || newRect.height < 0.1 { return }
-                
-                // Bounds Constraint (0...1)
-                // (Simplified for brevity, would clamp edges)
                 
                 cropRect = newRect
             }
-            .onEnded { _ in dragStartRect = nil }
+            .onEnded { _ in 
+                dragStartRect = nil 
+            }
     }
 }
 

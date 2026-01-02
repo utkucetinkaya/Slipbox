@@ -76,34 +76,47 @@ class OCRService {
             if result.merchantName != nil { break }
         }
         
-        // Fallback heuristic if no known brand found
+        // 2. Strict Top-Line Heuristic (If brand not found)
         if result.merchantName == nil {
-            for line in lines.prefix(6) {
+            // Check the first 5 lines. The merchant is almost always at the very top.
+            for line in lines.prefix(5) {
                 let clean = line.trimmingCharacters(in: .whitespacesAndNewlines)
-                let upperClean = clean.uppercased()
+                var upperClean = clean.uppercased()
                 
-                // Skip if contains generic blocklist terms
+                if clean.isEmpty { continue }
+                if clean.count < 3 { continue }
+                
+                // Skip common noise
+                if upperClean.contains("TARİH") || upperClean.contains("SAAT") || upperClean.contains("NO:") { continue }
+                
+                // Skip if purely numeric or looks like date/phone/total
+                if clean.rangeOfCharacter(from: CharacterSet.decimalDigits.inverted) == nil { continue }
+                if upperClean.contains("TOPLAM") || upperClean.contains("TUTAR") || upperClean.contains("KDV") { continue }
+                
+                // Check generic blocklist
                 let isGeneric = genericBlocklist.contains { term in upperClean.contains(term.uppercased()) }
                 if isGeneric { continue }
                 
-                // Valid merchant names usually don't have many symbols or start with numbers
-                if clean.count > 3 && !clean.contains(":") {
-                    // Prefer names with A.Ş. or LTD.
-                    if upperClean.contains("A.Ş") || upperClean.contains("LTD") || upperClean.contains("A.S") {
-                        result.merchantName = clean
-                        break
-                    }
-                    
-                    // Otherwise take the first plausible line
-                    if result.merchantName == nil {
-                        result.merchantName = clean
-                    }
-                }
+                // If we survive the filters, this is the merchant. Stop immediately.
+                result.merchantName = clean
+                break
             }
         }
         
+        // 3. Fallback: Search deeper if still nil
         if result.merchantName == nil {
-             result.merchantName = lines.first?.trimmingCharacters(in: .whitespacesAndNewlines)
+             for line in lines.prefix(8) {
+                let clean = line.trimmingCharacters(in: .whitespacesAndNewlines)
+                let upperClean = clean.uppercased()
+                 
+                let isGeneric = genericBlocklist.contains { term in upperClean.contains(term.uppercased()) }
+                if isGeneric { continue }
+                 
+                if upperClean.contains("A.Ş") || upperClean.contains("LTD") || upperClean.contains("TİC") {
+                    result.merchantName = clean
+                    break
+                }
+             }
         }
         
         // 2. Total Amount

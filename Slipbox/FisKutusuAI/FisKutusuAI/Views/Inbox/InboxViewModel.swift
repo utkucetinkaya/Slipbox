@@ -61,6 +61,11 @@ class InboxViewModel: ObservableObject {
         Task {
             do {
                 try await repository.deleteReceipt(receipt)
+                await MainActor.run {
+                    if let index = self.receipts.firstIndex(where: { $0.id == receipt.id }) {
+                        self.receipts.remove(at: index)
+                    }
+                }
                 print("✅ Receipt deleted: \(receipt.id ?? "")")
             } catch {
                 print("❌ Delete failed: \(error.localizedDescription)")

@@ -16,8 +16,8 @@ struct InboxView: View {
     var body: some View {
         NavigationStack {
             ZStack {
-                // Dark gradient background
-                Color(hex: "0A0A14")
+                // Background
+                DesignSystem.Colors.background
                     .ignoresSafeArea()
                 
                 VStack(spacing: 0) {
@@ -36,7 +36,7 @@ struct InboxView: View {
                     
                     // Divider
                     Rectangle()
-                        .fill(Color.white.opacity(0.05))
+                        .fill(DesignSystem.Colors.border)
                         .frame(height: 1)
                         .padding(.top, 16)
                     
@@ -81,7 +81,7 @@ struct InboxView: View {
         HStack {
             Text("inbox".localized)
                 .font(.system(size: 34, weight: .bold))
-                .foregroundColor(.white)
+                .foregroundColor(DesignSystem.Colors.textPrimary)
             
             Spacer()
             
@@ -90,7 +90,7 @@ struct InboxView: View {
             }) {
                 Image(systemName: "plus")
                     .font(.system(size: 24))
-                    .foregroundColor(.white)
+                    .foregroundColor(DesignSystem.Colors.textPrimary)
             }
             .padding(.trailing, 16)
             
@@ -102,7 +102,7 @@ struct InboxView: View {
             }) {
                 Image(systemName: "magnifyingglass")
                     .font(.system(size: 20))
-                    .foregroundColor(.white.opacity(0.6))
+                    .foregroundColor(DesignSystem.Colors.textSecondary)
             }
         }
     }
@@ -112,22 +112,22 @@ struct InboxView: View {
         HStack(spacing: 12) {
             HStack {
                 Image(systemName: "magnifyingglass")
-                    .foregroundColor(.white.opacity(0.4))
+                    .foregroundColor(DesignSystem.Colors.textSecondary)
                 
                 TextField("ara".localized, text: $viewModel.searchText)
-                    .foregroundColor(.white)
+                    .foregroundColor(DesignSystem.Colors.textPrimary)
                     .focused($isSearchFieldFocused)
                     .submitLabel(.search)
                 
                 if !viewModel.searchText.isEmpty {
                     Button(action: { viewModel.searchText = "" }) {
                         Image(systemName: "xmark.circle.fill")
-                            .foregroundColor(.white.opacity(0.4))
+                            .foregroundColor(DesignSystem.Colors.textSecondary)
                     }
                 }
             }
             .padding(12)
-            .background(Color.white.opacity(0.05))
+            .background(DesignSystem.Colors.inputBackground)
             .cornerRadius(12)
             
             Button("vazgec".localized) {
@@ -137,7 +137,7 @@ struct InboxView: View {
                     isSearchFieldFocused = false
                 }
             }
-            .foregroundColor(Color(hex: "4F46E5"))
+            .foregroundColor(DesignSystem.Colors.primary)
             .font(.system(size: 16, weight: .medium))
         }
     }
@@ -150,7 +150,7 @@ struct InboxView: View {
             segmentButton(label: "status_approved".localized, status: .approved)
         }
         .padding(4)
-        .background(Color.white.opacity(0.05))
+        .background(DesignSystem.Colors.inputBackground)
         .cornerRadius(20)
     }
     
@@ -162,12 +162,12 @@ struct InboxView: View {
         }) {
             Text(label)
                 .font(.system(size: 15, weight: .medium))
-                .foregroundColor(viewModel.selectedFilter == status ? .white : .white.opacity(0.5))
+                .foregroundColor(viewModel.selectedFilter == status ? .white : DesignSystem.Colors.textSecondary)
                 .padding(.horizontal, 16)
                 .padding(.vertical, 10)
                 .background(
                     Capsule()
-                        .fill(viewModel.selectedFilter == status ? Color(hex: "4F46E5") : Color.clear)
+                        .fill(viewModel.selectedFilter == status ? DesignSystem.Colors.primary : Color.clear)
                 )
         }
     }
@@ -212,7 +212,7 @@ struct InboxView: View {
         }
         .listStyle(.plain)
         .scrollContentBackground(.hidden)
-        .background(Color(hex: "0A0A14").ignoresSafeArea()) // Fix overscroll
+        .background(DesignSystem.Colors.background.ignoresSafeArea()) // Fix overscroll
         .padding(.bottom, 100)
     }
     
@@ -223,7 +223,7 @@ struct InboxView: View {
             
             ZStack {
                 RoundedRectangle(cornerRadius: 24)
-                    .fill(Color(hex: "1C1C1E"))
+                    .fill(DesignSystem.Colors.surface)
                     .frame(width: 200, height: 200)
                     .rotationEffect(.degrees(-6))
                 
@@ -240,11 +240,11 @@ struct InboxView: View {
             
             Text("inbox_empty".localized)
                 .font(.system(size: 24, weight: .bold))
-                .foregroundColor(.white)
+                .foregroundColor(DesignSystem.Colors.textPrimary)
             
             Text("inbox_subtitle".localized)
                 .font(.system(size: 16))
-                .foregroundColor(.white.opacity(0.6))
+                .foregroundColor(DesignSystem.Colors.textSecondary)
                 .multilineTextAlignment(.center)
                 .padding(.horizontal, 40)
             
@@ -276,7 +276,7 @@ struct AddReceiptPlaceholderView: View {
     var body: some View {
         NavigationStack {
             ZStack {
-                Color(hex: "050511")
+                DesignSystem.Colors.background
                     .ignoresSafeArea()
                 
                 VStack(spacing: 24) {

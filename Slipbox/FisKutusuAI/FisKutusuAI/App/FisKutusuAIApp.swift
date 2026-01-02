@@ -25,6 +25,7 @@ struct FisKutusuAIApp: App {
                 .environmentObject(storeKitManager)
                 .environmentObject(uiState)
                 .environment(\.locale, userPreferences.locale)
+                .preferredColorScheme(userPreferences.appTheme.colorScheme)
         }
     }
 }
@@ -38,22 +39,18 @@ struct RootView: View {
         // Global Appearance Configuration
         let appearance = UINavigationBarAppearance()
         appearance.configureWithOpaqueBackground()
-        appearance.backgroundColor = UIColor(Color(hex: "050511")) // Dark background
-        appearance.titleTextAttributes = [.foregroundColor: UIColor.white]
-        appearance.largeTitleTextAttributes = [.foregroundColor: UIColor.white]
+        appearance.backgroundColor = UIColor(DesignSystem.Colors.background) // Dark background
+        appearance.titleTextAttributes = [.foregroundColor: UIColor(DesignSystem.Colors.textPrimary)]
+        appearance.largeTitleTextAttributes = [.foregroundColor: UIColor(DesignSystem.Colors.textPrimary)]
         
         UINavigationBar.appearance().standardAppearance = appearance
         UINavigationBar.appearance().compactAppearance = appearance
         UINavigationBar.appearance().scrollEdgeAppearance = appearance
-        UINavigationBar.appearance().tintColor = .white
+        UINavigationBar.appearance().tintColor = UIColor(DesignSystem.Colors.primary)
         
-        // Tab Bar Appearance is also configured here to ensure consistency
-        let tabAppearance = UITabBarAppearance()
-        tabAppearance.configureWithOpaqueBackground()
-        tabAppearance.backgroundColor = UIColor(Color(hex: "1C1C1E")) // Slightly lighter for tab bar
-        
-        UITabBar.appearance().standardAppearance = tabAppearance
-        UITabBar.appearance().scrollEdgeAppearance = tabAppearance
+        // Hide Native Tab Bar Globally
+        // We use a custom floating tab bar, so the native one should never be visible or interactive.
+        UITabBar.appearance().isHidden = true
     }
     
     var body: some View {
@@ -82,7 +79,7 @@ struct RootView: View {
 struct LoadingView: View {
     var body: some View {
         ZStack {
-            Color(hex: "050511")
+            DesignSystem.Colors.background
                 .ignoresSafeArea()
             
             VStack(spacing: 20) {
@@ -99,13 +96,13 @@ struct EntitlementsLoadingView: View {
     
     var body: some View {
         ZStack {
-            Color(hex: "050511")
+            DesignSystem.Colors.background
                 .ignoresSafeArea()
             
             VStack(spacing: 24) {
                 ZStack {
                     Circle()
-                        .fill(Color(hex: "1C1C1E"))
+                        .fill(DesignSystem.Colors.surface)
                         .frame(width: 100, height: 100)
                         .shadow(color: Color(hex: "4F46E5").opacity(0.3), radius: 20, x: 0, y: 0)
                     

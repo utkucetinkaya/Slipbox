@@ -33,7 +33,7 @@ struct PermissionView: View {
                         .blur(radius: 20)
                     
                     Circle()
-                        .fill(Color(hex: "1C1C1E"))
+                        .fill(DesignSystem.Colors.surface)
                         .frame(width: 140, height: 140)
                         .overlay(
                             Circle()
@@ -42,7 +42,7 @@ struct PermissionView: View {
                     
                     Image(systemName: "camera.aperture")
                         .font(.system(size: 64))
-                        .foregroundColor(.white)
+                        .foregroundColor(DesignSystem.Colors.primary)
                     
                     // Checkmark Badge
                     VStack {
@@ -63,7 +63,7 @@ struct PermissionView: View {
                 VStack(spacing: 16) {
                     Text("unlock_camera".localized)
                         .font(.system(size: 32, weight: .bold))
-                        .foregroundColor(.white)
+                        .foregroundColor(DesignSystem.Colors.textPrimary)
                     
                     Text("camera_permission_description".localized)
                         .font(.system(size: 16))
@@ -211,7 +211,7 @@ struct PermissionCard: View {
             VStack(alignment: .leading, spacing: 4) {
                 Text(title)
                     .font(.system(size: 17, weight: .semibold))
-                    .foregroundColor(.white)
+                    .foregroundColor(DesignSystem.Colors.textPrimary)
                 
                 Text(description)
                     .font(.system(size: 14))
@@ -221,7 +221,7 @@ struct PermissionCard: View {
         }
         .padding(16)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Color(hex: "1C1C1E")) // Surface color
+        .background(DesignSystem.Colors.surface) // Surface color
         .cornerRadius(16)
         .overlay(
             RoundedRectangle(cornerRadius: 16)

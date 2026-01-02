@@ -1,8 +1,37 @@
 import SwiftUI
 import Combine
 
+enum AppTheme: String, CaseIterable {
+    case system = "system"
+    case light = "light"
+    case dark = "dark"
+    
+    var colorScheme: ColorScheme? {
+        switch self {
+        case .system: return nil
+        case .light: return .light
+        case .dark: return .dark
+        }
+    }
+    
+    var localizedName: String {
+        switch self {
+        case .system: return "system_theme".localized
+        case .light: return "light_theme".localized
+        case .dark: return "dark_theme".localized
+        }
+    }
+}
+
 class AppUserPreferences: ObservableObject {
     static let shared = AppUserPreferences()
+    
+    @Published var appTheme: AppTheme {
+        didSet {
+            UserDefaults.standard.set(appTheme.rawValue, forKey: "selectedAppTheme")
+        }
+    }
+    
     @Published var currencyCode: String {
         didSet {
             UserDefaults.standard.set(currencyCode, forKey: "selectedCurrencyCode")
@@ -24,6 +53,9 @@ class AppUserPreferences: ObservableObject {
     }
     
     init() {
+        let savedTheme = UserDefaults.standard.string(forKey: "selectedAppTheme") ?? "dark" // Default to dark as per current request
+        self.appTheme = AppTheme(rawValue: savedTheme) ?? .dark
+        
         self.currencyCode = UserDefaults.standard.string(forKey: "selectedCurrencyCode") ?? "TRY"
         self.currencySymbol = UserDefaults.standard.string(forKey: "selectedCurrencySymbol") ?? "₺"
         

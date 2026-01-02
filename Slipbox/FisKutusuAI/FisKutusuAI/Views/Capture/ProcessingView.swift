@@ -21,16 +21,16 @@ struct ProcessingView: View {
             VStack {
                 // Header
                 HStack {
-                    Text("processing_title".localized)
+                    Text(isCompleted ? "processing_completed".localized : "processing_title".localized)
                         .font(.system(size: 16, weight: .bold))
-                        .foregroundColor(.white)
+                        .foregroundColor(DesignSystem.Colors.textPrimary)
                     
                     Spacer()
                     
                     Button(action: onReturnToInbox) {
                         Image(systemName: "xmark")
                             .font(.system(size: 20))
-                            .foregroundColor(.white)
+                            .foregroundColor(DesignSystem.Colors.textPrimary)
                     }
                 }
                 .padding()
@@ -52,32 +52,34 @@ struct ProcessingView: View {
                         .overlay(Color.black.opacity(0.2))
                     
                     // Scanning line
-                    Rectangle()
-                        .fill(LinearGradient(
-                            gradient: Gradient(colors: [Color(hex: "4F46E5").opacity(0), Color(hex: "4F46E5"), Color(hex: "4F46E5").opacity(0)]),
-                            startPoint: .leading,
-                            endPoint: .trailing
-                        ))
-                        .frame(width: 260, height: 4)
-                        .shadow(color: Color(hex: "4F46E5"), radius: 10)
-                        .offset(y: scanOffset)
-                        .onAppear {
-                            withAnimation(Animation.linear(duration: 2).repeatForever(autoreverses: true)) {
-                                scanOffset = 150
+                    if !isCompleted {
+                        Rectangle()
+                            .fill(LinearGradient(
+                                gradient: Gradient(colors: [Color(hex: "4F46E5").opacity(0), Color(hex: "4F46E5"), Color(hex: "4F46E5").opacity(0)]),
+                                startPoint: .leading,
+                                endPoint: .trailing
+                            ))
+                            .frame(width: 260, height: 4)
+                            .shadow(color: Color(hex: "4F46E5"), radius: 10)
+                            .offset(y: scanOffset)
+                            .onAppear {
+                                withAnimation(Animation.linear(duration: 2).repeatForever(autoreverses: true)) {
+                                    scanOffset = 150
+                                }
                             }
-                        }
+                    }
                 }
                 .padding(.bottom, 40)
                 
                 // Status Text
                 Text(isCompleted ? "processing_completed".localized : "processing_in_progress".localized)
                     .font(.system(size: 24, weight: .bold))
-                    .foregroundColor(.white)
+                    .foregroundColor(DesignSystem.Colors.textPrimary)
                     .padding(.bottom, 8)
                 
                 Text("processing_description".localized)
                     .font(.system(size: 14))
-                    .foregroundColor(.white.opacity(0.6))
+                    .foregroundColor(DesignSystem.Colors.textSecondary)
                     .multilineTextAlignment(.center)
                     .padding(.horizontal, 40)
                     .padding(.bottom, 32)
@@ -225,24 +227,24 @@ struct ExtractionRow: View {
             
             Text(label)
                 .font(.system(size: 14))
-                .foregroundColor(.white)
+                .foregroundColor(DesignSystem.Colors.textSecondary)
             
             Spacer()
             
             if let value = value {
                 Text(value)
                     .font(.system(size: 14, weight: .semibold))
-                    .foregroundColor(.white)
+                    .foregroundColor(DesignSystem.Colors.textPrimary)
                     .transition(.opacity)
             } else {
                 // Skeleton Loader
                 Capsule()
-                    .fill(Color.white.opacity(0.1))
+                    .fill(DesignSystem.Colors.textSecondary.opacity(0.1))
                     .frame(width: 80, height: 12)
             }
         }
         .padding()
-        .background(Color(hex: "1C1C1E"))
+        .background(DesignSystem.Colors.surface)
         .cornerRadius(16)
     }
 }

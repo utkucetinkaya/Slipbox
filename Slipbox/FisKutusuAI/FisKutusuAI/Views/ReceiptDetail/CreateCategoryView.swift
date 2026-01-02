@@ -28,7 +28,7 @@ struct CreateCategoryView: View {
     var body: some View {
         NavigationStack {
             ZStack {
-                Color(hex: "050511")
+                DesignSystem.Colors.background
                     .ignoresSafeArea()
                 
                 ScrollView {
@@ -47,7 +47,7 @@ struct CreateCategoryView: View {
                             
                             Text(categoryName.isEmpty ? "category_name_placeholder".localized : categoryName)
                                 .font(.system(size: 20, weight: .bold))
-                                .foregroundColor(categoryName.isEmpty ? .white.opacity(0.3) : .white)
+                                .foregroundColor(categoryName.isEmpty ? DesignSystem.Colors.textSecondary.opacity(0.3) : DesignSystem.Colors.textPrimary)
                         }
                         .padding(.top, 20)
                         
@@ -57,20 +57,20 @@ struct CreateCategoryView: View {
                             VStack(alignment: .leading, spacing: 12) {
                                 Text("category_name_label".localized)
                                     .font(.system(size: 14, weight: .bold))
-                                    .foregroundColor(.white.opacity(0.6))
+                                    .foregroundColor(DesignSystem.Colors.textSecondary)
                                 
                                 TextField("category_name_placeholder".localized, text: $categoryName)
                                     .padding()
-                                    .background(Color(hex: "1C1C1E"))
+                                    .background(DesignSystem.Colors.surface)
                                     .cornerRadius(12)
-                                    .foregroundColor(.white)
+                                    .foregroundColor(DesignSystem.Colors.textPrimary)
                             }
                             
                             // Color Selection
                             VStack(alignment: .leading, spacing: 12) {
                                 Text("select_color".localized)
                                     .font(.system(size: 14, weight: .bold))
-                                    .foregroundColor(.white.opacity(0.6))
+                                    .foregroundColor(DesignSystem.Colors.textSecondary)
                                 
                                 HStack(spacing: 12) {
                                     ForEach(colors, id: \.self) { color in
@@ -94,13 +94,13 @@ struct CreateCategoryView: View {
                             VStack(alignment: .leading, spacing: 12) {
                                 Text("select_icon".localized)
                                     .font(.system(size: 14, weight: .bold))
-                                    .foregroundColor(.white.opacity(0.6))
+                                    .foregroundColor(DesignSystem.Colors.textSecondary)
                                 
                                 LazyVGrid(columns: columns, spacing: 20) {
                                     ForEach(icons, id: \.self) { icon in
                                         ZStack {
                                             Circle()
-                                                .fill(selectedIcon == icon ? Color(hex: "1C1C1E") : Color.clear)
+                                                .fill(selectedIcon == icon ? DesignSystem.Colors.surface : Color.clear)
                                                 .frame(width: 48, height: 48)
                                                 .overlay(
                                                     Circle()
@@ -109,7 +109,7 @@ struct CreateCategoryView: View {
                                             
                                             Image(systemName: icon)
                                                 .font(.system(size: 20))
-                                                .foregroundColor(selectedIcon == icon ? selectedColor : .white.opacity(0.6))
+                                                .foregroundColor(selectedIcon == icon ? selectedColor : DesignSystem.Colors.textSecondary)
                                         }
                                         .onTapGesture {
                                             withAnimation(.spring()) {
@@ -133,12 +133,19 @@ struct CreateCategoryView: View {
                     Button("cancel".localized) {
                         dismiss()
                     }
-                    .foregroundColor(.white.opacity(0.6))
+                    .foregroundColor(DesignSystem.Colors.textSecondary)
                 }
                 
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button("save".localized) {
-                        // In a real app, save to persistence/Firebase
+                        let newCategory = Category(
+                            id: UUID().uuidString,
+                            name: categoryName,
+                            icon: selectedIcon,
+                            order: 100, // Custom categories at the end
+                            isDefault: false
+                        )
+                        CategoryService.shared.addCustomCategory(newCategory)
                         dismiss()
                     }
                     .font(.system(size: 16, weight: .bold))

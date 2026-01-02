@@ -3,23 +3,28 @@ import SwiftUI
 struct MainTabView: View {
     @State private var selectedTab = 0
     @EnvironmentObject var uiState: AppUIState
+    @Environment(\.colorScheme) var colorScheme
+    
+    init() {
+        UITabBar.appearance().isHidden = true
+    }
     
     var body: some View {
         ZStack(alignment: .bottom) {
             // Content
-            Group {
-                switch selectedTab {
-                case 0:
-                    InboxView()
-                case 1:
-                    ReportsView()
-                case 2:
-                    SettingsView()
-                default:
-                    InboxView()
-                }
+            TabView(selection: $selectedTab) {
+                InboxView()
+                    .tag(0)
+                    .toolbarBackground(.hidden, for: .tabBar)
+                
+                ReportsView()
+                    .tag(1)
+                    .toolbarBackground(.hidden, for: .tabBar)
+                
+                SettingsView()
+                    .tag(2)
+                    .toolbarBackground(.hidden, for: .tabBar)
             }
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
             
             if !uiState.isTabBarHidden {
                 // Custom Pill TabBar
@@ -32,16 +37,17 @@ struct MainTabView: View {
                 .padding(.vertical, 8)
                 .background(
                     Capsule()
-                        .fill(Color(hex: "1C1C1E"))
-                        .shadow(color: .black.opacity(0.3), radius: 20, x: 0, y: 10)
+                        .fill(DesignSystem.Colors.surface)
+                        .shadow(color: Color.black.opacity(colorScheme == .dark ? 0.3 : 0.1), radius: 20, x: 0, y: 10)
                 )
                 .overlay(
                     Capsule()
-                        .stroke(Color.white.opacity(0.05), lineWidth: 1)
+                        .stroke(DesignSystem.Colors.border, lineWidth: 1)
                 )
                 .padding(.horizontal, 24)
                 .padding(.bottom, 20) // Floating adjustment
                 .transition(.move(edge: .bottom).combined(with: .opacity))
+                .zIndex(1) // Ensure it stays on top
             }
         }
         .ignoresSafeArea(.keyboard)
@@ -60,12 +66,12 @@ struct MainTabView: View {
                 Text(label)
                     .font(.system(size: 10, weight: .medium))
             }
-            .foregroundColor(selectedTab == index ? Color(hex: "4F46E5") : .white.opacity(0.4))
+            .foregroundColor(selectedTab == index ? DesignSystem.Colors.primary : DesignSystem.Colors.textSecondary)
             .frame(maxWidth: .infinity)
             .padding(.vertical, 8)
             .background(
                 Capsule()
-                    .fill(selectedTab == index ? Color(hex: "4F46E5").opacity(0.1) : Color.clear)
+                    .fill(selectedTab == index ? DesignSystem.Colors.primary.opacity(0.1) : Color.clear)
             )
         }
     }

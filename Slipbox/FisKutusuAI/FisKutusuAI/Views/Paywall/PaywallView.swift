@@ -18,8 +18,8 @@ struct PaywallView: View {
             // Dark Gradient Background
             LinearGradient(
                 gradient: Gradient(colors: [
-                    Color(hex: "0A0A14"),
-                    Color(hex: "1C1C1E")
+                    DesignSystem.Colors.background,
+                    DesignSystem.Colors.surface
                 ]),
                 startPoint: .top,
                 endPoint: .bottom
@@ -56,15 +56,15 @@ struct PaywallView: View {
                             VStack(spacing: 8) {
                                 Text("paywall_title".localized)
                                     .font(.system(size: 28, weight: .bold))
-                                    .foregroundColor(.white)
+                                    .foregroundColor(DesignSystem.Colors.textPrimary)
                                 
                                 Text("paywall_subtitle".localized)
                                     .font(.system(size: 28, weight: .bold))
-                                    .foregroundColor(Color(hex: "4F46E5"))
+                                    .foregroundColor(DesignSystem.Colors.primary)
                                 
                                 Text("paywall_description".localized)
                                     .font(.system(size: 16))
-                                    .foregroundColor(.white.opacity(0.7))
+                                    .foregroundColor(DesignSystem.Colors.textSecondary)
                                     .multilineTextAlignment(.center)
                                     .padding(.horizontal, 24)
                                     .padding(.top, 8)
@@ -138,7 +138,7 @@ struct PaywallView: View {
                                     Text("paywall_easy_cancel".localized)
                                         .font(.system(size: 12))
                                 }
-                                .foregroundColor(.white.opacity(0.7))
+                                .foregroundColor(DesignSystem.Colors.textSecondary)
                                 
                                 HStack(spacing: 16) {
                                     Button("paywall_restore".localized) {
@@ -150,7 +150,7 @@ struct PaywallView: View {
                                     Link("privacy".localized, destination: URL(string: "https://slipbox.app/privacy")!)
                                 }
                                 .font(.system(size: 11))
-                                .foregroundColor(.white.opacity(0.4))
+                                .foregroundColor(DesignSystem.Colors.textSecondary.opacity(0.6))
                             }
                             .padding(.horizontal, 24)
                             .padding(.bottom, 10) // Reduced bottom padding to allow spacer to push content closer to edge
@@ -164,7 +164,7 @@ struct PaywallView: View {
                     Button(action: { dismiss() }) {
                         Image(systemName: "xmark.circle.fill")
                             .font(.system(size: 32))
-                            .foregroundColor(.white.opacity(0.3))
+                            .foregroundColor(DesignSystem.Colors.textSecondary.opacity(0.6))
                             .padding() // Touch target
                     }
                 }
@@ -219,7 +219,7 @@ struct FeatureRow: View {
             
             Text(text)
                 .font(.system(size: 18, weight: .medium))
-                .foregroundColor(.white)
+                .foregroundColor(DesignSystem.Colors.textPrimary)
         }
     }
 }
@@ -238,25 +238,25 @@ struct PlanCard: View {
                 VStack(alignment: .leading, spacing: 8) {
                     Text(title)
                         .font(.system(size: 16, weight: .medium))
-                        .foregroundColor(isSelected ? .white : .white.opacity(0.6))
+                        .foregroundColor(isSelected ? DesignSystem.Colors.textPrimary : DesignSystem.Colors.textSecondary)
                     
                     HStack(alignment: .firstTextBaseline, spacing: 2) {
                         Text(price)
                             .font(.system(size: 24, weight: .bold))
-                            .foregroundColor(.white)
+                            .foregroundColor(DesignSystem.Colors.textPrimary)
                         
                         Text(period)
                             .font(.system(size: 14))
-                            .foregroundColor(.white.opacity(0.6))
+                            .foregroundColor(DesignSystem.Colors.textSecondary)
                     }
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .padding(16)
-                .background(Color(hex: "1C1C1E"))
+                .background(DesignSystem.Colors.surface)
                 .cornerRadius(16)
                 .overlay(
                     RoundedRectangle(cornerRadius: 16)
-                        .stroke(isSelected ? Color(hex: "4F46E5") : Color.white.opacity(0.1), lineWidth: 2)
+                        .stroke(isSelected ? DesignSystem.Colors.primary : DesignSystem.Colors.border, lineWidth: 2)
                 )
                 
                 if let badge = badge {

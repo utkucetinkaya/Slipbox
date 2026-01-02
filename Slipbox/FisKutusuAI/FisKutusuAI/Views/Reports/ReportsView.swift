@@ -33,7 +33,7 @@ struct ReportsView: View {
         NavigationStack {
             ZStack {
                 // Background
-                Color(hex: "050511")
+                DesignSystem.Colors.background
                     .ignoresSafeArea()
                 
                 ScrollView {
@@ -56,7 +56,7 @@ struct ReportsView: View {
                     .padding(.top, 10)
                 }
                 .scrollContentBackground(.hidden)
-                .background(Color(hex: "050511").ignoresSafeArea()) // Fix overscroll
+                .background(DesignSystem.Colors.background.ignoresSafeArea()) // Fix overscroll
             }
             .navigationTitle("reports_title".localized)
             .navigationBarTitleDisplayMode(.inline)
@@ -71,24 +71,24 @@ struct ReportsView: View {
         HStack {
             Button(action: { changeMonth(by: -1) }) {
                 Image(systemName: "chevron.left")
-                    .foregroundColor(.white.opacity(0.6))
+                    .foregroundColor(DesignSystem.Colors.textSecondary)
             }
             
             Spacer()
             
             Text(formattedMonth)
                 .font(.system(size: 16, weight: .medium))
-                .foregroundColor(.white)
+                .foregroundColor(DesignSystem.Colors.textPrimary)
             
             Spacer()
             
             Button(action: { changeMonth(by: 1) }) {
                 Image(systemName: "chevron.right")
-                    .foregroundColor(.white.opacity(0.6))
+                    .foregroundColor(DesignSystem.Colors.textSecondary)
             }
         }
         .padding()
-        .background(Color(hex: "1C1C1E"))
+        .background(DesignSystem.Colors.surface)
         .cornerRadius(12)
     }
     
@@ -98,7 +98,7 @@ struct ReportsView: View {
             VStack(alignment: .leading, spacing: 4) {
                 Text("total_expense".localized)
                     .font(.system(size: 14))
-                    .foregroundColor(.white.opacity(0.6))
+                    .foregroundColor(DesignSystem.Colors.textSecondary)
                 
                 Text(formatCurrency(viewModel.totalExpense))
                     .font(.system(size: 34, weight: .bold))
@@ -121,16 +121,20 @@ struct ReportsView: View {
                     VStack(alignment: .leading, spacing: 2) {
                         Text("receipt_count".localized)
                             .font(.system(size: 12))
-                            .foregroundColor(.white.opacity(0.6))
+                            .foregroundColor(DesignSystem.Colors.textSecondary)
                         Text("\(viewModel.receiptCount)")
                             .font(.system(size: 18, weight: .semibold))
-                            .foregroundColor(.white)
+                            .foregroundColor(DesignSystem.Colors.textPrimary)
                     }
                 }
                 .padding()
                 .frame(maxWidth: .infinity, alignment: .leading)
-                .background(Color(hex: "2C2C2E"))
+                .background(DesignSystem.Colors.surface)
                 .cornerRadius(16)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 16)
+                        .stroke(DesignSystem.Colors.border, lineWidth: 1)
+                )
                 
                 // Top Category
                 VStack(alignment: .leading, spacing: 8) {
@@ -146,20 +150,24 @@ struct ReportsView: View {
                     VStack(alignment: .leading, spacing: 2) {
                         Text("top_category".localized)
                             .font(.system(size: 12))
-                            .foregroundColor(.white.opacity(0.6))
+                            .foregroundColor(DesignSystem.Colors.textSecondary)
                         Text(viewModel.topCategory.localized)
                             .font(.system(size: 18, weight: .semibold))
-                            .foregroundColor(.white)
+                            .foregroundColor(DesignSystem.Colors.textPrimary)
                     }
                 }
                 .padding()
                 .frame(maxWidth: .infinity, alignment: .leading)
-                .background(Color(hex: "2C2C2E"))
+                .background(DesignSystem.Colors.surface)
                 .cornerRadius(16)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 16)
+                        .stroke(DesignSystem.Colors.border, lineWidth: 1)
+                )
             }
         }
         .padding(20)
-        .background(Color(hex: "1C1C1E"))
+        .background(DesignSystem.Colors.surface)
         .cornerRadius(24)
     }
     
@@ -169,7 +177,7 @@ struct ReportsView: View {
             HStack {
                 Text("category_detail".localized)
                     .font(.system(size: 18, weight: .semibold))
-                    .foregroundColor(.white)
+                    .foregroundColor(DesignSystem.Colors.textPrimary)
                 
                 Spacer()
                 
@@ -209,7 +217,7 @@ struct ReportsView: View {
                     .foregroundColor(Color(hex: "FFCC00"))
                 Text("export".localized)
                     .font(.system(size: 18, weight: .semibold))
-                    .foregroundColor(.white)
+                    .foregroundColor(DesignSystem.Colors.textPrimary)
             }
             
             VStack(spacing: 12) {
@@ -272,7 +280,7 @@ struct ExportButtonContent: View {
             
             Text(title)
                 .font(.system(size: 14, weight: .semibold))
-                .foregroundColor(.white)
+                .foregroundColor(DesignSystem.Colors.textPrimary)
             
             Spacer()
             
@@ -287,7 +295,7 @@ struct ExportButtonContent: View {
             }
         }
         .padding()
-        .background(Color(hex: "1C1C1E"))
+        .background(DesignSystem.Colors.surface)
         .cornerRadius(16)
     }
 }
@@ -316,17 +324,17 @@ struct CategoryRow: View {
                 VStack(alignment: .leading, spacing: 4) {
                     Text(name)
                         .font(.system(size: 16, weight: .medium))
-                        .foregroundColor(.white)
+                        .foregroundColor(DesignSystem.Colors.textPrimary)
                     Text("\(count) " + "receipt_suffix".localized)
                         .font(.system(size: 12))
-                        .foregroundColor(.white.opacity(0.6))
+                        .foregroundColor(DesignSystem.Colors.textSecondary)
                 }
                 
                 Spacer()
                 
                 Text(formatCurrency(amount))
                     .font(.system(size: 16, weight: .bold))
-                    .foregroundColor(.white)
+                    .foregroundColor(DesignSystem.Colors.textPrimary)
             }
             
             // Progress Bar
@@ -334,7 +342,7 @@ struct CategoryRow: View {
                 GeometryReader { geometry in
                     ZStack(alignment: .leading) {
                         Capsule()
-                            .fill(Color(hex: "2C2C2E"))
+                            .fill(DesignSystem.Colors.inputBackground)
                             .frame(height: 6)
                         
                         Capsule()
@@ -346,12 +354,12 @@ struct CategoryRow: View {
                 
                 Text("%\(Int(percent * 100))")
                     .font(.system(size: 12))
-                    .foregroundColor(.white.opacity(0.6))
+                    .foregroundColor(DesignSystem.Colors.textSecondary)
                     .frame(width: 30, alignment: .trailing)
             }
         }
         .padding()
-        .background(Color(hex: "1C1C1E"))
+        .background(DesignSystem.Colors.surface)
         .cornerRadius(16)
     }
     
@@ -396,7 +404,7 @@ struct ExportButton: View {
                     .foregroundColor(Color(hex: "FFCC00"))
             }
             .padding()
-            .background(Color(hex: "1C1C1E"))
+            .background(DesignSystem.Colors.surface)
             .cornerRadius(16)
         }
     }

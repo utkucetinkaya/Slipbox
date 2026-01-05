@@ -22,18 +22,45 @@ class ImageStorageService {
             throw StorageError.dataConversionFailed
         }
         
-        let fileURL = baseDirectory.appendingPathComponent("\(fileName).jpg")
+        let nameWithExt = fileName.hasSuffix(".jpg") ? fileName : "\(fileName).jpg"
+        let fileURL = baseDirectory.appendingPathComponent(nameWithExt)
         try data.write(to: fileURL)
         
-        return fileURL.path
+        // Return ONLY the filename. The app support directory path changes on iOS.
+        return nameWithExt
     }
     
     func loadImage(from path: String) -> UIImage? {
-        return UIImage(contentsOfFile: path)
+        if path.isEmpty { return nil }
+        
+        // Handle legacy absolute paths OR new relative paths
+        if path.starts(with: "/") {
+            // Legacy: Try to load directly, but if it fails (due to app update), 
+            // try to recover by taking only the filename
+            if let image = UIImage(contentsOfFile: path) {
+                return image
+            }
+            
+            let fileName = (path as NSString).lastPathComponent
+            let recoveredURL = baseDirectory.appendingPathComponent(fileName)
+            return UIImage(contentsOfFile: recoveredURL.path)
+        } else {
+            // New: Relative path (just filename)
+            let fileURL = baseDirectory.appendingPathComponent(path)
+            return UIImage(contentsOfFile: fileURL.path)
+        }
     }
     
     func deleteImage(at path: String) {
-        let url = URL(fileURLWithPath: path)
+        if path.isEmpty { return }
+        
+        let url: URL
+        if path.starts(with: "/") {
+            url = URL(fileURLWithPath: path)
+        } else {
+            url = baseDirectory.appendingPathComponent(path)
+        }
+        
         try? fileManager.removeItem(at: url)
     }
     

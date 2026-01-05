@@ -19,7 +19,7 @@ class FirestoreReceiptRepository: ObservableObject {
         stopListening()
         
         listener = db.collection("users").document(uid).collection("receipts")
-            .order(by: "date", descending: true)
+            .order(by: "createdAt", descending: true)
             .addSnapshotListener { [weak self] snapshot, error in
                 if let error = error {
                     print("Error listening to receipts: \(error.localizedDescription)")

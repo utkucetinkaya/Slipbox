@@ -63,6 +63,9 @@ struct ReportsView: View {
             .sheet(isPresented: $showingPaywall) {
                 PaywallView()
             }
+            .onAppear {
+                FirestoreReceiptRepository.shared.startListening()
+            }
         }
     }
     

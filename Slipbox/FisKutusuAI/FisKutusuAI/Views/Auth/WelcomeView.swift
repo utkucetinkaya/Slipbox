@@ -23,7 +23,7 @@ struct WelcomeView: View {
                                     Image("AppLogo")
                                         .resizable()
                                         .aspectRatio(contentMode: .fit)
-                                        .frame(width: 60, height: 60)
+                                        .frame(width: 72, height: 72)
                                         .clipShape(RoundedRectangle(cornerRadius: 14))
                                         .shadow(color: DesignSystem.Colors.primary.opacity(0.5), radius: 10, x: 0, y: 0)
                                     

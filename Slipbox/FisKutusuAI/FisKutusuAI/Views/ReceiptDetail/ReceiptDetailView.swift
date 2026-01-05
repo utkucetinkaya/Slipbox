@@ -11,6 +11,7 @@ struct ReceiptDetailView: View {
     @State private var showingApproveSheet = false
     @State private var showingImagePreview = false
     @State private var showingCategoryPicker = false
+    @State private var wasDeleted = false
     
     init(receipt: Receipt, viewModel: InboxViewModel) {
         self._receipt = State(initialValue: receipt)
@@ -118,7 +119,7 @@ struct ReceiptDetailView: View {
             uiState.isTabBarHidden = false
             
             // Auto-save changes when leaving the screen
-            if isEditable {
+            if isEditable && !wasDeleted {
                 Task {
                     try? await FirestoreReceiptRepository.shared.updateReceipt(receipt)
                 }
@@ -240,6 +241,25 @@ struct ReceiptDetailView: View {
                             RoundedRectangle(cornerRadius: 12)
                                 .stroke(DesignSystem.Colors.border, lineWidth: 1)
                         )
+                }
+                
+                // Month Mismatch Warning
+                if isDifferentMonth {
+                    HStack {
+                        Image(systemName: "info.circle.fill")
+                        Text("different_month_warning".localized)
+                            .font(.system(size: 13, weight: .medium))
+                        Spacer()
+                    }
+                    .padding(12)
+                    .background(Color.blue.opacity(0.1))
+                    .foregroundColor(.blue)
+                    .cornerRadius(12)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 12)
+                            .stroke(Color.blue.opacity(0.3), lineWidth: 1)
+                    )
+                    .padding(.top, 4)
                 }
                 
                 // Amount
@@ -426,11 +446,13 @@ struct ReceiptDetailView: View {
                 Button(action: {
                     Task {
                         do {
+                            wasDeleted = true
                             try await FirestoreReceiptRepository.shared.deleteReceipt(receipt)
                             await MainActor.run {
                                 dismiss()
                             }
                         } catch {
+                            wasDeleted = false
                             print("❌ Deletion failed: \(error.localizedDescription)")
                         }
                     }
@@ -508,6 +530,19 @@ struct ReceiptDetailView: View {
         formatter.dateFormat = "d MMM yyyy"
         formatter.locale = userPreferences.locale
         return formatter.string(from: date)
+    }
+    
+    private var isDifferentMonth: Bool {
+        let calendar = Calendar.current
+        let today = Date()
+        let rDate = receipt.displayDate
+        
+        let rMonth = calendar.component(.month, from: rDate)
+        let rYear = calendar.component(.year, from: rDate)
+        let cMonth = calendar.component(.month, from: today)
+        let cYear = calendar.component(.year, from: today)
+        
+        return rMonth != cMonth || rYear != cYear
     }
     
     // Logic to convert initial value

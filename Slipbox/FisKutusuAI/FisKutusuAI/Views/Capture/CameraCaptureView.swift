@@ -10,6 +10,7 @@ struct CameraCaptureView: View {
     @State private var showingPhotoPicker = false
     @State private var cameraService = CameraService() // Custom simple camera service wrapper
     @State private var capturedImage: UIImage?
+    @State private var isProcessingImage = false
     
     var body: some View {
         ZStack {
@@ -139,17 +140,30 @@ struct CameraCaptureView: View {
                 }
                 .padding(.trailing, 32)
             }
-            .padding(.top, 20)
-            .padding(.bottom, UIApplication.shared.windows.first?.safeAreaInsets.bottom ?? 30)
-            .background(
-                Color.black.opacity(0.8)
-                    .background(VisualEffectView(effect: UIBlurEffect(style: .dark)))
-                    .ignoresSafeArea()
-            )
+            
+            
+            // Loading Overlay
+            if isProcessingImage {
+                ZStack {
+                    Color.black.opacity(0.6)
+                        .ignoresSafeArea()
+                    
+                    VStack(spacing: 16) {
+                        ProgressView()
+                            .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                            .scaleEffect(1.5)
+                        
+                        Text("processing_image".localized)
+                            .foregroundColor(.white)
+                            .font(.system(size: 16, weight: .medium))
+                    }
+                }
+                .transition(.opacity)
+            }
         }
     }
     .sheet(isPresented: $showingPhotoPicker) {
-        PhotoPickerView(selectedImage: $capturedImage)
+        PhotoPickerView(selectedImage: $capturedImage, isProcessing: $isProcessingImage)
             .ignoresSafeArea()
     }
     .onChange(of: capturedImage) { newValue in
@@ -363,6 +377,7 @@ struct CameraPreview: UIViewRepresentable {
 // MARK: - Photo Picker View
 struct PhotoPickerView: UIViewControllerRepresentable {
 @Binding var selectedImage: UIImage?
+@Binding var isProcessing: Bool
 @Environment(\.dismiss) private var dismiss
 
 func makeUIViewController(context: Context) -> PHPickerViewController {
@@ -389,10 +404,13 @@ class Coordinator: NSObject, PHPickerViewControllerDelegate {
     }
     
     func picker(_ picker: PHPickerViewController, didFinishPicking results: [PHPickerResult]) {
-        // Just dismiss, we will load async
+        // Dismiss first to handle transition
         picker.dismiss(animated: true)
         
         guard let provider = results.first?.itemProvider else { return }
+        
+        // Start loading
+        parent.isProcessing = true
         
         // Load image
         if provider.canLoadObject(ofClass: UIImage.self) {
@@ -400,9 +418,13 @@ class Coordinator: NSObject, PHPickerViewControllerDelegate {
                 DispatchQueue.main.async {
                     if let uiImage = image as? UIImage {
                         self.parent.selectedImage = uiImage
+                    } else {
+                        self.parent.isProcessing = false
                     }
                 }
             }
+        } else {
+            parent.isProcessing = false
         }
     }
 }

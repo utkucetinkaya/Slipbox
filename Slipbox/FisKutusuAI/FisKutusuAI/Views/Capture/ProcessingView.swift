@@ -11,6 +11,7 @@ struct ProcessingView: View {
     @State private var extractedMerchant: String?
     @State private var extractedDate: String?
     @State private var extractedTotal: String?
+    @State private var hasStarted = false
     
     // Duplicate & Accounting Logic
     @State private var showDuplicateAlert = false
@@ -140,7 +141,10 @@ struct ProcessingView: View {
             Text("mukkerrer_fis_message".localized)
         }
         .onAppear {
-            startProcessing()
+            if !hasStarted {
+                hasStarted = true
+                startProcessing()
+            }
         }
     }
     
@@ -172,6 +176,11 @@ struct ProcessingView: View {
                 // UTTS Logic
                 if ocrResult.isUTTS {
                     finalCategoryId = "transport" // Ulaşım
+                    finalStatus = .pendingReview
+                }
+                
+                // Low Confidence logic: If missing name or total, force review
+                if ocrResult.merchantName == nil || ocrResult.total == nil {
                     finalStatus = .pendingReview
                 }
                 

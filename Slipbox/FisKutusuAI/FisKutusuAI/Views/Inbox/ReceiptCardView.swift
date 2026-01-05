@@ -4,6 +4,7 @@ struct ReceiptCardView: View {
     let receipt: Receipt
     @EnvironmentObject var userPreferences: AppUserPreferences
     @EnvironmentObject var localizationManager: LocalizationManager
+    @ObservedObject var currencyService = CurrencyService.shared // Observe updates
     
     var body: some View {
         HStack(spacing: 16) {
@@ -71,7 +72,13 @@ struct ReceiptCardView: View {
             
             Spacer()
             
-            Text(formatAmount(receipt.displayAmount))
+            // Calculate converted amount
+            let amount = receipt.total ?? 0
+            let fromCurrency = receipt.currency ?? "TRY"
+            let targetCurrency = userPreferences.currencyCode
+            let converted = currencyService.convert(amount, from: fromCurrency, to: targetCurrency)
+            
+            Text(formatAmount(converted))
                 .font(.system(size: 17, weight: .semibold))
                 .foregroundColor(Color(hex: "4F46E5"))
         }
@@ -140,12 +147,13 @@ struct ReceiptCardView: View {
             )
     }
     
-    private func formatAmount(_ amount: Decimal) -> String {
+    private func formatAmount(_ amount: Double) -> String {
         let formatter = NumberFormatter()
         formatter.numberStyle = .currency
         formatter.currencyCode = userPreferences.currencyCode
+        formatter.currencySymbol = userPreferences.currencySymbol // Explicit symbol
         formatter.locale = userPreferences.locale
-        return formatter.string(from: amount as NSDecimalNumber) ?? "0,00"
+        return formatter.string(from: NSNumber(value: amount)) ?? "0,00"
     }
     
     private func formatDate(_ date: Date) -> String {

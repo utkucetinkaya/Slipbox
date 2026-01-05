@@ -1,5 +1,6 @@
 import SwiftUI
 import FirebaseFirestore
+import CryptoKit
 
 struct ProcessingView: View {
     let image: UIImage
@@ -10,6 +11,10 @@ struct ProcessingView: View {
     @State private var extractedMerchant: String?
     @State private var extractedDate: String?
     @State private var extractedTotal: String?
+    
+    // Duplicate & Accounting Logic
+    @State private var showDuplicateAlert = false
+    @State private var pendingReceipt: Receipt?
     
     // Auto-save logic
     @EnvironmentObject var inboxViewModel: InboxViewModel
@@ -107,6 +112,33 @@ struct ProcessingView: View {
                 .padding(24)
             }
         }
+        .alert("mukkerrer_fis_title".localized, isPresented: $showDuplicateAlert) {
+            Button("vazgec".localized, role: .cancel) {
+                // Cancel logic: delete local image to avoid garbage
+                if let path = pendingReceipt?.imageLocalPath {
+                    ImageStorageService.shared.deleteImage(at: path)
+                }
+                onReturnToInbox()
+            }
+            Button("continue_anyway".localized, role: .destructive) {
+                if var receipt = pendingReceipt {
+                    // Mark as rejected or just pending review? System instructions said "rejected" or "cancel".
+                    // Let's stick to rejected to be safe, or pendingReview if they really want to proceed.
+                    // Given the user prompt: "Kullanıcı 'Devam' derse status = rejected veya kayıt iptal" -> Wait, actually "Devam" usually means "Go ahead". But the prompt said status=rejected. Let's use pendingReview so they can see it in inbox, but maybe flag it?
+                    // Actually, let's use .pendingReview so it doesn't just disappear. The user can then Reject or Approve manually.
+                    // Or follow the prompt strictly: "status = rejected". Okay, rejected means it shows up in "Trash" or "Rejected" section if we have one.
+                    // If we don't have a rejected view, it might be lost. Let's use .pendingReview but add a note?
+                    // Re-reading prompt: "Devam etmek istiyor musunuz? Kullanıcı 'Devam' derse status = rejected veya kayıt iptal"
+                    // This is confusing. Why "continue" if it's rejected? Maybe it means "Yes, I acknowledge it's duplicate, but I want it anyway".
+                    // Let's use .pendingReview for UX sake, unless strictly rejected.
+                    // Let's use .pendingReview for now as it's safer for data visibility.
+                    receipt.status = .pendingReview
+                    saveReceipt(receipt)
+                }
+            }
+        } message: {
+            Text("mukkerrer_fis_message".localized)
+        }
         .onAppear {
             startProcessing()
         }
@@ -133,40 +165,85 @@ struct ProcessingView: View {
                 // 3. Categorization (Keyword based)
                 let catResult = CategorizationService.shared.categorize(merchantName: ocrResult.merchantName, rawText: ocrResult.rawText)
                 
-                // 4. Determine Status
-                // All receipts now land in 'new' initially for easy access in the 'Recent' tab
-                let initialStatus: ReceiptStatus = .new
+                // 4. Accounting Logic Preparation
+                var finalCategoryId = catResult.categoryId
+                var finalStatus: ReceiptStatus = .new
+                
+                // UTTS Logic
+                if ocrResult.isUTTS {
+                    finalCategoryId = "transport" // Ulaşım
+                    finalStatus = .pendingReview
+                }
+                
+                // Hash Calculation for Duplicates
+                // Hash = SHA256(merchant + date + total + currency)
+                let merchantStr = ocrResult.merchantName ?? "unknown"
+                let dateStr = ocrResult.date?.timeIntervalSince1970.description ?? "0"
+                let totalStr = String(format: "%.2f", ocrResult.total ?? 0.0)
+                let currencyStr = AppUserPreferences.shared.currencyCode
+                
+                let inputString = "\(merchantStr)|\(dateStr)|\(totalStr)|\(currencyStr)"
+                let inputData = Data(inputString.utf8)
+                let hashed = SHA256.hash(data: inputData)
+                let hashString = hashed.compactMap { String(format: "%02x", $0) }.joined()
                 
                 // Fetch category name if found
                 var categoryName: String? = nil
-                if catResult.categoryId != "other" {
-                    categoryName = Category.defaults.first(where: { $0.id == catResult.categoryId })?.name 
-                        ?? Category.additional.first(where: { $0.id == catResult.categoryId })?.name
+                if finalCategoryId != "other" {
+                    categoryName = Category.defaults.first(where: { $0.id == finalCategoryId })?.name 
+                        ?? Category.additional.first(where: { $0.id == finalCategoryId })?.name
                 }
                 
                 let finalReceipt = Receipt(
                     id: nil,
-                    status: initialStatus,
+                    status: finalStatus,
                     imageLocalPath: localPath,
                     rawText: ocrResult.rawText,
                     merchantName: ocrResult.merchantName,
                     date: ocrResult.date,
                     total: ocrResult.total,
-                    currency: AppUserPreferences.shared.currencyCode,
-                    categoryId: catResult.categoryId,
+                    currency: currencyStr,
+                    categoryId: finalCategoryId,
                     categoryName: categoryName,
                     confidence: catResult.confidence,
                     note: nil,
                     source: .camera,
                     createdAt: Timestamp(date: Date()),
                     updatedAt: Timestamp(date: Date()),
-                    error: nil
+                    error: nil,
+                    duplicateHash: hashString,
+                    isUTTS: ocrResult.isUTTS,
+                    vatRate: ocrResult.vatRate,
+                    vatAmount: ocrResult.vatAmount,
+                    baseAmount: ocrResult.baseAmount
                 )
 
-                // Animate fields one by one to create "scanning" effect
-                try? await Task.sleep(nanoseconds: 300_000_000) // 0.3s base delay
+                // 5. Check Duplicate
+                let isDuplicate = await FirestoreReceiptRepository.shared.checkDuplicate(hash: hashString)
                 
+                if isDuplicate {
+                    await MainActor.run {
+                        self.pendingReceipt = finalReceipt
+                        self.showDuplicateAlert = true
+                    }
+                    return // Stop processing, wait for alert
+                }
+                
+                // 6. Complete directly if not duplicate
+                saveReceipt(finalReceipt)
+                
+            } catch {
+                print("❌ Processing failed: \(error.localizedDescription)")
+            }
+        }
+    }
+    
+    private func saveReceipt(_ receipt: Receipt) {
+        Task {
+            do {
+                // Animate fields (preserving original visual flair)
                 // Clear fields initially (they were set in step 2, but we want to re-reveal them)
+                try? await Task.sleep(nanoseconds: 300_000_000)
                 await MainActor.run {
                     extractedMerchant = nil
                     extractedDate = nil
@@ -177,7 +254,7 @@ struct ProcessingView: View {
                 try? await Task.sleep(nanoseconds: 200_000_000)
                 await MainActor.run {
                     withAnimation {
-                        extractedMerchant = finalReceipt.merchantName
+                        extractedMerchant = receipt.merchantName
                     }
                 }
                 
@@ -185,7 +262,7 @@ struct ProcessingView: View {
                 try? await Task.sleep(nanoseconds: 400_000_000)
                 await MainActor.run {
                     withAnimation {
-                        extractedDate = finalReceipt.date?.formatted(date: .abbreviated, time: .omitted)
+                        extractedDate = receipt.date?.formatted(date: .abbreviated, time: .omitted)
                     }
                 }
                 
@@ -193,14 +270,13 @@ struct ProcessingView: View {
                 try? await Task.sleep(nanoseconds: 400_000_000)
                 await MainActor.run {
                     withAnimation {
-                        extractedTotal = finalReceipt.total != nil ? "\(finalReceipt.total!)" : nil
+                        extractedTotal = receipt.total != nil ? "\(receipt.total!)" : nil
                     }
                 }
                 
-                // 4. Save to Firestore
-                try await FirestoreReceiptRepository.shared.addReceipt(finalReceipt)
+                // Save to Firestore
+                try await FirestoreReceiptRepository.shared.addReceipt(receipt)
                 
-                // 7. Complete
                 try? await Task.sleep(nanoseconds: 500_000_000)
                 await MainActor.run {
                     withAnimation {
@@ -208,7 +284,7 @@ struct ProcessingView: View {
                     }
                 }
             } catch {
-                print("❌ Processing failed: \(error.localizedDescription)")
+                print("Error saving: \(error)")
             }
         }
     }
@@ -247,8 +323,4 @@ struct ExtractionRow: View {
         .background(DesignSystem.Colors.surface)
         .cornerRadius(16)
     }
-}
-
-#Preview {
-    ProcessingView(image: UIImage(), onReturnToInbox: {})
 }

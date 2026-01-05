@@ -72,4 +72,19 @@ class FirestoreReceiptRepository: ObservableObject {
         // 2. Delete Local image
         ImageStorageService.shared.deleteImage(at: receipt.imageLocalPath)
     }
+    
+    func checkDuplicate(hash: String) async -> Bool {
+        guard let uid = Auth.auth().currentUser?.uid else { return false }
+        
+        do {
+            let snapshot = try await db.collection("users").document(uid).collection("receipts")
+                .whereField("duplicateHash", isEqualTo: hash)
+                .getDocuments()
+            
+            return !snapshot.documents.isEmpty
+        } catch {
+            print("Error checking duplicate: \(error.localizedDescription)")
+            return false
+        }
+    }
 }

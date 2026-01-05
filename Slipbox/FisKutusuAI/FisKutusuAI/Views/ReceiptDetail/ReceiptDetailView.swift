@@ -98,11 +98,21 @@ struct ReceiptDetailView: View {
         .sheet(isPresented: $showingCategoryPicker) {
             CategoryPickerView(selectedCategoryId: $receipt.categoryId)
         }
+        .onChange(of: receipt.categoryId) { newId in
+            if let newId = newId {
+                // Sync categoryName so display updates immediately
+                if let cat = Category.defaults.first(where: { $0.id == newId }) ?? Category.additional.first(where: { $0.id == newId }) {
+                    receipt.categoryName = cat.name
+                    // Also define display color/icon if we tracked them, but name is key
+                }
+            }
+        }
         .fullScreenCover(isPresented: $showingImagePreview) {
             ImagePreviewView(dismiss: $showingImagePreview, imagePath: receipt.imageLocalPath)
         }
         .onAppear {
             uiState.isTabBarHidden = true
+            updateCurrencyDisplay()
         }
         .onDisappear {
             uiState.isTabBarHidden = false
@@ -179,6 +189,30 @@ struct ReceiptDetailView: View {
     // MARK: - Form Fields
     private var formFields: some View {
         VStack(spacing: 16) {
+            // UTTS Warning
+            if receipt.isUTTS ?? false {
+                VStack(alignment: .leading, spacing: 8) {
+                    HStack {
+                        Image(systemName: "fuelpump.fill")
+                            .foregroundColor(.orange)
+                        Text("utts_warning_title".localized)
+                            .font(.headline)
+                            .foregroundColor(.orange)
+                    }
+                    Text("utts_warning_message".localized)
+                        .font(.subheadline)
+                        .foregroundColor(DesignSystem.Colors.textSecondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+                .padding()
+                .background(Color.orange.opacity(0.1))
+                .cornerRadius(12)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 12)
+                        .stroke(Color.orange.opacity(0.3), lineWidth: 1)
+                )
+            }
+            
             // Merchant
             FormField(
                 label: "merchant".localized,
@@ -229,6 +263,60 @@ struct ReceiptDetailView: View {
                         RoundedRectangle(cornerRadius: 12)
                             .stroke(DesignSystem.Colors.border, lineWidth: 1)
                     )
+                }
+            }
+            
+            // Tax Details (VAT & Base)
+            if let kdvAmount = receipt.vatAmount, kdvAmount > 0 {
+                HStack(spacing: 12) {
+                    // VAT Info
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("vat_amount_label".localized)
+                            .font(.system(size: 14))
+                            .foregroundColor(DesignSystem.Colors.textSecondary)
+                        
+                        HStack {
+                            Text(userPreferences.currencySymbol)
+                            Text(String(format: "%.2f", kdvAmount))
+                            if let rate = receipt.vatRate {
+                                Text("(%\(Int(rate)))")
+                                    .font(.caption)
+                                    .foregroundColor(.gray)
+                            }
+                        }
+                        .font(.system(size: 16))
+                        .foregroundColor(DesignSystem.Colors.textPrimary)
+                        .padding()
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .background(DesignSystem.Colors.surface)
+                        .cornerRadius(12)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 12)
+                                .stroke(DesignSystem.Colors.border, lineWidth: 1)
+                        )
+                    }
+                    
+                    // Base Amount
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("base_amount_label".localized)
+                            .font(.system(size: 14))
+                            .foregroundColor(DesignSystem.Colors.textSecondary)
+                         
+                        HStack {
+                            Text(userPreferences.currencySymbol)
+                            Text(String(format: "%.2f", receipt.baseAmount ?? ((receipt.total ?? 0) - kdvAmount)))
+                        }
+                        .font(.system(size: 16))
+                        .foregroundColor(DesignSystem.Colors.textPrimary)
+                        .padding()
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .background(DesignSystem.Colors.surface)
+                        .cornerRadius(12)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 12)
+                                .stroke(DesignSystem.Colors.border, lineWidth: 1)
+                        )
+                    }
                 }
             }
             
@@ -398,10 +486,16 @@ struct ReceiptDetailView: View {
     }
     
     // MARK: - Helpers
+    // MARK: - Helpers
     private func saveAndDismiss() {
         Task {
             do {
-                try await FirestoreReceiptRepository.shared.updateReceipt(receipt)
+                // If the user saves, we commit to the CURRENT currency settings.
+                // This means the receipt's currency becomes the user's selected reference currency.
+                var editingReceipt = self.receipt
+                editingReceipt.currency = userPreferences.currencyCode
+                try await FirestoreReceiptRepository.shared.updateReceipt(editingReceipt)
+                
                 dismiss()
             } catch {
                 print("❌ Update failed: \(error.localizedDescription)")
@@ -414,6 +508,27 @@ struct ReceiptDetailView: View {
         formatter.dateFormat = "d MMM yyyy"
         formatter.locale = userPreferences.locale
         return formatter.string(from: date)
+    }
+    
+    // Logic to convert initial value
+    private func updateCurrencyDisplay() {
+        // If receipt currency is different from user preference, convert it for display/edit
+        // But only if we haven't edited it yet (or just opened).
+        let targetCurrency = userPreferences.currencyCode
+        let originalCurrency = receipt.currency ?? "TRY"
+        
+        // If they match, no conversion needed
+        if targetCurrency == originalCurrency { return }
+        
+        // Otherwise, convert the receipts total to the targets
+        if let total = receipt.total {
+             let converted = CurrencyService.shared.convert(total, from: originalCurrency, to: targetCurrency)
+             // We update the local state 'receipt' to reflect this converted value
+             // So the TextField shows the converted value.
+             // When saved, it saves this new value + new currency code.
+             receipt.total = Double(truncating: NSNumber(value: converted))
+             receipt.currency = targetCurrency // Temporarily update local state
+        }
     }
 }
 

@@ -146,6 +146,15 @@
 "send_feedback" = "Geri Bildirim Gönder";
 "delete_account" = "Hesabı Sil";
 "danger_zone" = "TEHLİKELİ BÖLGE";
+"account" = "HESAP";
+
+/* Feedback */
+"feedback_intro" = "Geri bildiriminiz bizim için değerli. Lütfen düşüncelerinizi paylaşın.";
+"feedback_placeholder" = "Düşüncelerinizi buraya yazın...";
+"send" = "Gönder";
+"close" = "Kapat";
+"thank_you" = "Teşekkürler";
+"feedback_sent_message" = "Geri bildiriminiz başarıyla gönderildi.";
 
 /* Settings - Developer */
 "developer" = "GELİŞTİRİCİ";
@@ -182,6 +191,43 @@
 "status_error" = "Hata";
 "ara" = "Arama...";
 "vazgec" = "Vazgeç";
+"mukkerrer_fis_title" = "Mükerrer Fiş Tespit Edildi";
+"mukkerrer_fis_message" = "Bu fiş daha önce sistemimize kaydedilmiş. Mükerrer kayıt yapmak yasal ve muhasebesel açıdan sakıncalı olabilir. Yine de kaydetmek istiyor musunuz?";
+"continue_anyway" = "Yine de Kaydet";
+"utts_warning_title" = "UTTS Kaydı";
+"utts_warning_message" = "Bu fiş Ulusal Taşıt Tanıma Sistemi (UTTS) kapsamında olabilir. Vergi indiriminden yararlanabilmek için fişin faturaya dönüştürülmesi gerekebilir.";
+"kdv_header" = "KDV Tutarı";
+"matrah_header" = "Matrah";
+"kdv_rate_label" = "Oran";
+"base_amount_label" = "Matrah";
+"vat_amount_label" = "KDV";
 
 /* App Name */
 "slipbox_app_name" = "SlipBox";
+/* Privacy Policy Content */
+"privacy_title_full" = "GİZLİLİK POLİTİKASI ve KVKK AYDINLATMA METNİ";
+"privacy_section1_title" = "1. Veri Sorumlusu";
+"privacy_section1_body" = "SlipBox (bundan böyle 'Uygulama' olarak anılacaktır), kullanıcılarının gizliliğine önem verir. Bu metin, 6698 sayılı Kişisel Verilerin Korunması Kanunu ('KVKK') kapsamında aydınlatma amacıyla hazırlanmıştır.";
+"privacy_section2_title" = "2. İşlenen Kişisel Veriler";
+"privacy_section2_body" = "Uygulama kullanımı sırasında aşağıdaki verileriniz işlenebilir:\n• Kimlik Bilgileri (Ad, Soyad vb.)\n• İletişim Bilgileri (E-posta adresi)\n• İşlem Güvenliği Bilgileri (Log kayıtları)\n• Fiş/Fatura Görüntüleri ve İçerikleri (Yapay zeka ile ayrıştırılan veriler)";
+"privacy_section3_title" = "3. Kişisel Verilerin İşlenme Amacı";
+"privacy_section3_body" = "Verileriniz şu amaçlarla işlenmektedir:\n• Üyelik işlemlerinin gerçekleştirilmesi\n• Fiş tarama ve AI analiz hizmetlerinin sunulması\n• Finansal raporların oluşturulması\n• Yasal yükümlülüklerin yerine getirilmesi";
+"privacy_section4_title" = "4. Verilerin Aktarılması";
+"privacy_section4_body" = "Kişisel verileriniz, yasal zorunluluklar dışında üçüncü kişilerle paylaşılmamaktadır. Bulut tabanlı hizmet kullanımı (Firebase, AI İşleyiciler) nedeniyle veriler yurtiçinde veya yurtdışında bulunan güvenli sunucularda saklanabilir.";
+"privacy_section5_title" = "5. Haklarınız";
+"privacy_section5_body" = "KVKK’nın 11. maddesi uyarınca;\n• Verilerinizin işlenip işlenmediğini öğrenme,\n• İşlenmişse bilgi talep etme,\n• Yanlış işlenen verilerin düzeltilmesini isteme,\n• Verilerinizin silinmesini isteme haklarına sahipsiniz.";
+"privacy_contact_title" = "İletişim";
+"privacy_contact_body" = "Talepleriniz için uygulama içerisindeki geri bildirim formunu kullanabilirsiniz.";
+
+/* Terms of Service Content */
+"terms_title_full" = "KULLANIM KOŞULLARI";
+"terms_section1_title" = "1. Taraflar ve Konu";
+"terms_section1_body" = "İşbu Kullanım Koşulları, SlipBox uygulamasını kullanan kullanıcılar ile SlipBox (Şirket) arasındaki hak ve yükümlülükleri düzenler.";
+"terms_section2_title" = "2. Kullanım Şartları";
+"terms_section2_body" = "• Kullanıcı, uygulamayı hukuka ve ahlaka uygun amaçlarla kullanacağını kabul eder.\n• Uygulama içeriğinin izinsiz kopyalanması yasaktır.\n• Kullanıcı hesabının güvenliğinden bizzat sorumludur.";
+"terms_section3_title" = "3. Fikri Mülkiyet Hakları";
+"terms_section3_body" = "Uygulamanın tasarımı, yazılımı ve içeriği üzerindeki tüm fikri mülkiyet hakları Şirket'e aittir.";
+"terms_section4_title" = "4. Sorumluluk Reddi";
+"terms_section4_body" = "Şirket, uygulamanın kesintisiz veya hatasız çalışacağını garanti etmez. Uygulama 'olduğu gibi' sunulmaktadır.";
+"terms_section5_title" = "5. Değişiklikler";
+"terms_section5_body" = "Şirket, işbu koşulları dilediği zaman güncelleme hakkını saklı tutar.";

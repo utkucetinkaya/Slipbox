@@ -20,6 +20,13 @@ struct Receipt: Codable, Identifiable {
     var updatedAt: Timestamp?
     var error: String?
     
+    // MARK: - Tax & Accounting Fields
+    var duplicateHash: String?
+    var isUTTS: Bool?
+    var vatRate: Double?
+    var vatAmount: Double?
+    var baseAmount: Double?
+    
     enum CodingKeys: String, CodingKey {
         case id
         case status
@@ -37,6 +44,11 @@ struct Receipt: Codable, Identifiable {
         case createdAt
         case updatedAt
         case error
+        case duplicateHash
+        case isUTTS
+        case vatRate
+        case vatAmount
+        case baseAmount
     }
 }
 

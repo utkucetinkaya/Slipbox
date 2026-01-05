@@ -130,11 +130,7 @@ struct EmailSignInView: View {
                     // Switch & Forgot Password
                     VStack(spacing: 16) {
                         if !isSignUp {
-                            Button("Şifreni mi unuttun?") {
-                                // Forgot password action
-                            }
-                            .font(.system(size: 14, weight: .medium))
-                            .foregroundColor(DesignSystem.Colors.textSecondary)
+                            // Forgot Password removed as per request
                         }
                         
                         HStack {
@@ -171,15 +167,30 @@ struct EmailSignInView: View {
                 }
                 .padding(24)
             }
-        }
-        .toolbar {
-            ToolbarItem(placement: .navigationBarLeading) {
-                Button(action: { dismiss() }) {
-                    Image(systemName: "arrow.left")
-                        .foregroundColor(.white)
+            
+            // Custom Back Button
+            VStack {
+                HStack {
+                    Button(action: { dismiss() }) {
+                        Image(systemName: "arrow.left")
+                            .font(.system(size: 20, weight: .medium))
+                            .foregroundColor(DesignSystem.Colors.textPrimary)
+                            .padding(12)
+                            .background(
+                                Circle()
+                                    .fill(DesignSystem.Colors.surface)
+                                    .shadow(color: Color.black.opacity(0.1), radius: 4, x: 0, y: 2)
+                            )
+                    }
+                    .padding(.leading, 20)
+                    .padding(.top, 10) // Safe area padding
+                    
+                    Spacer()
                 }
+                Spacer()
             }
         }
+        .navigationBarBackButtonHidden(true)
     }
     
     private func handleSubmit() {

@@ -12,15 +12,15 @@ class CategorizationService {
     
     private let dictionary: [CategoryKeywords] = [
         CategoryKeywords(id: "food_drink", keywords: ["migros","şok","a101","bim","carrefour","starbucks","kahve","cafe","restaurant","yemek","burger","pizza","kfc","mcdonald","dominos","popeyes","yeme","içme","food","drink"]),
-        CategoryKeywords(id: "transport", keywords: ["shell","opet","bp","total","petrol","akaryakıt","benzin","dizel","otopark","park","uber","bitaksi","taksi","metro","otobüs","tramvay"]),
+        CategoryKeywords(id: "transport", keywords: ["shell","opet","bp","total","petrol","akaryakıt","benzin","dizel","otopark","park","uber","bitaksi","taksi","metro","otobüs","tramvay","utts","tts","taşıt tanıma","plaka","filo","yakıt otomasyon"]),
         CategoryKeywords(id: "equipment", keywords: ["teknosa","vatan","mediamarkt","apple","iphone","bilgisayar","laptop","ekran","klavye","mouse","ofis","donanım","ekipman"]),
-        CategoryKeywords(id: "service", keywords: ["netflix","spotify","youtube","google","apple.com","icloud","abonelik","elektrik","su","doğalgaz","internet","fatura","danışmanlık","servis"]),
+        CategoryKeywords(id: "service", keywords: ["netflix","spotify","youtube","google","apple.com","icloud","abonelik","elektrik","su","doğalgaz","internet","fatura","danışmanlık","servis","turkcell","vodafone","türk telekom"]),
         CategoryKeywords(id: "entertainment", keywords: ["sinema","cinema","tiyatro","konser","oyun","playstation","steam","eğlence"]),
         CategoryKeywords(id: "clothing", keywords: ["zara","hm","lcw","defacto","koton","giyim","ayakkabı","mont","pantolon"]),
         CategoryKeywords(id: "health", keywords: ["eczane","pharmacy","hastane","klinik","doktor","sağlık","ilaç"]),
         CategoryKeywords(id: "education", keywords: ["udemy","coursera","kurs","eğitim","kitap","book","akademi"]),
         CategoryKeywords(id: "rent", keywords: ["kira","rent","emlak","apartman","aidat"]),
-        CategoryKeywords(id: "tax", keywords: ["vergi","sgk","maliye","harç","ceza"]),
+        CategoryKeywords(id: "tax", keywords: ["vergi","sgk","maliye","harç","ceza","stopaj","ötv","götürü vergi","kdv"]),
         CategoryKeywords(id: "travel", keywords: ["otel","hotel","booking","airbnb","uçak","flight","thy","pegasus","seyahat"])
     ]
     

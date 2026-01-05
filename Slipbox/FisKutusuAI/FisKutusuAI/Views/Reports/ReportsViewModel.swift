@@ -11,6 +11,8 @@ class ReportsViewModel: ObservableObject {
     
     private var cancellables = Set<AnyCancellable>()
     private let repository = FirestoreReceiptRepository.shared
+    private let currencyService = CurrencyService.shared
+    private let userPreferences = AppUserPreferences.shared // Access singleton directly or inject if preferred. Using shared for simplicity as VM is @StateObject.
     
     struct CategorySummary: Identifiable {
         let id = UUID()
@@ -37,12 +39,18 @@ class ReportsViewModel: ObservableObject {
     }
     
     private func setupSubscription() {
-        Publishers.CombineLatest(repository.$receipts, $currentDate)
-            .receive(on: DispatchQueue.main)
-            .sink { [weak self] receipts, date in
-                self?.calculateStats(receipts: receipts, for: date)
-            }
-            .store(in: &cancellables)
+        // Observe receipts, date, currency changes, AND rates availability from the service
+        Publishers.CombineLatest4(
+            repository.$receipts,
+            $currentDate,
+            userPreferences.$currencyCode,
+            currencyService.$rates // Listen for rate updates from API
+        )
+        .receive(on: DispatchQueue.main)
+        .sink { [weak self] receipts, date, currencyCode, _ in
+            self?.calculateStats(receipts: receipts, for: date, targetCurrency: currencyCode)
+        }
+        .store(in: &cancellables)
     }
     
     func changeMonth(by value: Int) {
@@ -51,7 +59,7 @@ class ReportsViewModel: ObservableObject {
         }
     }
     
-    private func calculateStats(receipts: [Receipt], for date: Date) {
+    private func calculateStats(receipts: [Receipt], for date: Date, targetCurrency: String) {
         let calendar = Calendar.current
         let monthStart = calendar.date(from: calendar.dateComponents([.year, .month], from: date))!
         // Calculate the first day of next month, then subtract 1 second to get the very end of the last day of current month
@@ -59,23 +67,39 @@ class ReportsViewModel: ObservableObject {
         let monthEnd = calendar.date(byAdding: .second, value: -1, to: nextMonth)!
         
         let monthReceipts = receipts.filter { receipt in
-            let receiptDate = receipt.displayDate
-            let addedDate = receipt.createdAt?.dateValue() ?? receiptDate
+            // Effective Date Logic:
+            // 1. If the receipt has a Recognized Date -> Use it.
+            // 2. If not, fallback to the Scan/Creation Date.
+            // This ensures a receipt appears in ONE specific month only.
+            let effectiveDate = receipt.date ?? receipt.createdAt?.dateValue() ?? Date()
             
-            let dateInMonth = receiptDate >= monthStart && receiptDate <= monthEnd
-            let addedInMonth = addedDate >= monthStart && addedDate <= monthEnd
+            let inMonth = effectiveDate >= monthStart && effectiveDate <= monthEnd
             
-            return (dateInMonth || addedInMonth) && receipt.status == .approved
+            return inMonth && receipt.status == .approved
         }
         
         self.receiptCount = monthReceipts.count
-        self.totalExpense = monthReceipts.reduce(0) { $0 + ($1.total ?? 0) }
+        
+        // Calculate Total Expense with Currency Conversion
+        self.totalExpense = monthReceipts.reduce(0) { total, receipt in
+            let receiptAmount = receipt.total ?? 0
+            let receiptCurrency = receipt.currency ?? "TRY" // Default/Fallback
+            let convertedAmount = currencyService.convert(receiptAmount, from: receiptCurrency, to: targetCurrency)
+            return total + convertedAmount
+        }
         
         let grouped = Dictionary(grouping: monthReceipts) { $0.categoryId ?? "other" }
         
         var breakdown: [CategorySummary] = []
         for (catId, items) in grouped {
-            let amount = items.reduce(0) { $0 + ($1.total ?? 0) }
+            
+            // Calculate Category Total with Currency Conversion
+            let amount = items.reduce(0) { total, item in
+                let itemAmount = item.total ?? 0
+                let itemCurrency = item.currency ?? "TRY"
+                return total + currencyService.convert(itemAmount, from: itemCurrency, to: targetCurrency)
+            }
+            
             let name = items.first?.displayCategoryName ?? catId
             breakdown.append(CategorySummary(
                 categoryId: catId,

@@ -6,6 +6,7 @@ struct SettingsView: View {
     @EnvironmentObject var authManager: AuthenticationManager
     @EnvironmentObject var entitlementManager: EntitlementManager
     @State private var showingPaywall = false
+    @State private var showingFeedback = false
     
     var body: some View {
         NavigationStack {
@@ -39,14 +40,28 @@ struct SettingsView: View {
                         // Support & Legal
                         VStack(alignment: .leading, spacing: 8) {
                             sectionHeader("support_legal".localized)
-                            SettingsRow(icon: "bubble.left.fill", title: "send_feedback".localized, color: Color(hex: "06B6D4"))
-                            SettingsRow(icon: "lock.fill", title: "privacy".localized, color: Color(hex: "A855F7"))
-                            SettingsRow(icon: "doc.text.fill", title: "terms".localized, color: Color(hex: "FFCC00"))
+                            
+                            Button(action: { showingFeedback = true }) {
+                                SettingsRow(icon: "bubble.left.fill", title: "send_feedback".localized, color: Color(hex: "06B6D4"))
+                            }
+                            
+                            NavigationLink(destination: PrivacyPolicyView()) {
+                                SettingsRow(icon: "lock.fill", title: "privacy".localized, color: Color(hex: "A855F7"))
+                            }
+                            
+                            NavigationLink(destination: TermsOfServiceView()) {
+                                SettingsRow(icon: "doc.text.fill", title: "terms".localized, color: Color(hex: "FFCC00"))
+                            }
                         }
                         
-                        // Danger Zone
+                        // Danger Zone (Only Account Actions)
+                        // Simplified for Production - Removed "Danger Zone" Label if redundant or keep minimal
                         VStack(alignment: .leading, spacing: 8) {
-                            sectionHeader("DANGER ZONE".localized) // I'll add this key if needed, or use a general one. Let's use it as is for now or add it. I'll add "danger_zone" to strings.
+                           sectionHeader("account".localized.uppercased())
+                            
+                            Button(action: { try? AuthenticationManager.shared.signOut() }) {
+                                SettingsRow(icon: "rectangle.portrait.and.arrow.right", title: "sign_out".localized, color: .red)
+                            }
 
                             NavigationLink(destination: DeleteAccountView()) {
                                 HStack {
@@ -79,25 +94,7 @@ struct SettingsView: View {
                             }
                         }
                         
-                        // Developer / Debug Section
-                        // Developer / Debug Section
-                        VStack(alignment: .leading, spacing: 8) {
-                            sectionHeader("developer".localized)
-                            
-                            Button(action: { LaunchManager.shared.resetPermissions() }) {
-                                SettingsRow(icon: "shield.slash.fill", title: "reset_permissions".localized, color: .orange)
-                            }
-                            
-                             Button(action: { LaunchManager.shared.resetAll() }) {
-                                SettingsRow(icon: "exclamationmark.triangle.fill", title: "factory_reset".localized, color: .red)
-                            }
-                            
-                            Button(action: { try? AuthenticationManager.shared.signOut() }) {
-                                SettingsRow(icon: "rectangle.portrait.and.arrow.right", title: "sign_out".localized, color: .red)
-                            }
-                        }
-                        
-                        Text("SlipBox v2.4.0 (Build 412)")
+                        Text("SlipBox v1.0.0 (Build 1)")
                             .font(.system(size: 12))
                             .foregroundColor(.white.opacity(0.3))
                             .padding(.top, 20)
@@ -113,6 +110,9 @@ struct SettingsView: View {
             .navigationBarTitleDisplayMode(.inline) // Ensure title is visible and compact
             .fullScreenCover(isPresented: $showingPaywall) {
                 PaywallView()
+            }
+            .sheet(isPresented: $showingFeedback) {
+                FeedbackView()
             }
         }
     }

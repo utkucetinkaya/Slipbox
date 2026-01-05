@@ -146,6 +146,15 @@
 "send_feedback" = "Send Feedback";
 "delete_account" = "Delete Account";
 "danger_zone" = "DANGER ZONE";
+"account" = "ACCOUNT";
+
+/* Feedback */
+"feedback_intro" = "Your feedback is valuable to us. Please share your thoughts.";
+"feedback_placeholder" = "Write your thoughts here...";
+"send" = "Send";
+"close" = "Close";
+"thank_you" = "Thank You";
+"feedback_sent_message" = "Your feedback has been sent successfully.";
 
 /* Settings - Developer */
 "developer" = "DEVELOPER";
@@ -182,6 +191,43 @@
 "status_error" = "Error";
 "ara" = "Search...";
 "vazgec" = "Cancel";
+"mukkerrer_fis_title" = "Duplicate Receipt Detected";
+"mukkerrer_fis_message" = "This receipt has already been recorded in the system. Duplicate recording may cause accounting issues. Do you want to save it anyway?";
+"continue_anyway" = "Save Anyway";
+"utts_warning_title" = "UTTS Record";
+"utts_warning_message" = "This receipt might be part of the Vehicle Identification System (UTTS). You may need to convert it to an invoice for tax deduction.";
+"kdv_header" = "VAT Amount";
+"matrah_header" = "Base Amount";
+"kdv_rate_label" = "Rate";
+"base_amount_label" = "Base";
+"vat_amount_label" = "VAT";
 
 /* App Name */
 "slipbox_app_name" = "SlipBox";
+/* Privacy Policy Content */
+"privacy_title_full" = "PRIVACY POLICY & DATA PROTECTION";
+"privacy_section1_title" = "1. Data Controller";
+"privacy_section1_body" = "SlipBox (hereinafter referred to as the 'Application') values the privacy of its users. This text has been prepared for information purposes within the scope of GDPR and local data protection laws.";
+"privacy_section2_title" = "2. Processed Personal Data";
+"privacy_section2_body" = "The following data may be processed during the use of the Application:\n• Identity Information (Name, Surname, etc.)\n• Contact Information (E-mail address)\n• Transaction Security Information (Log records)\n• Receipt/Invoice Images and Contents (Parsed data via AI)";
+"privacy_section3_title" = "3. Purpose of Processing Personal Data";
+"privacy_section3_body" = "Your data is processed for the following purposes:\n• Performing membership transactions\n• Providing receipt scanning and AI analysis services\n• Creating financial reports\n• Fulfilling legal obligations";
+"privacy_section4_title" = "4. Transfer of Data";
+"privacy_section4_body" = "Your personal data is not shared with third parties except for legal obligations. Due to the use of cloud-based services (Firebase, AI Processors), data may be stored on secure servers located domestically or abroad.";
+"privacy_section5_title" = "5. Your Rights";
+"privacy_section5_body" = "You have the right to:\n• Learn whether your data limit is processed,\n• Request information if processed,\n• Request correction of wrongly processed data,\n• Request deletion of your data (Right to be Forgotten).";
+"privacy_contact_title" = "Contact";
+"privacy_contact_body" = "You can use the feedback form within the application for your requests.";
+
+/* Terms of Service Content */
+"terms_title_full" = "TERMS OF USE";
+"terms_section1_title" = "1. Parties and Subject";
+"terms_section1_body" = "These Terms of Use regulate the rights and obligations between users using the SlipBox application and SlipBox (Company).";
+"terms_section2_title" = "2. Terms of Use";
+"terms_section2_body" = "• The user agrees to use the application for lawful and ethical purposes.\n• Unauthorized copying of application content is prohibited.\n• The user is personally responsible for the security of their account credentials.";
+"terms_section3_title" = "3. Intellectual Property Rights";
+"terms_section3_body" = "All intellectual property rights on the design, software, and content of the Application belong to the Company.";
+"terms_section4_title" = "4. Disclaimer";
+"terms_section4_body" = "The Company does not guarantee that the application will operate continuously or error-free. The application is provided 'as is'.";
+"terms_section5_title" = "5. Changes";
+"terms_section5_body" = "The Company reserves the right to update these terms at any time.";

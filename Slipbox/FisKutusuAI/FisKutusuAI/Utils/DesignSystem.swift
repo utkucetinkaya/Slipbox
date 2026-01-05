@@ -99,7 +99,7 @@ struct DesignSystem {
                     RoundedRectangle(cornerRadius: 16)
                         .stroke(Colors.border, lineWidth: 1)
                 )
-                .foregroundColor(.white)
+                .foregroundColor(Colors.textPrimary)
                 .cornerRadius(16)
             }
         }

@@ -9,119 +9,135 @@ struct PermissionView: View {
     @State private var photoStatus: PHAuthorizationStatus = .notDetermined
     
     var body: some View {
-        ZStack {
-            // Background
-            DesignSystem.Colors.background
-                .ignoresSafeArea()
-            
-            // Content
-            VStack(spacing: 0) {
-                Spacer()
+        GeometryReader { geometry in
+            ZStack {
+                // Background
+                DesignSystem.Colors.background
+                    .ignoresSafeArea()
                 
-                // Hero Image
-                ZStack {
-                    Circle()
-                        .fill(LinearGradient(
-                            gradient: Gradient(colors: [
-                                Color(hex: "4F46E5").opacity(0.8),
-                                Color(hex: "06B6D4").opacity(0.6)
-                            ]),
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
-                        ))
-                        .frame(width: 160, height: 160)
-                        .blur(radius: 20)
+                VStack(spacing: 0) {
+                    ScrollView(.vertical, showsIndicators: false) {
+                        VStack(spacing: 0) {
+                            SizedBox(height: geometry.size.height * 0.05) // Dyanmic top spacing
+                            
+                            // Hero Image
+                            ZStack {
+                                Circle()
+                                    .fill(LinearGradient(
+                                        gradient: Gradient(colors: [
+                                            Color(hex: "4F46E5").opacity(0.8),
+                                            Color(hex: "06B6D4").opacity(0.6)
+                                        ]),
+                                        startPoint: .topLeading,
+                                        endPoint: .bottomTrailing
+                                    ))
+                                    .frame(width: 160, height: 160)
+                                    .blur(radius: 20)
+                                
+                                Circle()
+                                    .fill(DesignSystem.Colors.surface)
+                                    .frame(width: 140, height: 140)
+                                    .overlay(
+                                        Circle()
+                                            .stroke(Color(hex: "4F46E5"), lineWidth: 2)
+                                    )
+                                
+                                Image(systemName: "camera.aperture")
+                                    .font(.system(size: 64))
+                                    .foregroundColor(DesignSystem.Colors.primary)
+                                
+                                // Checkmark Badge
+                                VStack {
+                                    Spacer()
+                                    HStack {
+                                        Spacer()
+                                        Image(systemName: "checkmark.shield.fill")
+                                            .font(.title)
+                                            .foregroundColor(DesignSystem.Colors.primary)
+                                            .offset(x: -10, y: -10)
+                                    }
+                                }
+                                .frame(width: 160, height: 160)
+                            }
+                            .padding(.bottom, 32)
+                            
+                            // Title & Description
+                            VStack(spacing: 16) {
+                                Text("unlock_camera".localized)
+                                    .font(.system(size: 32, weight: .bold))
+                                    .foregroundColor(DesignSystem.Colors.textPrimary)
+                                    .multilineTextAlignment(.center)
+                                
+                                Text("camera_permission_description".localized)
+                                    .font(.system(size: 16))
+                                    .foregroundColor(DesignSystem.Colors.textSecondary)
+                                    .multilineTextAlignment(.center)
+                                    .padding(.horizontal, 32)
+                            }
+                            .padding(.bottom, 32)
+                            
+                            // Permission Cards
+                            VStack(spacing: 16) {
+                                // Camera
+                                PermissionCard(
+                                    icon: "camera.fill",
+                                    title: "onboarding_scan_title".localized,
+                                    description: "onboarding_scan_description".localized,
+                                    isAuthorized: cameraStatus == .authorized,
+                                    color: Color(hex: "4F46E5")
+                                )
+                                
+                                // Gallery
+                                PermissionCard(
+                                    icon: "photo.on.rectangle",
+                                    title: "select_from_gallery".localized,
+                                    description: "gallery_permission_description".localized,
+                                    isAuthorized: photoStatus == .authorized || photoStatus == .limited,
+                                    color: Color(hex: "4F46E5")
+                                )
+                            }
+                            .padding(.horizontal, 24)
+                            .padding(.bottom, 24)
+                        }
+                        .frame(minHeight: geometry.size.height - 180) // Push footer down if content is small
+                    }
                     
-                    Circle()
-                        .fill(DesignSystem.Colors.surface)
-                        .frame(width: 140, height: 140)
-                        .overlay(
-                            Circle()
-                                .stroke(Color(hex: "4F46E5"), lineWidth: 2)
-                        )
-                    
-                    Image(systemName: "camera.aperture")
-                        .font(.system(size: 64))
-                        .foregroundColor(DesignSystem.Colors.primary)
-                    
-                    // Checkmark Badge
-                    VStack {
-                        Spacer()
-                        HStack {
-                            Spacer()
-                            Image(systemName: "checkmark.shield.fill")
-                                .font(.title)
-                                .foregroundColor(DesignSystem.Colors.primary)
-                                .offset(x: -10, y: -10)
+                    // Buttons Footer - always visible at bottom if possible, but part of flow if needed
+                    VStack(spacing: 16) {
+                        Button(action: requestAllPermissions) {
+                            Text("enable_permissions".localized)
+                                .font(.system(size: 17, weight: .semibold))
+                                .frame(maxWidth: .infinity)
+                                .frame(height: 56)
+                                .background(DesignSystem.Colors.primary)
+                                .foregroundColor(.white)
+                                .cornerRadius(28)
+                                .shadow(color: DesignSystem.Colors.primary.opacity(0.3), radius: 10, x: 0, y: 5)
+                        }
+                        
+                        Button(action: skipOnboarding) {
+                            Text("maybe_later".localized)
+                                .font(.system(size: 15, weight: .regular))
+                                .foregroundColor(DesignSystem.Colors.textSecondary)
                         }
                     }
-                    .frame(width: 160, height: 160)
+                    .padding(.horizontal, 24)
+                    .padding(.bottom, 24)
+                    .padding(.top, 16)
+                    .background(DesignSystem.Colors.background.opacity(0.95)) // Slight scrim behind buttons
                 }
-                .padding(.bottom, 40)
-                
-                // Title & Description
-                VStack(spacing: 16) {
-                    Text("unlock_camera".localized)
-                        .font(.system(size: 32, weight: .bold))
-                        .foregroundColor(DesignSystem.Colors.textPrimary)
-                    
-                    Text("camera_permission_description".localized)
-                        .font(.system(size: 16))
-                        .foregroundColor(DesignSystem.Colors.textSecondary)
-                        .multilineTextAlignment(.center)
-                        .padding(.horizontal, 32)
-                }
-                .padding(.bottom, 40)
-                
-                // Permission Cards
-                VStack(spacing: 16) {
-                    // Camera
-                    PermissionCard(
-                        icon: "camera.fill",
-                        title: "onboarding_scan_title".localized,
-                        description: "onboarding_scan_description".localized,
-                        isAuthorized: cameraStatus == .authorized,
-                        color: Color(hex: "4F46E5")
-                    )
-                    
-                    // Gallery
-                    PermissionCard(
-                        icon: "photo.on.rectangle",
-                        title: "select_from_gallery".localized,
-                        description: "gallery_permission_description".localized,
-                        isAuthorized: photoStatus == .authorized || photoStatus == .limited,
-                        color: Color(hex: "4F46E5")
-                    )
-                }
-                .padding(.horizontal, 24)
-                
-                Spacer()
-                
-                // Buttons
-                VStack(spacing: 16) {
-                    Button(action: requestAllPermissions) {
-                        Text("enable_permissions".localized)
-                            .font(.system(size: 17, weight: .semibold))
-                            .frame(maxWidth: .infinity)
-                            .frame(height: 56)
-                            .background(DesignSystem.Colors.primary)
-                            .foregroundColor(.white)
-                            .cornerRadius(28)
-                            .shadow(color: DesignSystem.Colors.primary.opacity(0.3), radius: 10, x: 0, y: 5)
-                    }
-                    
-                    Button(action: skipOnboarding) {
-                        Text("maybe_later".localized)
-                            .font(.system(size: 15, weight: .regular))
-                            .foregroundColor(DesignSystem.Colors.textSecondary)
-                    }
-                }
-                .padding(.horizontal, 24)
-                .padding(.bottom, 24)
+            }
+            .onAppear {
+                checkPermissions()
             }
         }
-        .onAppear {
-            checkPermissions()
+    }
+    
+    // Helper for spacing
+    private struct SizedBox: View {
+        let height: CGFloat
+        var body: some View {
+            Spacer().frame(height: height)
         }
     }
     

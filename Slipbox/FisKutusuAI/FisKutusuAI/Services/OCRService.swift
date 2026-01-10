@@ -12,6 +12,12 @@ struct OCRResult {
     var vatRate: Double?
     var vatAmount: Double?
     var baseAmount: Double?
+    
+    // Enhanced fields for categorization
+    var lines: [String] = []
+    var topLinesTokens: [String] = []
+    var itemsAreaTokens: [String] = []
+    var merchantNormalized: String?
 }
 
 class OCRService {
@@ -45,6 +51,7 @@ class OCRService {
             
             request.recognitionLevel = .accurate
             request.usesLanguageCorrection = true
+            request.recognitionLanguages = ["tr-TR", "en-US"]
             
             let handler = VNImageRequestHandler(cgImage: cgImage, options: [:])
             do {
@@ -65,11 +72,19 @@ class OCRService {
             "E-ARŞİV", "E-ARSIV", "FATURA", "MÜŞTERİ", "MUSTERI", "NÜSHASI", "NUSHASI",
             "SATIŞ", "SATIS", "İŞYERİ", "ISYERI", "TERMINAL", "FİS", "FISI", "BELGE",
             "Mersis", "Tarih:", "Saat:", "ETTN", "TCKN", "VKN", "TUTAR", "TOPLAM", "KDV",
-            "TEŞEKKÜRLER", "TESEKKURLER", "TEŞEKKÜR", "TESEKKUR", "TES EKKUR", "TESEKKORLER", "TESEKKOR",
+            // TEŞEKKÜRLER variations - OCR often misreads Turkish characters
+            "TEŞEKKÜRLER", "TESEKKURLER", "TEŞEKKÜR", "TESEKKUR", "TES EKKUR", 
+            "TESEKKORLER", "TESEKKOR", "TESEKKÖRLER", "TESEKKOLER", "TEŞEKKORLER",
+            "TESSEKKURLER", "TESEKK", "TEŞEKK", "TESEKURLER", "TESSEKK",
+            // Other thank-you/greeting phrases
             "İYİ GÜNLER", "IYI GUNLER", "IYIGUNLER", "BİZİ TERCİH", "BIZI TERCIH", 
             "YİNE BEKLERİZ", "YINE BEKLERIZ", "SAĞOLUN", "SAGOLUN", "HOSGELDINIZ", "HOŞGELDİNİZ",
+            "TEKRAR BEKLERIZ", "TEKRAR BEKLERİZ", "GORÜŞMEK ÜZERE", "GORUSMEK UZERE",
+            // Order/Table/Service terms
             "ORDER", "SİPARİŞ", "SIPARIS", "MASA", "TABLE", "SERVİS", "SERVIS", 
-            "KASİYER", "KASIYER", "INDEX", "SAYFA", "NO:", "TARİH", "SAAT"
+            "KASİYER", "KASIYER", "INDEX", "SAYFA", "NO:", "TARİH", "SAAT",
+            // Website patterns
+            "WWW.", ".COM", ".NET", ".ORG", ".TR"
         ]
         
         let knownBrands = ["A101", "BİM", "BIM", "ŞOK", "SOK", "MİGROS", "MIGROS", "CARREFOUR", "KÖFTECİ YUSUF"]
@@ -103,8 +118,12 @@ class OCRService {
                 if clean.rangeOfCharacter(from: CharacterSet.decimalDigits.inverted) == nil { continue }
                 if upperClean.contains("TOPLAM") || upperClean.contains("TUTAR") || upperClean.contains("KDV") { continue }
                 
-                // Check generic blocklist
-                let isGeneric = genericBlocklist.contains { term in upperClean.contains(term.uppercased()) }
+                // Check generic blocklist - normalize for Turkish character variations
+                let normalizedLine = TextNormalizer.normalize(upperClean)
+                let isGeneric = genericBlocklist.contains { term in 
+                    let normalizedTerm = TextNormalizer.normalize(term)
+                    return normalizedLine.contains(normalizedTerm) || upperClean.contains(term.uppercased())
+                }
                 if isGeneric { continue }
                 
                 // Skip websites (starts with WWW or ends with .COM, .NET, .TR)
@@ -265,6 +284,14 @@ class OCRService {
             result.confidence = result.merchantName != nil ? 0.9 : 0.7
         } else {
             result.confidence = 0.4
+        }
+        
+        // Populate enhanced categorization fields
+        result.lines = lines
+        result.topLinesTokens = TextNormalizer.extractTopLineTokens(from: lines, count: 5)
+        result.itemsAreaTokens = TextNormalizer.extractItemsZoneTokens(from: lines)
+        if let merchant = result.merchantName {
+            result.merchantNormalized = TextNormalizer.normalizeMerchant(merchant)
         }
         
         return result

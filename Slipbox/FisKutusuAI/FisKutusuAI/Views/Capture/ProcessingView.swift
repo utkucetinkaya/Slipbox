@@ -166,17 +166,25 @@ struct ProcessingView: View {
                     }
                 }
                 
-                // 3. Categorization (Keyword based)
-                let catResult = CategorizationService.shared.categorize(merchantName: ocrResult.merchantName, rawText: ocrResult.rawText)
+                // 3. Categorization (Enhanced scoring-based)
+                let catResult = CategorizationService.shared.categorize(
+                    merchantName: ocrResult.merchantName,
+                    rawText: ocrResult.rawText,
+                    lines: ocrResult.lines,
+                    topLinesTokens: ocrResult.topLinesTokens,
+                    itemsAreaTokens: ocrResult.itemsAreaTokens
+                )
                 
                 // 4. Accounting Logic Preparation
-                var finalCategoryId = catResult.categoryId
-                var finalStatus: ReceiptStatus = .new
+                var finalCategoryId = catResult.primaryCategory
+                var finalConfidence = catResult.confidence
+                var finalStatus: ReceiptStatus = catResult.requiresReview ? .pendingReview : .new
                 
-                // UTTS Logic
+                // UTTS Logic - override if detected
                 if ocrResult.isUTTS {
                     finalCategoryId = "transport" // Ulaşım
                     finalStatus = .pendingReview
+                    finalConfidence = max(finalConfidence, 0.8)
                 }
                 
                 // Low Confidence logic: If missing name or total, force review
@@ -214,7 +222,7 @@ struct ProcessingView: View {
                     currency: currencyStr,
                     categoryId: finalCategoryId,
                     categoryName: categoryName,
-                    confidence: catResult.confidence,
+                    confidence: finalConfidence,
                     note: nil,
                     source: .camera,
                     createdAt: Timestamp(date: Date()),

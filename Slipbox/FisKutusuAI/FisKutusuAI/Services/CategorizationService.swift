@@ -1,46 +1,252 @@
 import Foundation
 
+/// Result of categorization with scoring details
+struct CategorizationResult {
+    let primaryCategory: String
+    let primaryScore: Int
+    let confidence: Double
+    let alternatives: [(category: String, score: Int)]
+    let requiresReview: Bool
+    let matchDetails: [String] // Debug: what matched
+}
+
+/// Precision scoring-based categorization service
 class CategorizationService {
     static let shared = CategorizationService()
     
     private init() {}
     
-    struct CategoryKeywords {
-        let id: String
-        let keywords: [String]
+    // MARK: - Scoring Weights
+    private struct Weights {
+        static let merchantMatch = 8
+        static let productMatch = 4
+        static let productMatchInItemsZone = 6
+        static let generalMatch = 2
+        static let topLineBonus = 3
+        static let negativeMatch = -8
     }
     
-    private let dictionary: [CategoryKeywords] = [
-        CategoryKeywords(id: "food_drink", keywords: ["migros","şok","a101","bim","carrefour","starbucks","kahve","cafe","restaurant","yemek","burger","pizza","kfc","mcdonald","dominos","popeyes","yeme","içme","food","drink"]),
-        CategoryKeywords(id: "transport", keywords: ["shell","opet","bp","total","petrol","akaryakıt","benzin","dizel","otopark","park","uber","bitaksi","taksi","metro","otobüs","tramvay","utts","tts","taşıt tanıma","plaka","filo","yakıt otomasyon"]),
-        CategoryKeywords(id: "equipment", keywords: ["teknosa","vatan","mediamarkt","apple","iphone","bilgisayar","laptop","ekran","klavye","mouse","ofis","donanım","ekipman"]),
-        CategoryKeywords(id: "service", keywords: ["netflix","spotify","youtube","google","apple.com","icloud","abonelik","elektrik","su","doğalgaz","internet","fatura","danışmanlık","servis","turkcell","vodafone","türk telekom"]),
-        CategoryKeywords(id: "entertainment", keywords: ["sinema","cinema","tiyatro","konser","oyun","playstation","steam","eğlence"]),
-        CategoryKeywords(id: "clothing", keywords: ["zara","hm","lcw","defacto","koton","giyim","ayakkabı","mont","pantolon"]),
-        CategoryKeywords(id: "health", keywords: ["eczane","pharmacy","hastane","klinik","doktor","sağlık","ilaç"]),
-        CategoryKeywords(id: "education", keywords: ["udemy","coursera","kurs","eğitim","kitap","book","akademi"]),
-        CategoryKeywords(id: "rent", keywords: ["kira","rent","emlak","apartman","aidat"]),
-        CategoryKeywords(id: "tax", keywords: ["vergi","sgk","maliye","harç","ceza","stopaj","ötv","götürü vergi","kdv"]),
-        CategoryKeywords(id: "travel", keywords: ["otel","hotel","booking","airbnb","uçak","flight","thy","pegasus","seyahat"])
-    ]
+    // MARK: - Thresholds
+    private struct Thresholds {
+        static let autoAssign = 10      // Score >= 10: auto-assign
+        static let pendingReview = 6    // Score 6-9: pending review with suggestions
+        static let conflictMargin = 3   // If top 2 scores differ by < 3: show both
+    }
     
+    /// Main categorization function with enhanced OCR data
+    func categorize(
+        merchantName: String?,
+        rawText: String?,
+        lines: [String] = [],
+        topLinesTokens: [String] = [],
+        itemsAreaTokens: [String] = []
+    ) -> CategorizationResult {
+        
+        // Prepare normalized data
+        let merchantNormalized = merchantName.map { TextNormalizer.normalizeMerchant($0) } ?? ""
+        let allTextTokens = TextNormalizer.tokenize(rawText ?? "")
+        let topTokens = topLinesTokens.isEmpty ? 
+            TextNormalizer.extractTopLineTokens(from: lines) : topLinesTokens
+        let itemsTokens = itemsAreaTokens.isEmpty ? 
+            TextNormalizer.extractItemsZoneTokens(from: lines) : itemsAreaTokens
+        
+        // Calculate scores for all categories
+        var categoryScores: [(id: String, score: Int, matches: [String])] = []
+        
+        for category in KeywordCatalog.categories {
+            let (score, matches) = calculateScore(
+                for: category,
+                merchantNormalized: merchantNormalized,
+                allTextTokens: allTextTokens,
+                topLinesTokens: topTokens,
+                itemsAreaTokens: itemsTokens
+            )
+            categoryScores.append((category.id, score, matches))
+        }
+        
+        // Sort by score descending
+        categoryScores.sort { $0.score > $1.score }
+        
+        // Apply conflict resolution
+        let resolved = resolveConflicts(scores: categoryScores, rawText: rawText ?? "")
+        
+        // Determine final category and status
+        let topCategory = resolved.first ?? (id: "other", score: 0, matches: [])
+        let alternatives = resolved.dropFirst().prefix(2).map { ($0.id, $0.score) }
+        
+        // Calculate confidence
+        let matchCount = topCategory.matches.count
+        var confidence = calculateConfidence(score: topCategory.score, matchCount: matchCount)
+        
+        // Determine if review is needed
+        let requiresReview: Bool
+        if topCategory.score >= Thresholds.autoAssign {
+            requiresReview = false
+        } else if topCategory.score >= Thresholds.pendingReview {
+            // Check if there's a close alternative
+            if let secondScore = resolved.dropFirst().first?.score,
+               topCategory.score - secondScore < Thresholds.conflictMargin {
+                requiresReview = true
+                confidence = min(confidence, 0.6) // Cap confidence when ambiguous
+            } else {
+                requiresReview = true
+            }
+        } else {
+            requiresReview = true
+        }
+        
+        return CategorizationResult(
+            primaryCategory: topCategory.score > 0 ? topCategory.id : "other",
+            primaryScore: topCategory.score,
+            confidence: confidence,
+            alternatives: Array(alternatives),
+            requiresReview: requiresReview,
+            matchDetails: topCategory.matches
+        )
+    }
+    
+    /// Simplified categorization for backward compatibility
     func categorize(merchantName: String?, rawText: String?) -> (categoryId: String, confidence: Double) {
-        let searchContent = "\(merchantName ?? "") \(rawText ?? "")".lowercased()
+        let lines = (rawText ?? "").components(separatedBy: "\n")
+        let result = categorize(
+            merchantName: merchantName,
+            rawText: rawText,
+            lines: lines
+        )
+        return (result.primaryCategory, result.confidence)
+    }
+    
+    // MARK: - Private Methods
+    
+    private func calculateScore(
+        for category: KeywordCatalog.CategoryKeywordSet,
+        merchantNormalized: String,
+        allTextTokens: [String],
+        topLinesTokens: [String],
+        itemsAreaTokens: [String]
+    ) -> (score: Int, matches: [String]) {
         
-        var bestCategoryId = "other"
-        var maxMatches = 0
+        var score = 0
+        var matches: [String] = []
         
-        for entry in dictionary {
-            let matchCount = entry.keywords.filter { searchContent.contains($0) }.count
-            if matchCount > maxMatches {
-                maxMatches = matchCount
-                bestCategoryId = entry.id
+        // 1. Merchant keyword matches (+8 each)
+        for keyword in category.merchantKeywords {
+            let normalizedKeyword = TextNormalizer.normalize(keyword)
+            if merchantNormalized.contains(normalizedKeyword) ||
+               allTextTokens.contains(where: { $0.contains(normalizedKeyword) }) {
+                score += Weights.merchantMatch
+                matches.append("merchant:\(keyword)")
+                
+                // Bonus for top-line merchant match
+                if topLinesTokens.contains(where: { $0.contains(normalizedKeyword) }) {
+                    score += Weights.topLineBonus
+                    matches.append("topline_bonus:\(keyword)")
+                }
             }
         }
         
-        // Simple confidence: 1 match = 0.5, 2+ matches = 1.0, 0 matches = 0.0
-        let confidence = maxMatches >= 2 ? 1.0 : (maxMatches == 1 ? 0.6 : 0.0)
+        // 2. Product keyword matches (+4 or +6 in items zone)
+        for keyword in category.productKeywords {
+            let normalizedKeyword = TextNormalizer.normalize(keyword)
+            
+            // Check items zone first (higher weight)
+            if itemsAreaTokens.contains(where: { $0.contains(normalizedKeyword) }) {
+                score += Weights.productMatchInItemsZone
+                matches.append("product_items:\(keyword)")
+            } else if allTextTokens.contains(where: { $0.contains(normalizedKeyword) }) {
+                score += Weights.productMatch
+                matches.append("product:\(keyword)")
+                
+                // Bonus for top-line product match
+                if topLinesTokens.contains(where: { $0.contains(normalizedKeyword) }) {
+                    score += Weights.topLineBonus
+                    matches.append("topline_bonus:\(keyword)")
+                }
+            }
+        }
         
-        return (bestCategoryId, confidence)
+        // 3. General keyword matches (+2 each)
+        for keyword in category.generalKeywords {
+            let normalizedKeyword = TextNormalizer.normalize(keyword)
+            if allTextTokens.contains(where: { $0.contains(normalizedKeyword) }) {
+                score += Weights.generalMatch
+                matches.append("general:\(keyword)")
+            }
+        }
+        
+        // 4. Negative keyword matches (-8 each)
+        for keyword in category.negativeKeywords {
+            let normalizedKeyword = TextNormalizer.normalize(keyword)
+            if allTextTokens.contains(where: { $0.contains(normalizedKeyword) }) {
+                score += Weights.negativeMatch
+                matches.append("negative:\(keyword)")
+            }
+        }
+        
+        return (max(0, score), matches)
+    }
+    
+    private func resolveConflicts(
+        scores: [(id: String, score: Int, matches: [String])],
+        rawText: String
+    ) -> [(id: String, score: Int, matches: [String])] {
+        
+        var resolved = scores
+        let normalizedText = TextNormalizer.normalize(rawText)
+        
+        // Priority rules for specific conflicts
+        
+        // Rule 1: If benzin/dizel/lt/pompa present -> Transport priority
+        let fuelKeywords = ["benzin", "dizel", "motorin", "lpg", "pompa", "litre", " lt "]
+        let hasFuelKeyword = fuelKeywords.contains { normalizedText.contains($0) }
+        
+        // Rule 2: If latte/espresso/cappuccino present -> Food priority
+        let coffeeKeywords = ["latte", "espresso", "cappuccino", "americano", "mocha", "macchiato"]
+        let hasCoffeeKeyword = coffeeKeywords.contains { normalizedText.contains($0) }
+        
+        // Apply priority adjustments
+        if hasFuelKeyword && !hasCoffeeKeyword {
+            // Boost transport, penalize food
+            resolved = resolved.map { item in
+                if item.id == "transport" {
+                    return (item.id, item.score + 5, item.matches + ["priority:fuel"])
+                } else if item.id == "food_drink" {
+                    return (item.id, max(0, item.score - 5), item.matches + ["penalty:fuel_present"])
+                }
+                return item
+            }
+        }
+        
+        if hasCoffeeKeyword && !hasFuelKeyword {
+            // Boost food, penalize transport
+            resolved = resolved.map { item in
+                if item.id == "food_drink" {
+                    return (item.id, item.score + 5, item.matches + ["priority:coffee"])
+                } else if item.id == "transport" {
+                    return (item.id, max(0, item.score - 5), item.matches + ["penalty:coffee_present"])
+                }
+                return item
+            }
+        }
+        
+        // Re-sort after adjustments
+        resolved.sort { $0.score > $1.score }
+        
+        return resolved
+    }
+    
+    private func calculateConfidence(score: Int, matchCount: Int) -> Double {
+        // Base confidence from score
+        var confidence = min(1.0, Double(score) / 20.0)
+        
+        // Reduce confidence if only 1 match led to the score
+        if matchCount == 1 {
+            confidence = min(confidence, 0.5)
+        } else if matchCount == 2 {
+            confidence = min(confidence, 0.7)
+        }
+        
+        // Cap at 0.95 (never 100% certain)
+        return min(0.95, confidence)
     }
 }

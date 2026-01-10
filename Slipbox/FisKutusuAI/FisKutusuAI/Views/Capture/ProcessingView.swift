@@ -11,6 +11,7 @@ struct ProcessingView: View {
     @State private var extractedMerchant: String?
     @State private var extractedDate: String?
     @State private var extractedTotal: String?
+    @State private var extractedVAT: String?
     @State private var hasStarted = false
     
     // Duplicate & Accounting Logic
@@ -95,6 +96,7 @@ struct ProcessingView: View {
                     ExtractionRow(icon: "storefront.fill", label: "merchant".localized, value: extractedMerchant)
                     ExtractionRow(icon: "calendar", label: "date".localized, value: extractedDate)
                     ExtractionRow(icon: "doc.text.fill", label: "amount".localized, value: extractedTotal)
+                    ExtractionRow(icon: "percent", label: "vat_total_label".localized, value: extractedVAT ?? "—")
                 }
                 .padding(.horizontal, 24)
                 
@@ -162,7 +164,8 @@ struct ProcessingView: View {
                     withAnimation {
                         extractedMerchant = ocrResult.merchantName
                         extractedDate = ocrResult.date?.formatted(date: .abbreviated, time: .omitted)
-                        extractedTotal = ocrResult.total != nil ? "\(ocrResult.total!)" : nil
+                        extractedTotal = ocrResult.total != nil ? String(format: "%.2f", ocrResult.total!) : nil
+                        extractedVAT = ocrResult.vatTotal != nil ? String(format: "%.2f", ocrResult.vatTotal!) : nil
                     }
                 }
                 
@@ -231,7 +234,7 @@ struct ProcessingView: View {
                     duplicateHash: hashString,
                     isUTTS: ocrResult.isUTTS,
                     vatRate: ocrResult.vatRate,
-                    vatAmount: ocrResult.vatAmount,
+                    vatTotal: ocrResult.vatTotal,
                     baseAmount: ocrResult.baseAmount
                 )
 
@@ -265,6 +268,7 @@ struct ProcessingView: View {
                     extractedMerchant = nil
                     extractedDate = nil
                     extractedTotal = nil
+                    extractedVAT = nil
                 }
                 
                 // Merchant
@@ -287,7 +291,15 @@ struct ProcessingView: View {
                 try? await Task.sleep(nanoseconds: 400_000_000)
                 await MainActor.run {
                     withAnimation {
-                        extractedTotal = receipt.total != nil ? "\(receipt.total!)" : nil
+                        extractedTotal = receipt.total != nil ? String(format: "%.2f", receipt.total!) : nil
+                    }
+                }
+                
+                // VAT
+                try? await Task.sleep(nanoseconds: 300_000_000)
+                await MainActor.run {
+                    withAnimation {
+                        extractedVAT = receipt.vatTotal != nil ? String(format: "%.2f", receipt.vatTotal!) : "—"
                     }
                 }
                 

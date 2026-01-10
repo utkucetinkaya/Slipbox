@@ -203,6 +203,7 @@
 "kdv_rate_label" = "Oran";
 "base_amount_label" = "Matrah";
 "vat_amount_label" = "KDV";
+"vat_total_label" = "Toplam KDV";
 
 /* App Name */
 "slipbox_app_name" = "SlipBox";

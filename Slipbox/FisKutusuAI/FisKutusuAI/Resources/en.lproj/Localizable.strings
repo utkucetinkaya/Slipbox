@@ -203,6 +203,7 @@
 "kdv_rate_label" = "Rate";
 "base_amount_label" = "Base";
 "vat_amount_label" = "VAT";
+"vat_total_label" = "Total VAT";
 
 /* App Name */
 "slipbox_app_name" = "SlipBox";

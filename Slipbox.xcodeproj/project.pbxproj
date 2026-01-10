@@ -171,7 +171,7 @@
 				CODE_SIGN_ENTITLEMENTS = Slipbox/Slipbox.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = "";
+				DEVELOPMENT_TEAM = 3ZB4FM26D2;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Slipbox/Info.plist;
 				INFOPLIST_KEY_NSCameraUsageDescription = "Fiş tarama işlemi için kamera erişimi gereklidir.";
@@ -207,7 +207,7 @@
 				CODE_SIGN_ENTITLEMENTS = Slipbox/Slipbox.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = "";
+				DEVELOPMENT_TEAM = 3ZB4FM26D2;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Slipbox/Info.plist;
 				INFOPLIST_KEY_NSCameraUsageDescription = "Fiş tarama işlemi için kamera erişimi gereklidir.";

@@ -10,7 +10,7 @@ struct OCRResult {
     var confidence: Double
     var isUTTS: Bool = false
     var vatRate: Double?
-    var vatAmount: Double?
+    var vatTotal: Double?
     var baseAmount: Double?
     
     // Enhanced fields for categorization
@@ -63,15 +63,19 @@ class OCRService {
     }
     
     private func parseText(_ text: String) -> OCRResult {
-        let lines = text.components(separatedBy: "\n")
+        // 1. Normalize Text (TR Locale awareness)
+        let normalizedText = text.replacingOccurrences(of: "i", with: "İ")
+            .replacingOccurrences(of: "ı", with: "I")
+            .uppercased()
+        
+        let lines = normalizedText.components(separatedBy: "\n")
         var result = OCRResult(rawText: text, confidence: 0.5)
         
-        // 1. Merchant Name Heuristic
-        // 1. Merchant Name Heuristic
+        // --- 1. Merchant Name Heuristic ---
         let genericBlocklist = [
             "E-ARŞİV", "E-ARSIV", "FATURA", "MÜŞTERİ", "MUSTERI", "NÜSHASI", "NUSHASI",
             "SATIŞ", "SATIS", "İŞYERİ", "ISYERI", "TERMINAL", "FİS", "FISI", "BELGE",
-            "Mersis", "Tarih:", "Saat:", "ETTN", "TCKN", "VKN", "TUTAR", "TOPLAM", "KDV",
+            "MERSIS", "TARIH:", "SAAT:", "ETTN", "TCKN", "VKN", "TUTAR", "TOPLAM", "KDV",
             // TEŞEKKÜRLER variations - OCR often misreads Turkish characters
             "TEŞEKKÜRLER", "TESEKKURLER", "TEŞEKKÜR", "TESEKKUR", "TES EKKUR", 
             "TESEKKORLER", "TESEKKOR", "TESEKKÖRLER", "TESEKKOLER", "TEŞEKKORLER",
@@ -89,9 +93,8 @@ class OCRService {
         
         let knownBrands = ["A101", "BİM", "BIM", "ŞOK", "SOK", "MİGROS", "MIGROS", "CARREFOUR", "KÖFTECİ YUSUF"]
         
-        // Search first 10 lines for known brands first
         for line in lines.prefix(10) {
-            let clean = line.trimmingCharacters(in: .whitespacesAndNewlines).uppercased()
+            let clean = line.trimmingCharacters(in: .whitespacesAndNewlines)
             for brand in knownBrands {
                 if clean.contains(brand) {
                     result.merchantName = clean
@@ -101,178 +104,150 @@ class OCRService {
             if result.merchantName != nil { break }
         }
         
-        // 2. Strict Top-Line Heuristic (If brand not found)
         if result.merchantName == nil {
-            // Check the first 5 lines. The merchant is almost always at the very top.
             for line in lines.prefix(5) {
                 let clean = line.trimmingCharacters(in: .whitespacesAndNewlines)
-                var upperClean = clean.uppercased()
-                
-                if clean.isEmpty { continue }
-                if clean.count < 3 { continue }
-                
-                // Skip common noise
-                if upperClean.contains("TARİH") || upperClean.contains("SAAT") || upperClean.contains("NO:") { continue }
-                
-                // Skip if purely numeric or looks like date/phone/total
+                if clean.isEmpty || clean.count < 3 { continue }
                 if clean.rangeOfCharacter(from: CharacterSet.decimalDigits.inverted) == nil { continue }
-                if upperClean.contains("TOPLAM") || upperClean.contains("TUTAR") || upperClean.contains("KDV") { continue }
                 
                 // Check generic blocklist - normalize for Turkish character variations
-                let normalizedLine = TextNormalizer.normalize(upperClean)
+                let normalizedLine = TextNormalizer.normalize(clean)
                 let isGeneric = genericBlocklist.contains { term in 
                     let normalizedTerm = TextNormalizer.normalize(term)
-                    return normalizedLine.contains(normalizedTerm) || upperClean.contains(term.uppercased())
+                    return normalizedLine.contains(normalizedTerm) || clean.contains(term.uppercased())
                 }
                 if isGeneric { continue }
+                if clean.hasPrefix("WWW.") || clean.contains(".COM") { continue }
                 
-                // Skip websites (starts with WWW or ends with .COM, .NET, .TR)
-                if upperClean.hasPrefix("WWW.") || upperClean.contains(".COM") || upperClean.contains(".NET") || upperClean.contains(".ORG") { continue }
-                
-                // If we survive the filters, this is the merchant. Stop immediately.
                 result.merchantName = clean
                 break
             }
         }
         
-        // 3. Fallback: Search deeper if still nil
-        if result.merchantName == nil {
-             for line in lines.prefix(8) {
-                let clean = line.trimmingCharacters(in: .whitespacesAndNewlines)
-                let upperClean = clean.uppercased()
-                 
-                let isGeneric = genericBlocklist.contains { term in upperClean.contains(term.uppercased()) }
-                if isGeneric { continue }
-                 
-                if upperClean.contains("A.Ş") || upperClean.contains("LTD") || upperClean.contains("TİC") {
-                    result.merchantName = clean
-                    break
-                }
-             }
-        }
-        
-        // 2. Total Amount
-        // Regex: Matches numbers like 123,45 or 123.45. Group 1 captures the digits.
-        // We look for patterns like "* 163.78", "TOPLAM 163,78", etc.
+        // --- 2. Total Amount ---
         let amountPattern = #"(\d+[\.,]\d{2})"#
         let amountRegex = try? NSRegularExpression(pattern: amountPattern, options: .caseInsensitive)
-        let matches = amountRegex?.matches(in: text, range: NSRange(text.startIndex..., in: text)) ?? []
+        let matches = amountRegex?.matches(in: normalizedText, range: NSRange(normalizedText.startIndex..., in: normalizedText)) ?? []
         
         var amounts: [Double] = []
         for match in matches {
-            if let range = Range(match.range(at: 1), in: text) {
-                let cleanStr = text[range].replacingOccurrences(of: ",", with: ".")
+            if let range = Range(match.range(at: 1), in: normalizedText) {
+                let cleanStr = String(normalizedText[range]).replacingOccurrences(of: ".", with: "").replacingOccurrences(of: ",", with: ".")
                 if let val = Double(cleanStr) {
-                    // Filter out numbers that look like dates (e.g. 20.20 from 20.2023)
-                    // Simple heuristic: Total usually doesn't have 4 digits immediately following it
                     amounts.append(val)
                 }
             }
         }
-        // Take the largest one as it's usually the total
         result.total = amounts.max()
         
-        // 3. Date (Regex for DD.MM.YYYY, DD/MM/YYYY, etc.)
-        // 3. Date Parsing (Enhanced)
-        // Regex: Matches DD.MM.YYYY, DD/MM/YYYY, DD-MM-YYYY with optional spaces (horizontal only)
-        // We use [ \t] instead of \s to prevent matching across lines (e.g. "1/2" on one line and "18" on next)
+        // --- 3. Date ---
         let datePattern = #"(\d{1,2})[ \t]*[\./-][ \t]*(\d{1,2})[ \t]*[\./-][ \t]*(\d{2,4})"#
         let dateRegex = try? NSRegularExpression(pattern: datePattern)
-        let dateMatches = dateRegex?.matches(in: text, range: NSRange(text.startIndex..., in: text)) ?? []
+        let dateMatches = dateRegex?.matches(in: normalizedText, range: NSRange(normalizedText.startIndex..., in: normalizedText)) ?? []
         
         let formatter = DateFormatter()
         formatter.locale = Locale(identifier: "tr_TR")
-        
         var validDates: [(date: Date, yearDigits: Int)] = []
         
         for match in dateMatches {
-            // We expect 3 captures: Day, Month, Year
             if match.numberOfRanges == 4,
-               let dayRange = Range(match.range(at: 1), in: text),
-               let monthRange = Range(match.range(at: 2), in: text),
-               let yearRange = Range(match.range(at: 3), in: text) {
+               let dayRange = Range(match.range(at: 1), in: normalizedText),
+               let monthRange = Range(match.range(at: 2), in: normalizedText),
+               let yearRange = Range(match.range(at: 3), in: normalizedText) {
                 
-                let day = String(text[dayRange])
-                let month = String(text[monthRange])
-                let year = String(text[yearRange])
-                let yearDigits = year.count
-                
-                // Construct a normalized date string "dd.MM.yyyy"
-                // If year is 2 digits, let formatter handle 20xx interpretation, but we track it.
+                let day = String(normalizedText[dayRange])
+                let month = String(normalizedText[monthRange])
+                let year = String(normalizedText[yearRange])
                 let cleanDateStr = "\(day).\(month).\(year)"
                 
                 let formats = ["dd.MM.yyyy", "d.M.yyyy", "dd.MM.yy"]
-                
                 for format in formats {
                     formatter.dateFormat = format
                     if let datePos = formatter.date(from: cleanDateStr) {
                         let calendar = Calendar.current
                         let yearInt = calendar.component(.year, from: datePos)
-                        
-                        // Sanity check: 2000 - 2030
                         if yearInt >= 2000 && yearInt < 2030 {
-                            validDates.append((date: datePos, yearDigits: yearDigits))
+                            validDates.append((date: datePos, yearDigits: year.count))
                             break
                         }
                     }
                 }
             }
         }
+        result.date = validDates.sorted(by: { $0.yearDigits > $1.yearDigits }).first?.date
         
-        // Pick the best date
-        // Priority: 4-digit year > 2-digit year.
-        // If same digits, pick the one that appears later? Or earlier? 
-        // Usually receipts have date at top or bottom. 
-        // Let's sort by yearDigits desc (4 > 2).
-        if let best = validDates.sorted(by: { $0.yearDigits > $1.yearDigits }).first {
-            result.date = best.date
-        }
-        
-        // 4. UTTS & Fuel Detection
-        // Keywords: UTTS, TTS, Taşıt Tanıma, Plaka, Filo, Yakıt Otomasyon
+        // --- 4. UTTS & Fuel ---
         let uttsKeywords = ["UTTS", "TTS", "TAŞIT TANIMA", "TASIT TANIMA", "PLAKA", "FİLO", "FILO", "YAKIT OTOMASYON", "OPET TAŞIT", "SHELL TTS", "BP TAŞIT", "KURŞUNSUZ", "MOTORIN", "DIZEL"]
-        let upperText = text.uppercased()
-        
         for keyword in uttsKeywords {
-            if upperText.contains(keyword) {
+            if normalizedText.contains(keyword) {
                 result.isUTTS = true
                 break
             }
         }
         
-        // Additional Heuristic: Fuel Volume (e.g., "3,82 LT")
-        if !result.isUTTS {
-            // Look for "LT" or "LITRE" preceded by a number
-            // Regex: (\d+[.,]\d+)\s*(LT|LİTRE|LITRE)
-            let fuelPattern = #"(\d+[\.,]\d+)\s*(LT|LİTRE|LITRE)"#
-            if let fuelRegex = try? NSRegularExpression(pattern: fuelPattern, options: .caseInsensitive),
-               fuelRegex.firstMatch(in: text, range: NSRange(text.startIndex..., in: text)) != nil {
-                result.isUTTS = true // It's likely a fuel receipt, treat as similar category
+        // --- 5. VAT (KDV) Extraction (Enhanced) ---
+        var detectedVats: [Double] = []
+        
+        // Regular Expression Candidates
+        // Pattern 1: TOPLAM KDV : 1.234,56 or TOPKDV *20,45
+        let vatPatterns = [
+            #"(?:TOPLAM\s*KDV|KDV\s*TOPLAM|KDV\s*TUTARI|TOPKDV|TOP\.KDV|KDV)\s*[:\-\=\*]*\s*(?:₺|TL|TR)?\s*(\d{1,3}(?:[\.\s]\d{3})*(?:,\d{2})|\d+(?:,\d{2})|\d+(?:\.\d{2}))"#,
+            #"(?:KDV|K\.D\.V)\s*%?\s*\d{1,2}\s*[:\-\=\*]*\s*(?:₺|TL|TR)?\s*(\d{1,3}(?:[\.\s]\d{3})*(?:,\d{2})|\d+(?:,\d{2})|\d+(?:\.\d{2}))"#
+        ]
+        
+        for pattern in vatPatterns {
+            if let regex = try? NSRegularExpression(pattern: pattern, options: .caseInsensitive) {
+                let matches = regex.matches(in: normalizedText, range: NSRange(normalizedText.startIndex..., in: normalizedText))
+                for match in matches {
+                    if let amountRange = Range(match.range(at: 1), in: normalizedText) {
+                        var amountStr = String(normalizedText[amountRange])
+                            .replacingOccurrences(of: " ", with: "")
+                            .replacingOccurrences(of: ".", with: "")
+                            .replacingOccurrences(of: ",", with: ".")
+                        
+                        if let amount = Double(amountStr) {
+                            if let total = result.total, amount < total {
+                                detectedVats.append(amount)
+                            }
+                        }
+                    }
+                }
             }
         }
         
-        // 5. VAT (KDV) Parsing
-        // Regex: KDV[%]?\s*(\d{1,2})\s*[:=]?\s*([0-9.,]+)
-        // Looks for "KDV %8 : 12,50" or "KDV 18 20.00"
-        let kdvPattern = #"KDV[%]?\s*(\d{1,2})\s*[:=]?\s*(\d+[\.,]\d{2})"#
-        if let kdvRegex = try? NSRegularExpression(pattern: kdvPattern, options: .caseInsensitive) {
-            let kdvMatches = kdvRegex.matches(in: text, range: NSRange(text.startIndex..., in: text))
-            
-            // We take the last match typically, or iterate to find plausible ones (often at bottom)
-            for match in kdvMatches {
-                if let rateRange = Range(match.range(at: 1), in: text),
-                   let amountRange = Range(match.range(at: 2), in: text) {
-                    
-                    if let rate = Double(String(text[rateRange])),
-                       let amountStr = String(text[amountRange]).replacingOccurrences(of: ",", with: ".") as String?,
-                       let amount = Double(amountStr) {
+        // If multiple matches, sum them if they are small (aggregation logic)
+        // If we found a "TOPLAM KDV" specifically, we might prefer that.
+        // For now, let's take the largest if it's below total, OR sum if they look like line items.
+        // Actually, many receipts list KDV %1, KDV %10, KDV %20 and then a TOTAL KDV.
+        // If we sum them all, we might double count.
+        // Heuristic: If we have multiple and one is close to the sum of others, take the largest.
+        if !detectedVats.isEmpty {
+            let totalVat = detectedVats.max() ?? 0.0
+            result.vatTotal = totalVat
+        }
+        
+        // Fallback Compute: vatTotal = total - net (if keywords found)
+        if result.vatTotal == nil, let total = result.total {
+            let netKeywords = ["ARA TOPLAM", "TOPLAM MATRAH", "NET TOPLAM", "KDV HARIÇ", "KDV HARIC"]
+            for keyword in netKeywords {
+                if normalizedText.contains(keyword) {
+                    // Try to find the amount after this keyword
+                    let pattern = NSRegularExpression.escapedPattern(for: keyword) + #"\s*[:\-\=]?\s*(?:₺|TL|TR)?\s*(\d{1,3}(?:[\.\s]\d{3})*(?:,\d{2})|\d+(?:,\d{2})|\d+(?:\.\d{2}))"#
+                    if let regex = try? NSRegularExpression(pattern: pattern, options: .caseInsensitive),
+                       let match = regex.firstMatch(in: normalizedText, range: NSRange(normalizedText.startIndex..., in: normalizedText)),
+                       let range = Range(match.range(at: 1), in: normalizedText) {
                         
-                        // Heuristic: VAT amount must be less than Total
-                        if let total = result.total, amount < total {
-                            result.vatRate = rate
-                            result.vatAmount = amount
-                            result.baseAmount = total - amount
-                            // Found a valid KDV line
+                        let netStr = String(normalizedText[range])
+                            .replacingOccurrences(of: " ", with: "")
+                            .replacingOccurrences(of: ".", with: "")
+                            .replacingOccurrences(of: ",", with: ".")
+                        
+                        if let net = Double(netStr) {
+                            let diff = total - net
+                            if diff > 0 && diff < (total * 0.5) { // Guards: positive and max 50%
+                                result.vatTotal = diff
+                                break
+                            }
                         }
                     }
                 }

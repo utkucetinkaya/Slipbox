@@ -24,7 +24,7 @@ struct Receipt: Codable, Identifiable {
     var duplicateHash: String?
     var isUTTS: Bool?
     var vatRate: Double?
-    var vatAmount: Double?
+    var vatTotal: Double?
     var baseAmount: Double?
     
     enum CodingKeys: String, CodingKey {
@@ -47,7 +47,7 @@ struct Receipt: Codable, Identifiable {
         case duplicateHash
         case isUTTS
         case vatRate
-        case vatAmount
+        case vatTotal
         case baseAmount
     }
 }

@@ -286,57 +286,54 @@ struct ReceiptDetailView: View {
                 }
             }
             
-            // Tax Details (VAT & Base)
-            if let kdvAmount = receipt.vatAmount, kdvAmount > 0 {
-                HStack(spacing: 12) {
-                    // VAT Info
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text("vat_amount_label".localized)
-                            .font(.system(size: 14))
-                            .foregroundColor(DesignSystem.Colors.textSecondary)
-                        
-                        HStack {
-                            Text(userPreferences.currencySymbol)
-                            Text(String(format: "%.2f", kdvAmount))
-                            if let rate = receipt.vatRate {
-                                Text("(%\(Int(rate)))")
-                                    .font(.caption)
-                                    .foregroundColor(.gray)
-                            }
-                        }
-                        .font(.system(size: 16))
-                        .foregroundColor(DesignSystem.Colors.textPrimary)
-                        .padding()
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .background(DesignSystem.Colors.surface)
-                        .cornerRadius(12)
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 12)
-                                .stroke(DesignSystem.Colors.border, lineWidth: 1)
-                        )
-                    }
+            // VAT & Base Amount Row
+            HStack(spacing: 12) {
+                // VAT Total
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("vat_total_label".localized)
+                        .font(.system(size: 14))
+                        .foregroundColor(DesignSystem.Colors.textSecondary)
                     
-                    // Base Amount
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text("base_amount_label".localized)
-                            .font(.system(size: 14))
-                            .foregroundColor(DesignSystem.Colors.textSecondary)
-                         
-                        HStack {
-                            Text(userPreferences.currencySymbol)
-                            Text(String(format: "%.2f", receipt.baseAmount ?? ((receipt.total ?? 0) - kdvAmount)))
-                        }
-                        .font(.system(size: 16))
-                        .foregroundColor(DesignSystem.Colors.textPrimary)
-                        .padding()
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .background(DesignSystem.Colors.surface)
-                        .cornerRadius(12)
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 12)
-                                .stroke(DesignSystem.Colors.border, lineWidth: 1)
-                        )
+                    HStack {
+                        Text(userPreferences.currencySymbol)
+                            .foregroundColor(DesignSystem.Colors.textPrimary)
+                        
+                        TextField("—", value: $receipt.vatTotal, format: .number)
+                            .keyboardType(.decimalPad)
+                            .foregroundColor(DesignSystem.Colors.textPrimary)
                     }
+                    .font(.system(size: 16))
+                    .padding()
+                    .background(DesignSystem.Colors.surface)
+                    .cornerRadius(12)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 12)
+                            .stroke(DesignSystem.Colors.border, lineWidth: 1)
+                    )
+                }
+                
+                // Base Amount (Computed or Stored)
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("base_amount_label".localized)
+                        .font(.system(size: 14))
+                        .foregroundColor(DesignSystem.Colors.textSecondary)
+                    
+                    HStack {
+                        Text(userPreferences.currencySymbol)
+                            .foregroundColor(DesignSystem.Colors.textPrimary)
+                        
+                        Text(String(format: "%.2f", receipt.baseAmount ?? ((receipt.total ?? 0) - (receipt.vatTotal ?? 0))))
+                            .foregroundColor(DesignSystem.Colors.textPrimary)
+                    }
+                    .font(.system(size: 16))
+                    .padding()
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .background(DesignSystem.Colors.surface)
+                    .cornerRadius(12)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 12)
+                            .stroke(DesignSystem.Colors.border, lineWidth: 1)
+                    )
                 }
             }
             

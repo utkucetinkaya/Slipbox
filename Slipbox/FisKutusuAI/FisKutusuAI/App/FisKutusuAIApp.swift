@@ -109,7 +109,7 @@ struct EntitlementsLoadingView: View {
                     Image("AppLogo") // Proper app logo as requested
                         .resizable()
                         .aspectRatio(contentMode: .fit)
-                        .frame(width: 60, height: 60)
+                        .frame(width: 80, height: 80)
                         .cornerRadius(14)
                 }
                 

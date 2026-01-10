@@ -38,6 +38,10 @@ class ReportsViewModel: ObservableObject {
         setupSubscription()
     }
     
+    func refresh() {
+       repository.startListening()
+    }
+    
     private func setupSubscription() {
         // Observe receipts, date, currency changes, AND rates availability from the service
         Publishers.CombineLatest4(
@@ -66,17 +70,28 @@ class ReportsViewModel: ObservableObject {
         let nextMonth = calendar.date(byAdding: .month, value: 1, to: monthStart)!
         let monthEnd = calendar.date(byAdding: .second, value: -1, to: nextMonth)!
         
+        print("📊 Calculating stats for: \(monthStart) to \(monthEnd)")
+        print("📦 Total receipts in repository: \(receipts.count)")
+        
         let monthReceipts = receipts.filter { receipt in
             // Effective Date Logic:
             // 1. If the receipt has a Recognized Date -> Use it.
             // 2. If not, fallback to the Scan/Creation Date.
-            // This ensures a receipt appears in ONE specific month only.
             let effectiveDate = receipt.date ?? receipt.createdAt?.dateValue() ?? Date()
             
             let inMonth = effectiveDate >= monthStart && effectiveDate <= monthEnd
+            let isApproved = receipt.status == .approved
             
-            return inMonth && receipt.status == .approved
+            if isApproved && inMonth {
+                print("✅ Included: \(receipt.merchantName ?? "Unknown") - \(receipt.total ?? 0) \(receipt.currency ?? "") on \(effectiveDate)")
+            } else if isApproved {
+                print("❌ Excluded (Wrong Month): \(receipt.merchantName ?? "Unknown") on \(effectiveDate)")
+            }
+            
+            return inMonth && isApproved
         }
+        
+        print("📈 Final count for this month: \(monthReceipts.count)")
         
         self.receiptCount = monthReceipts.count
         

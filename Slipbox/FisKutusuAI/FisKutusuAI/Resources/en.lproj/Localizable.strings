@@ -95,6 +95,8 @@
 "inbox_empty" = "No receipts yet";
 "inbox_subtitle" = "Get started by scanning";
 "processing" = "Processing...";
+"processing_image" = "Preparing Photo...";
+"different_month_warning" = "This receipt will not appear in the current month's report (Date differs).";
 "processing_title" = "Processing";
 "processing_completed" = "Processing Completed";
 "processing_in_progress" = "Processing receipt...";

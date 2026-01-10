@@ -9,7 +9,7 @@
 	<key>PLIST_VERSION</key>
 	<string>1</string>
 	<key>BUNDLE_ID</key>
-	<string>com.pharmahan.Slipbox</string>
+	<string>com.pharmahan.SlipboxApp</string>
 	<key>PROJECT_ID</key>
 	<string>slipbox-fc659</string>
 	<key>STORAGE_BUCKET</key>
@@ -25,6 +25,6 @@
 	<key>IS_SIGNIN_ENABLED</key>
 	<true></true>
 	<key>GOOGLE_APP_ID</key>
-	<string>1:771588596380:ios:9c1091479c8e8a92e94359</string>
+	<string>1:771588596380:ios:6ec5d734ecea0536e94359</string>
 </dict>
 </plist>

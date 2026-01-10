@@ -143,10 +143,12 @@ final class AuthenticationManager: ObservableObject {
     func signInWithApple(credential: ASAuthorizationAppleIDCredential) async throws {
         guard let tokenData = credential.identityToken,
               let idTokenString = String(data: tokenData, encoding: .utf8) else {
+            print("❌ SIWA: Identity token is missing")
             throw AuthError.invalidCredentials
         }
 
         guard let rawNonce = currentNonce else {
+            print("❌ SIWA: Current nonce is missing")
             throw AuthError.invalidCredentials
         }
 
@@ -162,14 +164,28 @@ final class AuthenticationManager: ObservableObject {
             isLoading = true
             errorMessage = nil
             
+            print("🚀 SIWA: Starting Firebase Sign-in")
             let result = try await Auth.auth().signIn(with: firebaseCredential)
+            print("✅ SIWA: Firebase Sign-in Success: \(result.user.uid)")
             
             if result.additionalUserInfo?.isNewUser == true {
-                try await initializeNewUser(uid: result.user.uid, email: result.user.email)
+                print("📦 SIWA: New User Detected, Initializing Profile")
+                
+                // Formulate display name from Apple fullName components
+                var fullName = ""
+                if let nameComponents = credential.fullName {
+                    let givenName = nameComponents.givenName ?? ""
+                    let familyName = nameComponents.familyName ?? ""
+                    fullName = "\(givenName) \(familyName)".trimmingCharacters(in: .whitespaces)
+                }
+                
+                try await initializeNewUser(uid: result.user.uid, email: result.user.email, displayName: fullName)
             }
-            isLoading = false
-            // Status will be fetched by the auth listener
+            
+            // Note: fetchUserStatus will be called by the auth listener automatically
+            self.isLoading = false
         } catch {
+            print("❌ SIWA: Firebase Sign-in Failed: \(error.localizedDescription)")
             isLoading = false
             errorMessage = error.localizedDescription
             throw AuthError.signInFailed(error.localizedDescription)
@@ -200,7 +216,7 @@ final class AuthenticationManager: ObservableObject {
             let result = try await Auth.auth().createUser(withEmail: email, password: password)
             print("✅ Auth User Created: \(result.user.uid)")
             
-            try await initializeNewUser(uid: result.user.uid, email: email)
+            try await initializeNewUser(uid: result.user.uid, email: email, displayName: result.user.displayName)
             print("✅ User Profile Initialized")
             
             self.isProfileLoaded = true
@@ -214,12 +230,12 @@ final class AuthenticationManager: ObservableObject {
     }
 
     // MARK: - Initialize New User
-    private func initializeNewUser(uid: String, email: String?) async throws {
+    private func initializeNewUser(uid: String, email: String?, displayName: String? = nil) async throws {
         do {
             let userData: [String: Any] = [
                 "uid": uid,
                 "email": email ?? "",
-                "displayName": "",
+                "displayName": displayName ?? "",
                 "phoneNumber": "",
                 "profileImageUrl": NSNull(),
                 "currencyDefault": "TRY",

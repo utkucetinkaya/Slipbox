@@ -14,7 +14,7 @@ struct SplashView: View {
                     Image("AppLogo")
                         .resizable()
                         .aspectRatio(contentMode: .fit)
-                        .frame(width: 250, height: 250) // Adjust size for splash
+                        .frame(width: 280, height: 280) // Larger splash logo
                         .cornerRadius(48) // Rounded corners for icon look
                         .shadow(color: DesignSystem.Colors.primary.opacity(0.6), radius: 20, x: 0, y: 0) // Glow effect
                     

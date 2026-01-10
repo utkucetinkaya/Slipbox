@@ -95,6 +95,8 @@
 "inbox_empty" = "Henüz fiş yok";
 "inbox_subtitle" = "Fişlerini tarayarak başla";
 "processing" = "İşleniyor...";
+"processing_image" = "Fotoğraf Hazırlanıyor...";
+"different_month_warning" = "Bu fiş mevcut ayın raporuna dahil olmayacaktır (Tarih farklı).";
 "processing_title" = "İşleniyor";
 "processing_completed" = "İşlem Tamamlandı";
 "processing_in_progress" = "Fiş işleniyor...";

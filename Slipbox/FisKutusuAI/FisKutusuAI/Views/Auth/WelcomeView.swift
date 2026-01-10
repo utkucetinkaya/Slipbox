@@ -5,7 +5,7 @@ struct WelcomeView: View {
     @EnvironmentObject var authManager: AuthenticationManager
     @State private var showEmailSignIn = false
     @State private var showError = false
-    @State private var appleSignInCoordinator = AppleSignInCoordinator()
+    @State private var coordinator: AppleSignInCoordinator?
     
     var body: some View {
         NavigationStack {
@@ -23,7 +23,7 @@ struct WelcomeView: View {
                                     Image("AppLogo")
                                         .resizable()
                                         .aspectRatio(contentMode: .fit)
-                                        .frame(width: 60, height: 60)
+                                        .frame(width: 72, height: 72)
                                         .clipShape(RoundedRectangle(cornerRadius: 14))
                                         .shadow(color: DesignSystem.Colors.primary.opacity(0.5), radius: 10, x: 0, y: 0)
                                     
@@ -85,8 +85,14 @@ struct WelcomeView: View {
                             // Custom Apple Sign In Button
                             Button(action: startAppleSignIn) {
                                 HStack {
-                                    Image(systemName: "apple.logo")
-                                        .font(.system(size: 20))
+                                    if authManager.isLoading {
+                                        ProgressView()
+                                            .tint(.white)
+                                            .padding(.trailing, 8)
+                                    } else {
+                                        Image(systemName: "apple.logo")
+                                            .font(.system(size: 20))
+                                    }
                                     Text("Apple ile Devam Et")
                                         .font(.system(size: 17, weight: .semibold))
                                 }
@@ -96,6 +102,7 @@ struct WelcomeView: View {
                                 .foregroundColor(.white)
                                 .cornerRadius(16)
                             }
+                            .disabled(authManager.isLoading)
                             
                             // Email Sign In Button
                             Button(action: { showEmailSignIn = true }) {
@@ -115,6 +122,7 @@ struct WelcomeView: View {
                                         .stroke(DesignSystem.Colors.border, lineWidth: 1)
                                 )
                             }
+                            .disabled(authManager.isLoading)
                             
                             // Footer Links
                             HStack(spacing: 16) {
@@ -138,6 +146,12 @@ struct WelcomeView: View {
                         .background(DesignSystem.Colors.background.opacity(0.95))
                     }
                 }
+                
+                // Final Loading Overlay
+                if authManager.isLoading {
+                    Color.black.opacity(0.2)
+                        .ignoresSafeArea()
+                }
             }
             .navigationDestination(isPresented: $showEmailSignIn) {
                 EmailSignInView()
@@ -150,34 +164,36 @@ struct WelcomeView: View {
                     Text(error)
                 }
             }
-            .onAppear {
-                appleSignInCoordinator.onSuccess = { credential in
-                    Task {
-                        do {
-                            try await authManager.signInWithApple(credential: credential)
-                        } catch {
-                            authManager.errorMessage = error.localizedDescription
-                            showError = true
-                        }
-                    }
-                }
-                
-                appleSignInCoordinator.onError = { error in
-                    authManager.errorMessage = error.localizedDescription
-                    showError = true
-                }
-            }
         }
     }
     
     private func startAppleSignIn() {
+        let coordinator = AppleSignInCoordinator(
+            onSuccess: { credential in
+                Task {
+                    do {
+                        try await authManager.signInWithApple(credential: credential)
+                    } catch {
+                        authManager.errorMessage = error.localizedDescription
+                        showError = true
+                    }
+                }
+            },
+            onError: { error in
+                authManager.errorMessage = error.localizedDescription
+                showError = true
+            }
+        )
+        
+        self.coordinator = coordinator // Retain the coordinator
+        
         let provider = ASAuthorizationAppleIDProvider()
         let request = provider.createRequest()
-        authManager.configureAppleRequest(request) // Use the manager to configure nonce
+        authManager.configureAppleRequest(request)
         
         let controller = ASAuthorizationController(authorizationRequests: [request])
-        controller.delegate = appleSignInCoordinator
-        controller.presentationContextProvider = appleSignInCoordinator
+        controller.delegate = coordinator
+        controller.presentationContextProvider = coordinator
         controller.performRequests()
     }
 }
@@ -185,29 +201,32 @@ struct WelcomeView: View {
 // MARK: - Apple Sign In Coordinator
 class AppleSignInCoordinator: NSObject, ASAuthorizationControllerDelegate, ASAuthorizationControllerPresentationContextProviding {
     
-    var onSuccess: ((ASAuthorizationAppleIDCredential) -> Void)?
-    var onError: ((Error) -> Void)?
+    let onSuccess: (ASAuthorizationAppleIDCredential) -> Void
+    let onError: (Error) -> Void
+    
+    init(onSuccess: @escaping (ASAuthorizationAppleIDCredential) -> Void, onError: @escaping (Error) -> Void) {
+        self.onSuccess = onSuccess
+        self.onError = onError
+    }
     
     func presentationAnchor(for controller: ASAuthorizationController) -> ASPresentationAnchor {
-        return UIApplication.shared.connectedScenes
-            .first { $0.activationState == .foregroundActive }
-            .map { $0 as? UIWindowScene }
-            .flatMap { $0 }?
-            .windows
-            .first { $0.isKeyWindow } ?? UIWindow()
+        guard let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+              let window = windowScene.windows.first(where: { $0.isKeyWindow }) else {
+            return UIWindow()
+        }
+        return window
     }
     
     func authorizationController(controller: ASAuthorizationController, didCompleteWithAuthorization authorization: ASAuthorization) {
         if let appleIDCredential = authorization.credential as? ASAuthorizationAppleIDCredential {
-            onSuccess?(appleIDCredential)
+            onSuccess(appleIDCredential)
         }
     }
     
     func authorizationController(controller: ASAuthorizationController, didCompleteWithError error: Error) {
-        // Ignore user cancellation
         let nsError = error as NSError
         if nsError.code != ASAuthorizationError.canceled.rawValue {
-            onError?(error)
+            onError(error)
         }
     }
 }

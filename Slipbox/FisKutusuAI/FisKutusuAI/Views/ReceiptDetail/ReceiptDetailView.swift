@@ -339,6 +339,57 @@ struct ReceiptDetailView: View {
             
             // Category
             categoryPicker
+            
+            // Fiş Detayları Section
+            VStack(alignment: .leading, spacing: 16) {
+                Text("receipt_details_section".localized)
+                    .font(.system(size: 13, weight: .bold))
+                    .foregroundColor(DesignSystem.Colors.textSecondary)
+                    .padding(.top, 8)
+                
+                // VKN and Time
+                HStack(spacing: 12) {
+                    FormField(
+                        label: "tax_number".localized,
+                        icon: "number",
+                        value: $receipt.taxOfficeIdNumber,
+                        placeholder: "—"
+                    )
+                    .keyboardType(.numberPad)
+                    
+                    FormField(
+                        label: "receipt_time".localized,
+                        icon: "clock",
+                        value: $receipt.receiptTime,
+                        placeholder: "—"
+                    )
+                }
+                
+                // Receipt No
+                FormField(
+                    label: "receipt_number".localized,
+                    icon: "doc.text",
+                    value: $receipt.receiptNumber,
+                    placeholder: "—"
+                )
+                
+                // Store and Terminal No
+                HStack(spacing: 12) {
+                    FormField(
+                        label: "workplace_number".localized,
+                        icon: "building.2",
+                        value: $receipt.workplaceNumber,
+                        placeholder: "—"
+                    )
+                    
+                    FormField(
+                        label: "terminal_number".localized,
+                        icon: "cpu",
+                        value: $receipt.terminalNumber,
+                        placeholder: "—"
+                    )
+                }
+            }
         }
     }
     

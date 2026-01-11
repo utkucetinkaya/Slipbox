@@ -27,6 +27,13 @@ struct Receipt: Codable, Identifiable {
     var vatTotal: Double?
     var baseAmount: Double?
     
+    // New Fields for Enhanced Reports
+    var taxOfficeIdNumber: String? // VKN/TCKN
+    var receiptTime: String?      // HH:mm
+    var receiptNumber: String?    // Fiş No
+    var workplaceNumber: String?  // İşyeri No
+    var terminalNumber: String?   // Terminal No
+    
     enum CodingKeys: String, CodingKey {
         case id
         case status
@@ -49,6 +56,11 @@ struct Receipt: Codable, Identifiable {
         case vatRate
         case vatTotal
         case baseAmount
+        case taxOfficeIdNumber
+        case receiptTime
+        case receiptNumber
+        case workplaceNumber
+        case terminalNumber
     }
 }
 

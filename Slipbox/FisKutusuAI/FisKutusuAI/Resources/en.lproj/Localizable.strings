@@ -181,6 +181,12 @@
 "scan_receipt" = "Scan Receipt";
 "fis_ekleme" = "Add Receipt";
 "kapat" = "Close";
+"receipt_details_section" = "RECEIPT DETAILS";
+"tax_number" = "Tax ID (VKN/TCKN)";
+"receipt_time" = "Time";
+"receipt_number" = "Receipt No";
+"workplace_number" = "Store No";
+"terminal_number" = "Terminal No";
 "merchant" = "Merchant";
 "merchant_placeholder" = "Merchant name";
 "receipt_review" = "Receipt Review";

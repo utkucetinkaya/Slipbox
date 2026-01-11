@@ -181,6 +181,12 @@
 "scan_receipt" = "Fiş Tara";
 "fis_ekleme" = "Fiş Ekleme";
 "kapat" = "Kapat";
+"receipt_details_section" = "FİŞ DETAYLARI";
+"tax_number" = "Vergi No (VKN/TCKN)";
+"receipt_time" = "Saat";
+"receipt_number" = "Fiş No";
+"workplace_number" = "İşyeri No";
+"terminal_number" = "Terminal No";
 "merchant" = "İşletme";
 "merchant_placeholder" = "İşletme adı";
 "receipt_review" = "Fiş İnceleme";

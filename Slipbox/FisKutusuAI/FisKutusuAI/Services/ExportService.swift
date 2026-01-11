@@ -69,9 +69,9 @@ class ExportService {
             var yPosition = 190.0
             
             // Table Header
-            let headers = ["Tarih", "İşletme", "Kategori", "Tutar"]
-            var xPosition = 50.0
-            let columnWidths = [100.0, 180.0, 115.0, 100.0]
+            let headers = ["Tarih/Saat", "İşletme", "VKN", "Fiş No", "Kategori", "Tutar"]
+            var xPosition = 40.0
+            let columnWidths = [85.0, 125.0, 85.0, 80.0, 80.0, 60.0]
             
             // Header Background
             let headerRect = CGRect(x: 50, y: yPosition - 5, width: pageWidth - 100, height: 25)
@@ -105,18 +105,18 @@ class ExportService {
                     UIRectFill(rowRect)
                 }
                 
-                xPosition = 50.0
+                xPosition = 40.0
                 let dateStr = receipt.date != nil ? dateFormatter.string(from: receipt.date!) : "-"
-                let merchantStr = receipt.merchantName ?? "Bilinmiyor"
-                let categoryStr = receipt.categoryName ?? "-"
+                let timeStr = receipt.receiptTime ?? ""
+                let dateTimeStr = timeStr.isEmpty ? dateStr : "\(dateStr)\n\(timeStr)"
                 
-                // For table rows, we show the receipt's own total or converted?
-                // To match the summary total, we should probably show converted if it's different.
-                // But usually, users want to see the original value in the table.
-                // For now, let's stick to the target currency to ensure the PDF is consistent.
+                let merchantStr = receipt.merchantName ?? "Bilinmiyor"
+                let vknStr = receipt.taxOfficeIdNumber ?? "-"
+                let fisNoStr = receipt.receiptNumber ?? "-"
+                let categoryStr = receipt.categoryName ?? "-"
                 let totalStr = formatCurrency(receipt.total ?? 0.0, currencyCode: currencyCode)
                 
-                let rowData = [dateStr, merchantStr, categoryStr, totalStr]
+                let rowData = [dateTimeStr, merchantStr, vknStr, fisNoStr, categoryStr, totalStr]
                 
                 for (index, text) in rowData.enumerated() {
                     let rect = CGRect(x: xPosition + 5, y: yPosition, width: columnWidths[index], height: 20)
@@ -184,13 +184,14 @@ class ExportService {
     /// Generate CSV Report locally
     func generateCSV(receipts: [Receipt], month: String) -> URL? {
         // Turkish CSV often uses Semicolon as separator due to comma in decimals
-        var csvString = "Tarih;İşletme;Kategori;Tutar;KDV;Para Birimi;Not\n"
+        var csvString = "Tarih;Saat;İşletme;Kategori;Tutar;KDV;VKN/TCKN;Fiş No;İşyeri No;Terminal No;Para Birimi;Not\n"
         
         let dateFormatter = DateFormatter()
         dateFormatter.dateFormat = "dd.MM.yyyy"
         
         for receipt in receipts {
             let dateStr = receipt.date != nil ? dateFormatter.string(from: receipt.date!) : ""
+            let timeStr = receipt.receiptTime ?? ""
             let merchant = (receipt.merchantName ?? "").replacingOccurrences(of: ";", with: " ")
             let category = (receipt.categoryName ?? "").replacingOccurrences(of: ";", with: " ")
             
@@ -198,10 +199,15 @@ class ExportService {
             let total = String(format: "%.2f", receipt.total ?? 0.0).replacingOccurrences(of: ".", with: ",")
             let vatTotal = String(format: "%.2f", receipt.vatTotal ?? 0.0).replacingOccurrences(of: ".", with: ",")
             
+            let vkn = receipt.taxOfficeIdNumber ?? ""
+            let fisNo = receipt.receiptNumber ?? ""
+            let isyeriNo = receipt.workplaceNumber ?? ""
+            let terminalNo = receipt.terminalNumber ?? ""
+            
             let currency = receipt.currency ?? "TRY"
             let notes = (receipt.note ?? "").replacingOccurrences(of: ";", with: " ").replacingOccurrences(of: "\n", with: " ")
             
-            let line = "\(dateStr);\(merchant);\(category);\(total);\(vatTotal);\(currency);\(notes)\n"
+            let line = "\(dateStr);\(timeStr);\(merchant);\(category);\(total);\(vatTotal);\(vkn);\(fisNo);\(isyeriNo);\(terminalNo);\(currency);\(notes)\n"
             csvString.append(line)
         }
         

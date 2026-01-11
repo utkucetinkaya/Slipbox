@@ -13,6 +13,13 @@ struct OCRResult {
     var vatTotal: Double?
     var baseAmount: Double?
     
+    // New fields
+    var taxOfficeIdNumber: String?
+    var receiptTime: String?
+    var receiptNumber: String?
+    var workplaceNumber: String?
+    var terminalNumber: String?
+    
     // Enhanced fields for categorization
     var lines: [String] = []
     var topLinesTokens: [String] = []
@@ -185,7 +192,78 @@ class OCRService {
             }
         }
         
-        // --- 5. VAT (KDV) Extraction (Enhanced) ---
+        // --- 5. New Fields Extraction (VKN, Time, Fiş No, etc.) ---
+        
+        // VKN / TCKN
+        let vknPatterns = [
+            #"(?:VKN|VERGİ NO|VERGI NO|VD NO|VD|VERGİ DAİRESİ|VERGI DAIRESI)\s*[:\- ]*\s*(\d{10,11})"#,
+            #"(?:TCKN|TC NO|T\.C\. KİMLİK|T\.C\. KIMLIK)\s*[:\- ]*\s*(\d{11})"#
+        ]
+        for pattern in vknPatterns {
+            if let regex = try? NSRegularExpression(pattern: pattern, options: .caseInsensitive),
+               let match = regex.firstMatch(in: normalizedText, range: NSRange(normalizedText.startIndex..., in: normalizedText)),
+               let range = Range(match.range(at: 1), in: normalizedText) {
+                result.taxOfficeIdNumber = String(normalizedText[range])
+                break
+            }
+        }
+        
+        // Time (HH:mm)
+        let timePatterns = [
+            #"(?:SAAT|TIME)\s*[:\- ]*\s*([0-2][0-9][:\.][0-5][0-9])"#,
+            #"\b([0-2][0-9][:\.][0-5][0-9])\b"#
+        ]
+        for pattern in timePatterns {
+            if let regex = try? NSRegularExpression(pattern: pattern, options: .caseInsensitive),
+               let match = regex.firstMatch(in: normalizedText, range: NSRange(normalizedText.startIndex..., in: normalizedText)),
+               let range = Range(match.range(at: 1), in: normalizedText) {
+                let timeStr = String(normalizedText[range]).replacingOccurrences(of: ".", with: ":")
+                result.receiptTime = timeStr
+                break
+            }
+        }
+        
+        // Receipt Number
+        let receiptNoPatterns = [
+            #"(?:FİŞ NO|FIS NO|FIS#|BELGE NO|DOCUMENT NO|Z NO|ZNO|SLIP NO)\s*[:\- ]*\s*([A-Z0-9\-\/]{3,20})"#,
+            #"\bNO\s*[:\- ]*\s*(\d{4,})"# // Generic candidate for numbers like 0045, 1234
+        ]
+        for pattern in receiptNoPatterns {
+            if let regex = try? NSRegularExpression(pattern: pattern, options: .caseInsensitive),
+               let match = regex.firstMatch(in: normalizedText, range: NSRange(normalizedText.startIndex..., in: normalizedText)),
+               let range = Range(match.range(at: 1), in: normalizedText) {
+                result.receiptNumber = String(normalizedText[range])
+                break
+            }
+        }
+        
+        // Workplace Number
+        let workplacePatterns = [
+            #"(?:İŞYERİ NO|ISYERI NO|STORE NO|ŞUBE NO|SUBE NO)\s*[:\- ]*\s*([A-Z0-9]{4,})"#
+        ]
+        for pattern in workplacePatterns {
+            if let regex = try? NSRegularExpression(pattern: pattern, options: .caseInsensitive),
+               let match = regex.firstMatch(in: normalizedText, range: NSRange(normalizedText.startIndex..., in: normalizedText)),
+               let range = Range(match.range(at: 1), in: normalizedText) {
+                result.workplaceNumber = String(normalizedText[range])
+                break
+            }
+        }
+        
+        // Terminal Number
+        let terminalPatterns = [
+            #"(?:TERMINAL NO|TERM NO|POS NO|POS#|TERMINAL)\s*[:\- ]*\s*([A-Z0-9]{4,})"#
+        ]
+        for pattern in terminalPatterns {
+            if let regex = try? NSRegularExpression(pattern: pattern, options: .caseInsensitive),
+               let match = regex.firstMatch(in: normalizedText, range: NSRange(normalizedText.startIndex..., in: normalizedText)),
+               let range = Range(match.range(at: 1), in: normalizedText) {
+                result.terminalNumber = String(normalizedText[range])
+                break
+            }
+        }
+        
+        // --- 6. VAT (KDV) Extraction (Enhanced) ---
         var detectedVats: [Double] = []
         
         // Regular Expression Candidates

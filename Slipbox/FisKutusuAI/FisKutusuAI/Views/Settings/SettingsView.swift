@@ -7,6 +7,7 @@ struct SettingsView: View {
     @EnvironmentObject var entitlementManager: EntitlementManager
     @State private var showingPaywall = false
     @State private var showingFeedback = false
+    @State private var remainingScans: Int? = nil
     
     var body: some View {
         NavigationStack {
@@ -114,88 +115,113 @@ struct SettingsView: View {
             .sheet(isPresented: $showingFeedback) {
                 FeedbackView()
             }
+            .onAppear {
+                updateRemainingScans()
+            }
+            .onChange(of: entitlementManager.isPro) { _ in
+                updateRemainingScans()
+            }
+        }
+    }
+    
+    private func updateRemainingScans() {
+        Task {
+            let remaining = await UsageLimiterService.shared.remainingScans()
+            await MainActor.run {
+                self.remainingScans = remaining
+            }
         }
     }
     
     // MARK: - Components
     
     private var profileCard: some View {
-        HStack(spacing: 16) {
-            ZStack {
-                if let base64String = authManager.profile?.profileImageUrl,
-                   let data = Data(base64Encoded: base64String),
-                   let image = UIImage(data: data) {
-                    Image(uiImage: image)
-                        .resizable()
-                        .aspectRatio(contentMode: .fill)
-                        .frame(width: 64, height: 64)
-                        .clipShape(Circle())
-                } else {
-                    Circle()
-                        .fill(Color(hex: "2C2C2E"))
-                        .frame(width: 64, height: 64)
+        VStack(spacing: 0) {
+            HStack(spacing: 16) {
+                ZStack {
+                    if let base64String = authManager.profile?.profileImageUrl,
+                       let data = Data(base64Encoded: base64String),
+                       let image = UIImage(data: data) {
+                        Image(uiImage: image)
+                            .resizable()
+                            .aspectRatio(contentMode: .fill)
+                            .frame(width: 64, height: 64)
+                            .clipShape(Circle())
+                    } else {
+                        Circle()
+                            .fill(Color(hex: "2C2C2E"))
+                            .frame(width: 64, height: 64)
+                        
+                        Image(systemName: "person.fill")
+                            .font(.system(size: 32))
+                            .foregroundColor(.white.opacity(0.5))
+                    }
                     
-                    Image(systemName: "person.fill")
-                        .font(.system(size: 32))
-                        .foregroundColor(.white.opacity(0.5))
+                    Circle()
+                        .fill(Color(hex: "34C759"))
+                        .frame(width: 16, height: 16)
+                        .overlay(Circle().stroke(DesignSystem.Colors.surface, lineWidth: 2))
+                        .offset(x: 22, y: 22)
                 }
                 
-                Circle()
-                    .fill(Color(hex: "34C759"))
-                    .frame(width: 16, height: 16)
-                    .overlay(Circle().stroke(DesignSystem.Colors.surface, lineWidth: 2))
-                    .offset(x: 22, y: 22)
-            }
-            
-            VStack(alignment: .leading, spacing: 4) {
-                Text(authManager.profile?.displayName?.isEmpty == false ? authManager.profile!.displayName! : (authManager.user?.email ?? "User"))
-                    .font(.system(size: 16, weight: .semibold))
-                    .foregroundColor(DesignSystem.Colors.textPrimary)
-                
-                if entitlementManager.isPro {
-                    Text(entitlementManager.plan.displayName.uppercased())
-                        .font(.system(size: 10, weight: .bold))
-                        .foregroundColor(.white)
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 4)
-                        .background(Color(hex: "4F46E5"))
-                        .cornerRadius(8)
-                } else {
-                    Button(action: { showingPaywall = true }) {
-                        Text("upgrade_now".localized)
-                            .font(.system(size: 11, weight: .bold))
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(authManager.profile?.displayName?.isEmpty == false ? authManager.profile!.displayName! : (authManager.user?.email ?? "User"))
+                        .font(.system(size: 16, weight: .semibold))
+                        .foregroundColor(DesignSystem.Colors.textPrimary)
+                    
+                    if entitlementManager.isPro {
+                        Text(entitlementManager.planName.uppercased())
+                            .font(.system(size: 10, weight: .bold))
                             .foregroundColor(.white)
-                            .padding(.horizontal, 10)
-                            .padding(.vertical, 6)
-                            .background(
-                                LinearGradient(
-                                    gradient: Gradient(colors: [Color(hex: "4F46E5"), Color(hex: "7C3AED")]),
-                                    startPoint: .leading,
-                                    endPoint: .trailing
-                                )
-                            )
-                            .cornerRadius(12)
-                            .shadow(color: Color(hex: "4F46E5").opacity(0.4), radius: 6, x: 0, y: 3)
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 4)
+                            .background(Color(hex: "4F46E5"))
+                            .cornerRadius(8)
+                    } else {
+                        VStack(alignment: .leading, spacing: 4) {
+                            Button(action: { showingPaywall = true }) {
+                                Text("upgrade_now".localized)
+                                    .font(.system(size: 11, weight: .bold))
+                                    .foregroundColor(.white)
+                                    .padding(.horizontal, 10)
+                                    .padding(.vertical, 6)
+                                    .background(
+                                        LinearGradient(
+                                            gradient: Gradient(colors: [Color(hex: "4F46E5"), Color(hex: "7C3AED")]),
+                                            startPoint: .leading,
+                                            endPoint: .trailing
+                                        )
+                                    )
+                                    .cornerRadius(12)
+                                    .shadow(color: Color(hex: "4F46E5").opacity(0.4), radius: 6, x: 0, y: 3)
+                            }
+                        }
                     }
                 }
+                
+                Spacer()
+                
+                NavigationLink(destination: EditProfileView()) {
+                    Circle()
+                        .fill(DesignSystem.Colors.inputBackground)
+                        .frame(width: 36, height: 36)
+                        .overlay(
+                            Image(systemName: "pencil")
+                                .font(.system(size: 14))
+                                .foregroundColor(DesignSystem.Colors.textSecondary)
+                        )
+                }
             }
+            .padding(20)
+            .background(DesignSystem.Colors.surface)
+            .cornerRadius(20)
             
-            Spacer()
-            
-            NavigationLink(destination: EditProfileView()) {
-                Circle()
-                    .fill(DesignSystem.Colors.inputBackground)
-                    .frame(width: 36, height: 36)
-                    .overlay(
-                        Image(systemName: "pencil")
-                            .font(.system(size: 14))
-                            .foregroundColor(DesignSystem.Colors.textSecondary)
-                    )
+            // Usage Bar for Free Users
+            if !entitlementManager.isPro, let remaining = remainingScans {
+                UsageProgressBar(used: 30 - remaining, total: 30)
+                    .padding(.top, -12) // Bring closer to profile card
             }
         }
-        .padding(20)
-        .background(DesignSystem.Colors.surface)
-        .cornerRadius(20)
     }
     
     private func sectionHeader(_ text: String) -> some View {
@@ -204,6 +230,57 @@ struct SettingsView: View {
             .foregroundColor(DesignSystem.Colors.textSecondary)
             .padding(.leading, 4)
             .padding(.top, 8)
+    }
+}
+
+struct UsageProgressBar: View {
+    let used: Int
+    let total: Int
+    
+    var progress: Double {
+        Double(used) / Double(total)
+    }
+    
+    var progressColor: Color {
+        if progress > 0.9 { return .red }
+        if progress > 0.7 { return .orange }
+        return Color(hex: "4F46E5")
+    }
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            HStack {
+                Text("usage_limit_label".localized)
+                    .font(.system(size: 12, weight: .medium))
+                    .foregroundColor(DesignSystem.Colors.textSecondary)
+                
+                Spacer()
+                
+                Text("\(used) / \(total)")
+                    .font(.system(size: 12, weight: .bold))
+                    .foregroundColor(DesignSystem.Colors.textPrimary)
+            }
+            
+            GeometryReader { geometry in
+                ZStack(alignment: .leading) {
+                    Capsule()
+                        .fill(DesignSystem.Colors.inputBackground)
+                        .frame(height: 6)
+                    
+                    Capsule()
+                        .fill(progressColor)
+                        .frame(width: geometry.size.width * CGFloat(min(progress, 1.0)), height: 6)
+                }
+            }
+            .frame(height: 6)
+        }
+        .padding(12)
+        .background(DesignSystem.Colors.surface)
+        .cornerRadius(12)
+        .overlay(
+            RoundedRectangle(cornerRadius: 12)
+                .stroke(DesignSystem.Colors.border.opacity(0.5), lineWidth: 1)
+        )
     }
 }
 

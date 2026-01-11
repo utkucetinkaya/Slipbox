@@ -54,6 +54,7 @@
 "paywall_badge_best" = "En avantajlı";
 "paywall_cta" = "Pro'ya Geç";
 "paywall_easy_cancel" = "İptal etmesi kolay";
+"paywall_loading_products" = "Ürünler Yükleniyor...";
 "paywall_restore" = "Satın alımı geri yükle";
 "upgrade_now" = "Şimdi Yükselt";
 
@@ -204,6 +205,11 @@
 "base_amount_label" = "Matrah";
 "vat_amount_label" = "KDV";
 "vat_total_label" = "Toplam KDV";
+"remaining_scans_suffix" = "aylık hak kaldı";
+"usage_limit_label" = "Aylık Tarama Kullanımı";
+"remaining_label" = "Kalan";
+"service_coming_soon_title" = "Çok Yakında";
+"service_coming_soon_message" = "Muhasebeci bağlantı özelliği çok yakında hizmete girecektir. SlipBox ile raporlarınızı şimdilik PDF veya CSV olarak paylaşabilirsiniz.";
 
 /* App Name */
 "slipbox_app_name" = "SlipBox";

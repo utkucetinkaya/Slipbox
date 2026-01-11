@@ -222,6 +222,25 @@ struct ReceiptDetailView: View {
                 placeholder: "merchant_placeholder".localized
             )
             
+            // Month Mismatch Warning
+            if isDifferentMonth {
+                HStack(spacing: 12) {
+                    Image(systemName: "info.circle.fill")
+                        .font(.system(size: 18))
+                    Text("different_month_warning".localized)
+                        .font(.system(size: 14, weight: .medium))
+                    Spacer()
+                }
+                .padding(16)
+                .background(Color.blue.opacity(0.1))
+                .foregroundColor(.blue)
+                .cornerRadius(12)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 12)
+                        .stroke(Color.blue.opacity(0.3), lineWidth: 1)
+                )
+            }
+            
             // Date & Amount Row
             HStack(spacing: 12) {
                 // Date
@@ -241,25 +260,6 @@ struct ReceiptDetailView: View {
                             RoundedRectangle(cornerRadius: 12)
                                 .stroke(DesignSystem.Colors.border, lineWidth: 1)
                         )
-                }
-                
-                // Month Mismatch Warning
-                if isDifferentMonth {
-                    HStack {
-                        Image(systemName: "info.circle.fill")
-                        Text("different_month_warning".localized)
-                            .font(.system(size: 13, weight: .medium))
-                        Spacer()
-                    }
-                    .padding(12)
-                    .background(Color.blue.opacity(0.1))
-                    .foregroundColor(.blue)
-                    .cornerRadius(12)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 12)
-                            .stroke(Color.blue.opacity(0.3), lineWidth: 1)
-                    )
-                    .padding(.top, 4)
                 }
                 
                 // Amount

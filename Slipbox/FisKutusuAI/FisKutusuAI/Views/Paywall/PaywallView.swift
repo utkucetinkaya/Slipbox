@@ -86,8 +86,8 @@ struct PaywallView: View {
                         VStack(spacing: 32) {
                             // Plans
                             HStack(spacing: 12) {
-                                let monthlyProduct = storeKitManager.products.first(where: { $0.id == "slipbox_pro_monthly" })
-                                let yearlyProduct = storeKitManager.products.first(where: { $0.id == "slipbox_pro_yearly" })
+                                let monthlyProduct = storeKitManager.products.first(where: { $0.id == "com.slipbox.pro.monthly" })
+                                let yearlyProduct = storeKitManager.products.first(where: { $0.id == "com.slipbox.pro.yearly" })
                                 
                                 PlanCard(
                                     title: "paywall_monthly".localized,
@@ -109,6 +109,9 @@ struct PaywallView: View {
                             .padding(.horizontal, 20)
                             
                             VStack(spacing: 16) {
+                                let productID = selectedPlan == .yearly ? "com.slipbox.pro.yearly" : "com.slipbox.pro.monthly"
+                                let isLoaded = storeKitManager.products.contains(where: { $0.id == productID })
+                                
                                 Button(action: {
                                     purchase()
                                 }) {
@@ -116,6 +119,12 @@ struct PaywallView: View {
                                         if isPurchasing {
                                             ProgressView()
                                                 .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                                        } else if !isLoaded {
+                                            HStack(spacing: 8) {
+                                                ProgressView()
+                                                    .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                                                Text("paywall_loading_products".localized)
+                                            }
                                         } else {
                                             Text("paywall_cta".localized)
                                                 .font(.system(size: 18, weight: .bold))
@@ -124,11 +133,11 @@ struct PaywallView: View {
                                     }
                                     .frame(maxWidth: .infinity)
                                     .frame(height: 56)
-                                    .background(Color(hex: "4F46E5").opacity(isPurchasing ? 0.6 : 1.0))
+                                    .background(Color(hex: "4F46E5").opacity((isPurchasing || !isLoaded) ? 0.6 : 1.0))
                                     .cornerRadius(28)
                                     .shadow(color: Color(hex: "4F46E5").opacity(0.4), radius: 10, x: 0, y: 5)
                                 }
-                                .disabled(isPurchasing)
+                                .disabled(isPurchasing || !isLoaded)
                                 
                                 Spacer(minLength: 16) // Brings the button and the text closer together
                                 
@@ -180,7 +189,7 @@ struct PaywallView: View {
     }
     
     private func purchase() {
-        let productID = selectedPlan == .yearly ? "slipbox_pro_yearly" : "slipbox_pro_monthly"
+        let productID = selectedPlan == .yearly ? "com.slipbox.pro.yearly" : "com.slipbox.pro.monthly"
         guard let product = storeKitManager.products.first(where: { $0.id == productID }) else { return }
         
         isPurchasing = true

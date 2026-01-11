@@ -191,6 +191,11 @@ struct UserProfile: Codable {
     var locale: String
     var currencyDefault: String
     var onboardingCompleted: Bool
+    
+    // Usage Limits
+    var monthlyScanCount: Int?
+    var monthlyScanPeriodKey: String? // format: "yyyy-MM"
+    
     var createdAt: Timestamp?
     var updatedAt: Timestamp?
 }

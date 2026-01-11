@@ -7,6 +7,7 @@ struct ReportsView: View {
     
     @StateObject private var viewModel = ReportsViewModel()
     @State private var showingPaywall = false
+    @State private var showingComingSoon = false
     
     private var formattedMonth: String {
         let formatter = DateFormatter()
@@ -65,6 +66,11 @@ struct ReportsView: View {
             }
             .onAppear {
                 FirestoreReceiptRepository.shared.startListening()
+            }
+            .alert("service_coming_soon_title".localized, isPresented: $showingComingSoon) {
+                Button("OK", role: .cancel) { }
+            } message: {
+                Text("service_coming_soon_message".localized)
             }
         }
     }
@@ -227,7 +233,7 @@ struct ReportsView: View {
                 HStack(spacing: 12) {
                     Button(action: { 
                         if entitlementManager.isPro {
-                            // Actual PDF Export
+                            exportPDF()
                         } else {
                             showingPaywall = true 
                         }
@@ -237,7 +243,7 @@ struct ReportsView: View {
                     
                     Button(action: { 
                         if entitlementManager.isPro {
-                            // Actual CSV Export
+                            exportCSV()
                         } else {
                             showingPaywall = true 
                         }
@@ -248,7 +254,7 @@ struct ReportsView: View {
                 
                 Button(action: { 
                     if entitlementManager.isPro {
-                        // Actual Link Share
+                        shareAccountingLink()
                     } else {
                         showingPaywall = true 
                     }
@@ -257,6 +263,63 @@ struct ReportsView: View {
                 }
             }
         }
+    }
+    
+    private func exportPDF() {
+        guard let url = ExportService.shared.generatePDF(
+            receipts: viewModel.filteredReceipts,
+            month: formattedMonth,
+            totalExpense: viewModel.totalExpense,
+            totalVat: viewModel.totalVat,
+            currencyCode: userPreferences.currencyCode
+        ) else { return }
+        shareFile(url: url)
+    }
+    
+    private func exportCSV() {
+        guard let url = ExportService.shared.generateCSV(receipts: viewModel.filteredReceipts, month: formattedMonth) else { return }
+        shareFile(url: url)
+    }
+    
+    private func shareAccountingLink() {
+        if entitlementManager.isPro {
+            showingComingSoon = true
+        } else {
+            showingPaywall = true
+        }
+    }
+    
+    private func shareFile(url: URL) {
+        let av = UIActivityViewController(activityItems: [url], applicationActivities: nil)
+        
+        // Fix for iPad and general presentation stability
+        if let scene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+           let rootVC = scene.windows.first?.rootViewController {
+            
+            let topVC = getTopViewController(from: rootVC)
+            
+            // For iPad
+            if let popoverController = av.popoverPresentationController {
+                popoverController.sourceView = topVC.view
+                popoverController.sourceRect = CGRect(x: topVC.view.bounds.midX, y: topVC.view.bounds.midY, width: 0, height: 0)
+                popoverController.permittedArrowDirections = []
+            }
+            
+            topVC.present(av, animated: true)
+        }
+    }
+    
+    private func getTopViewController(from viewController: UIViewController) -> UIViewController {
+        if let presented = viewController.presentedViewController {
+            return getTopViewController(from: presented)
+        }
+        if let nav = viewController as? UINavigationController {
+            return getTopViewController(from: nav.visibleViewController ?? nav)
+        }
+        if let tab = viewController as? UITabBarController {
+            return getTopViewController(from: tab.selectedViewController ?? tab)
+        }
+        return viewController
     }
     
     // ... formatCurrency unchanged ...

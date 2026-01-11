@@ -79,7 +79,7 @@ class LaunchManager: ObservableObject {
         }
         
         // 4. Entitlements Listener Start (if not already)
-        entitlementManager.startListening(uid: user.uid)
+        // EntitlementManager now handles its own lifecycle and sync
         
         // 5. Start Receipt Repository Listener
         FirestoreReceiptRepository.shared.startListening()

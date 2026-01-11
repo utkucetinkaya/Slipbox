@@ -5,9 +5,11 @@ import FirebaseFirestore
 class ReportsViewModel: ObservableObject {
     @Published var currentDate = Date()
     @Published var totalExpense: Double = 0
+    @Published var totalVat: Double = 0
     @Published var receiptCount: Int = 0
     @Published var topCategory: String = "n/a"
     @Published var categoryBreakdown: [CategorySummary] = []
+    @Published var filteredReceipts: [Receipt] = []
     
     private var cancellables = Set<AnyCancellable>()
     private let repository = FirestoreReceiptRepository.shared
@@ -93,6 +95,7 @@ class ReportsViewModel: ObservableObject {
         
         print("📈 Final count for this month: \(monthReceipts.count)")
         
+        self.filteredReceipts = monthReceipts
         self.receiptCount = monthReceipts.count
         
         // Calculate Total Expense with Currency Conversion
@@ -101,6 +104,13 @@ class ReportsViewModel: ObservableObject {
             let receiptCurrency = receipt.currency ?? "TRY" // Default/Fallback
             let convertedAmount = currencyService.convert(receiptAmount, from: receiptCurrency, to: targetCurrency)
             return total + convertedAmount
+        }
+        
+        self.totalVat = monthReceipts.reduce(0) { total, receipt in
+            let vatAmount = receipt.vatTotal ?? 0
+            let receiptCurrency = receipt.currency ?? "TRY"
+            let convertedVat = currencyService.convert(vatAmount, from: receiptCurrency, to: targetCurrency)
+            return total + convertedVat
         }
         
         let grouped = Dictionary(grouping: monthReceipts) { $0.categoryId ?? "other" }

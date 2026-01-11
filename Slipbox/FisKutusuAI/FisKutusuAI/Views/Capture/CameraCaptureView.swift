@@ -11,6 +11,8 @@ struct CameraCaptureView: View {
     @State private var cameraService = CameraService() // Custom simple camera service wrapper
     @State private var capturedImage: UIImage?
     @State private var isProcessingImage = false
+    @State private var showingPaywall = false
+    @State private var remainingScans: Int?
     
     var body: some View {
         ZStack {
@@ -20,6 +22,7 @@ struct CameraCaptureView: View {
                 .onAppear {
                     cameraService.checkPermissions()
                     cameraService.start()
+                    updateRemainingScans()
                 }
                 .onDisappear {
                     cameraService.stop()
@@ -103,9 +106,15 @@ struct CameraCaptureView: View {
                 
                 // Capture Button
                 Button(action: {
-                    cameraService.capturePhoto { image in
-                        if let image = image {
-                            onImageCaptured(image)
+                    Task {
+                        if await UsageLimiterService.shared.canScan() {
+                            cameraService.capturePhoto { image in
+                                if let image = image {
+                                    onImageCaptured(image)
+                                }
+                            }
+                        } else {
+                            showingPaywall = true
                         }
                     }
                 }) {
@@ -140,6 +149,26 @@ struct CameraCaptureView: View {
                 }
                 .padding(.trailing, 32)
             }
+            .overlay(
+                VStack {
+                    HStack {
+                        Spacer()
+                        if let remaining = remainingScans {
+                            Text(remaining > 30 ? "Sınırsız".localized : "\("remaining_label".localized): \(remaining)")
+                                .font(.system(size: 11, weight: .bold))
+                                .foregroundColor(.white)
+                                .padding(.horizontal, 12)
+                                .padding(.vertical, 6)
+                                .background(Color.black.opacity(0.4))
+                                .cornerRadius(20)
+                                .padding(.top, 60)
+                                .padding(.trailing, 20)
+                        }
+                    }
+                    Spacer()
+                },
+                alignment: .topTrailing
+            )
             
             
             // Loading Overlay
@@ -162,6 +191,11 @@ struct CameraCaptureView: View {
             }
         }
     }
+    .sheet(isPresented: $showingPaywall) {
+        PaywallView()
+            .environmentObject(StoreKitManager.shared)
+            .environmentObject(EntitlementManager.shared)
+    }
     .sheet(isPresented: $showingPhotoPicker) {
         PhotoPickerView(selectedImage: $capturedImage, isProcessing: $isProcessingImage)
             .ignoresSafeArea()
@@ -179,6 +213,15 @@ struct CameraCaptureView: View {
         }
     }
 }
+    
+    private func updateRemainingScans() {
+        Task {
+            let count = await UsageLimiterService.shared.remainingScans()
+            await MainActor.run {
+                self.remainingScans = count
+            }
+        }
+    }
 }
 
 // MARK: - Visual Effect View

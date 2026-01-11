@@ -53,6 +53,7 @@
 "paywall_yearly" = "Yearly";
 "paywall_badge_best" = "Best value";
 "paywall_cta" = "Go Pro";
+"paywall_loading_products" = "Loading Products...";
 "paywall_easy_cancel" = "Easy to cancel";
 "paywall_restore" = "Restore purchases";
 "upgrade_now" = "Upgrade Now";
@@ -204,6 +205,11 @@
 "base_amount_label" = "Base";
 "vat_amount_label" = "VAT";
 "vat_total_label" = "Total VAT";
+"remaining_scans_suffix" = "monthly scans remaining";
+"usage_limit_label" = "Monthly Scan Usage";
+"remaining_label" = "Remaining";
+"service_coming_soon_title" = "Coming Soon";
+"service_coming_soon_message" = "The accountant connection feature will be available soon. For now, you can share your reports as PDF or CSV.";
 
 /* App Name */
 "slipbox_app_name" = "SlipBox";

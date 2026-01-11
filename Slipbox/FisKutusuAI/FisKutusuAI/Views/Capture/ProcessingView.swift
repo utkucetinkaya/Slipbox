@@ -306,6 +306,9 @@ struct ProcessingView: View {
                 // Save to Firestore
                 try await FirestoreReceiptRepository.shared.addReceipt(receipt)
                 
+                // Increment Usage Limit
+                await UsageLimiterService.shared.incrementScanCount()
+                
                 try? await Task.sleep(nanoseconds: 500_000_000)
                 await MainActor.run {
                     withAnimation {
